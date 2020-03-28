@@ -50,6 +50,50 @@ defmodule Acx.Enforcer do
   end
 
   @doc """
+  Adds a new policy rule with key given by `key` and attributes list
+  given by `attrs` to the `enforcer`.
+  """
+  def add_policy!(%Enforcer{} = enforcer, {key, attrs}) do
+    case add_policy(enforcer, {key, attrs}) do
+      {:error, reason} ->
+        raise ArgumentError, message: reason
+
+      enforcer ->
+        enforcer
+    end
+  end
+
+  @doc """
+  Loads policy rules from external file given by the name `pfile` and
+  adds them to the enforcer.
+
+  A valid policy file should be a `*.csv` file, in which each line must
+  have the following format:
+
+    `pkey, attr1, attr2, attr3`
+
+  in which `pkey` is the key of the policy rule, this key must match the
+  policy definition in the enforcer. `attr1`, `attr2`, ... are the
+  value of attributes specified in the policy definition.
+  """
+  def load_policies!(
+    %Enforcer{model: m, policies: old_policies} = enforcer,
+    pfile
+  ) do
+    new_policies =
+      pfile
+      |> File.read!
+      |> String.split("\n", trim: true)
+      |> Enum.map(&String.split(&1, ~r{,\s*}))
+      |> Enum.map(fn [key | attrs] -> [String.to_atom(key) | attrs] end)
+      |> Enum.filter(fn [key | _] -> Model.has_policy_key?(m, key) end)
+      |> Enum.map(fn [key | attrs] -> Model.create_policy!(m, {key, attrs}) end)
+
+    %{enforcer | policies: Enum.uniq(new_policies ++ old_policies)}
+  end
+
+
+  @doc """
   Returns a list of policies in the given enforcer that match the
   given criteria.
 
@@ -79,7 +123,7 @@ defmodule Acx.Enforcer do
   @doc """
   Returns `true` if `request` is allowed, otherwise `false`.
   """
-  def enforce(%Enforcer{model: model} = e, request) do
+  def allow?(%Enforcer{model: model} = e, request) do
     matched_policies = list_matched_policies(e, request)
     Model.allow?(model, matched_policies)
   end
@@ -107,10 +151,10 @@ defmodule Acx.Enforcer do
 
   @doc """
   Returns `true` if the given string `str` matches the pattern
-  string `pattern`.
+  string `^pattern$`.
   """
   def regex_match?(str, pattern) do
-    case Regex.compile(pattern) do
+    case Regex.compile("^#{pattern}$") do
       {:error, _} ->
         false
 

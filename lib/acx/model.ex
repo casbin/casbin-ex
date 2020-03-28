@@ -74,13 +74,23 @@ defmodule Acx.Model do
   def create_policy!(%Model{} = m, {key, attrs_data}) do
     case create_policy(m, {key, attrs_data}) do
       {:error, reason} ->
-        info = ":\nkey: #{key}\nattrs: #{Enum.join(attrs_data, ",")}"
-        raise ArgumentError,
-          message: reason <> info
+        raise ArgumentError, message: reason
 
       {:ok, policy} ->
         policy
     end
+  end
+
+  @doc """
+  Returns `true` if the model has a policy definition with the given `key`.
+
+  Returns `false`, otherwise.
+  """
+  def has_policy_key?(%Model{policy_definition: definitions}, key) do
+    found =
+      definitions
+      |> Enum.find(fn %PolicyDefinition{key: k} -> k === key end)
+    found !== nil
   end
 
   @doc """
