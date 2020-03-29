@@ -170,8 +170,14 @@ defmodule Acx.Digraph do
 
   # Depth-first search algorithm.
 
-  defp dfs(%__MODULE__{} = g, v) do
-    dfs(g, v, %{})
+  defp dfs(%__MODULE__{adj: adj} = g, v) do
+    case Map.get(adj, v) do
+      nil ->
+        %{}
+
+      _ ->
+        dfs(g, v, %{})
+    end
   end
 
   defp dfs(%__MODULE__{adj: adj} = g, v, visited) do
