@@ -1,4 +1,4 @@
-defmodule Acx.Helpers do
+defmodule Acx.Internal.Helpers do
 
   @doc """
   Returns a tuple `{succeeds, remainder}` where `succeeds` is the initial

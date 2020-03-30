@@ -1,13 +1,12 @@
-defmodule Acx.ConfigTest do
-  use ExUnit.Case
-  doctest Acx.Config
-
-  alias Acx.Config
+defmodule Acx.Model.ConfigTest do
+  use ExUnit.Case, async: true
+  alias Acx.Model.Config
+  doctest Acx.Model.Config
 
   describe "new/1" do
     test "returns the correct key-value pairs under :undefined_section" do
-      assert {:ok, %Config{sections: sections}} =
-        "./data/kv.conf"
+      assert %Config{sections: sections} =
+        "../data/kv.conf"
         |> Path.expand(__DIR__)
         |> Config.new
 
@@ -21,8 +20,8 @@ defmodule Acx.ConfigTest do
     end
 
     test "returns correct number of sections for ACL config" do
-      assert {:ok, %Config{sections: sections}} =
-        "./data/acl.conf"
+      assert %Config{sections: sections} =
+        "../data/acl.conf"
         |> Path.expand(__DIR__)
         |> Config.new
 
@@ -40,8 +39,8 @@ defmodule Acx.ConfigTest do
     end
 
     test "returns correct number of sections for RBAC config" do
-      assert {:ok, %Config{sections: sections}} =
-        "./data/rbac.conf"
+      assert %Config{sections: sections} =
+        "../data/rbac.conf"
         |> Path.expand(__DIR__)
         |> Config.new
 
@@ -60,9 +59,9 @@ defmodule Acx.ConfigTest do
       assert matchers == [m: "g(r.sub,p.sub)&&r.obj==p.obj&&r.act==p.act"]
     end
 
-    test "returns correct number of sections for RBAC with resource rolse" do
-      assert {:ok, %Config{sections: sections}} =
-        "./data/rbac_with_resource_roles.conf"
+    test "returns correct number of sections for RBAC with resource roles" do
+      assert %Config{sections: sections} =
+        "../data/rbac_with_resource_roles.conf"
         |> Path.expand(__DIR__)
         |> Config.new
 

@@ -1,4 +1,4 @@
-defmodule Acx.Config do
+defmodule Acx.Model.Config do
   @moduledoc """
   A configuration file is a text files divided into named sections
   (optional). Brackets enclose each section name.
@@ -22,10 +22,15 @@ defmodule Acx.Config do
     key2 = value
   """
 
-  @enforce_keys [:sections]
   defstruct sections: []
 
-  alias __MODULE__
+  @type key() :: atom()
+  @type value() :: String.t()
+  @type section_name() :: atom()
+  @type section() :: {section_name(), [{key(), value()}]}
+  @type t() :: %__MODULE__{
+    sections: [section()]
+  }
 
   @whitespace 32
   @new_line 10
@@ -33,29 +38,21 @@ defmodule Acx.Config do
   @default_section :undefined_section
 
   @doc """
-  Reads a config file and convert it into `%Config{}` struct.
+  Reads a config file, parses it and converts it into a Config struct.
   """
-  def new(config_file) do
-    # TODO: There are few things to keep in mind:
-    #
-    #   1. What if the file does not exist or something went wrong while
-    #      trying to read the file content?
-    #
-    #   2. Reporting `syntax` error when something was wrong in the
-    #      config file ins't enough. Wrong at what position?
-    #
-    #   3. It doesn't feel right to me to return ok tuple in a `new`
-    #      function.
-    config_file
+  @spec new(String.t()) :: t() | {:error, String.t()}
+  def new(cfile) when is_binary(cfile) do
+    cfile
     |> File.read!
     |> parse()
     |> convert()
     |> case do
          {:error, _reason} ->
-           {:error, "syntax error in the config file #{config_file}"}
+           # TODO: provide more information about the error.
+           {:error, "syntax error in the config file #{cfile}"}
 
          {:ok, sections} ->
-           {:ok, %Config{sections: sections}}
+           %__MODULE__{sections: sections}
        end
   end
 

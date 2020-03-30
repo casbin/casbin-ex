@@ -1,21 +1,10 @@
-defmodule Acx.Matcher do
-  @enforce_keys [:prog]
+defmodule Acx.Model.Matcher do
+  @moduledoc """
+  This module defines a structure to represent a matcher expression.
+  """
+
   defstruct prog: nil
 
-  alias __MODULE__
-
-  alias Acx.Helpers
-  alias Acx.Parser
-  alias Acx.Operator
-
-  @unary_operators [:not, :pos, :neg]
-  @binary_operators [:mul, :div, :add, :sub, :lt, :le, :gt, :ge, :eq,
-                     :ne, :and, :or]
-
-  # Convert a matcher string to a matcher program.
-  # ##############################################
-
-  # Instruction type.
   @type instr() :: {:push, number()}
   | {:push, String.t()}
   | {:fetch, atom()}
@@ -37,13 +26,97 @@ defmodule Acx.Matcher do
   | {:or}
   | {:call, %{name: atom(), arity: non_neg_integer()}}
 
-  # Matcher program type.
   @type program() :: [instr()]
+
+  @type t() :: %__MODULE__{
+    prog: program()
+  }
+
+  alias Acx.Internal.{Helpers, Parser, Operator}
+
+  @unary_operators [:not, :pos, :neg]
+  @binary_operators [:mul, :div, :add, :sub, :lt, :le, :gt, :ge, :eq,
+                     :ne, :and, :or]
 
   @doc """
   Converts the given matcher string `str` to a matcher program.
+
+  ## Examples
+
+      iex> m = "r.sub == p.sub && r.obj == p.obj && r.act == p.act"
+      ...> %Matcher{prog: prog} = Matcher.new(m)
+      ...> prog
+      [
+        {:fetch_attr, %{key: :r, attr: :sub}},
+        {:fetch_attr, %{key: :p, attr: :sub}},
+        {:eq},
+        {:fetch_attr, %{key: :r, attr: :obj}},
+        {:fetch_attr, %{key: :p, attr: :obj}},
+        {:eq},
+        {:and},
+        {:fetch_attr, %{key: :r, attr: :act}},
+        {:fetch_attr, %{key: :p, attr: :act}},
+        {:eq},
+        {:and}
+      ]
+
+      iex> m = "r.sub == p.sub && regex_match?(r.obj, p.obj) && regex_match?(r.act, p.act)"
+      ...> %Matcher{prog: prog} = Matcher.new(m)
+      ...> prog
+      [
+        {:fetch_attr, %{attr: :sub, key: :r}},
+        {:fetch_attr, %{attr: :sub, key: :p}},
+        {:eq},
+        {:fetch_attr, %{attr: :obj, key: :r}},
+        {:fetch_attr, %{attr: :obj, key: :p}},
+        {:call, %{arity: 2, name: :regex_match?}},
+        {:and},
+        {:fetch_attr, %{attr: :act, key: :r}},
+        {:fetch_attr, %{attr: :act, key: :p}},
+        {:call, %{arity: 2, name: :regex_match?}},
+        {:and}
+      ]
+
+      iex> m = "g(r.sub, p.sub) && g2(r.obj, p.obj) && r.act == p.act"
+      ...> %Matcher{prog: prog} = Matcher.new(m)
+      ...> prog
+      [
+        {:fetch_attr, %{attr: :sub, key: :r}},
+        {:fetch_attr, %{attr: :sub, key: :p}},
+        {:call, %{arity: 2, name: :g}},
+        {:fetch_attr, %{attr: :obj, key: :r}},
+        {:fetch_attr, %{attr: :obj, key: :p}},
+        {:call, %{arity: 2, name: :g2}},
+        {:and},
+        {:fetch_attr, %{attr: :act, key: :r}},
+        {:fetch_attr, %{attr: :act, key: :p}},
+        {:eq},
+        {:and}
+      ]
+
+      iex> m = "r.sub == p.sub && r.obj == p.obj && r.act == p.act || r.sub == \\"root\\""
+      ...> %Matcher{prog: prog} = Matcher.new(m)
+      ...> prog
+      [
+        {:fetch_attr, %{attr: :sub, key: :r}},
+        {:fetch_attr, %{attr: :sub, key: :p}},
+        {:eq},
+        {:fetch_attr, %{attr: :obj, key: :r}},
+        {:fetch_attr, %{attr: :obj, key: :p}},
+        {:eq},
+        {:and},
+        {:fetch_attr, %{attr: :act, key: :r}},
+        {:fetch_attr, %{attr: :act, key: :p}},
+        {:eq},
+        {:and},
+        {:fetch_attr, %{attr: :sub, key: :r}},
+        {:push, "root"},
+        {:eq},
+        {:or}
+      ]
+
   """
-  @spec new(String.t()) :: {:ok, program()} | {:error, {atom(), map()}}
+  @spec new(String.t()) :: t() | {:error, {atom(), map()}}
   def new(str) do
     str
     |> Parser.parse()
@@ -53,24 +126,21 @@ defmodule Acx.Matcher do
            {:error, reason}
 
          {:ok, postfix} ->
-           prog = postfix |> compile()
-           {:ok, %Matcher{prog: prog}}
+           %__MODULE__{prog: postfix |> compile()}
        end
   end
 
   @doc """
   Runs a matcher program in the given environment
   """
-
   @type environment() :: map()
   @type result() :: number() | String.t() | boolean()
-
-  @spec eval(%Matcher{}, environment()) :: result()
-  def eval(%Matcher{prog: prog}, env \\ %{}) do
+  @spec eval(t(), environment()) :: {:ok, result()} | {:error, String.t()}
+  def eval(%__MODULE__{prog: prog}, env \\ %{}) do
     run(prog, env)
   end
 
-  def eval!(%Matcher{} = m, env \\ %{}) do
+  def eval!(%__MODULE__{} = m, env \\ %{}) do
     case eval(m, env) do
       {:error, reason} ->
         raise RuntimeError, message: reason
@@ -80,32 +150,32 @@ defmodule Acx.Matcher do
     end
   end
 
-  # Compile a matcher expression to a program
-  # #########################################
+  # Compile a matcher expression to a matcher program
+  # #################################################
 
   # Matcher expression
-  @type t :: {:num, number()}
+  @type expr() :: {:num, number()}
   | {:str, String.t()}
   | {:var, atom()}
   | {:dot, atom(), atom()}
-  | {:not, t()}
-  | {:pos, t()}
-  | {:neg, t()}
-  | {:mul, t(), t()}
-  | {:div, t(), t()}
-  | {:add, t(), t()}
-  | {:sub, t(), t()}
-  | {:lt, t(), t()}
-  | {:le, t(), t()}
-  | {:gt, t(), t()}
-  | {:ge, t(), t()}
-  | {:eq, t(), t()}
-  | {:ne, t(), t()}
-  | {:and, t(), t()}
-  | {:or, t(), t()}
-  | {:call, atom(), [t()]}
+  | {:not, expr()}
+  | {:pos, expr()}
+  | {:neg, expr()}
+  | {:mul, expr(), expr()}
+  | {:div, expr(), expr()}
+  | {:add, expr(), expr()}
+  | {:sub, expr(), expr()}
+  | {:lt, expr(), expr()}
+  | {:le, expr(), expr()}
+  | {:gt, expr(), expr()}
+  | {:ge, expr(), expr()}
+  | {:eq, expr(), expr()}
+  | {:ne, expr(), expr()}
+  | {:and, expr(), expr()}
+  | {:or, expr(), expr()}
+  | {:call, atom(), [expr()]}
 
-  @spec compile(t()) :: program()
+  @spec compile(expr()) :: program()
   defp compile({:num, x}), do: [{:push, x}]
   defp compile({:str, s}), do: [{:push, s}]
   defp compile({:dot, k, attr}), do: [{:fetch_attr, %{key: k, attr: attr}}]
@@ -136,11 +206,13 @@ defmodule Acx.Matcher do
   # ###############################################
 
   @type virtual_machine() :: [result()]
+  @spec run(program(), environment()) :: {:ok, result()}
+  | {:error, String.t()}
 
-  @spec run(program(), environment()) :: result()
   defp run(pro, env), do: run(pro, env, [])
 
-  @spec run(program(), environment(), virtual_machine()) :: result()
+  @spec run(program(), environment(), virtual_machine()) :: {:ok, result()}
+  | {:error, String.t()}
 
   defp run([{:push, x} | continue], env, stack) do
     run(continue, env, [x | stack])

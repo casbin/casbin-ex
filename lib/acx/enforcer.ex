@@ -2,36 +2,41 @@ defmodule Acx.Enforcer do
   @moduledoc """
   """
 
-  @enforce_keys [:model]
   defstruct [
     model: nil,
     policies: [],
     env: %{}
   ]
 
-  alias __MODULE__
   alias Acx.Model
-  alias Acx.Matcher
+
+  @type t() :: %__MODULE__{
+    model: Model.t(),
+    policies: [Model.Policy.t()],
+    env: map()
+  }
 
   @doc """
   Loads and contructs a model from the given config file `conf_file`.
   """
+  @spec init(String.t()) :: {:ok, t()} | {:error, String.t()}
   def init(conf_file) when is_binary(conf_file) do
     case Model.init(conf_file) do
       {:error, reason} ->
         {:error, reason}
 
       {:ok, model} ->
-        {:ok, %Enforcer{model: model, env: init_env()}}
+        {:ok, %__MODULE__{model: model, env: init_env()}}
     end
   end
 
   @doc """
-  Adds a new policy rule with key given by `key` and attributes list
-  given by `attrs` to the `enforcer`.
+  Adds a new policy rule with key given by `key` and a list of
+  attribute values `attr_values` to the enforcer.
   """
+  @spec add_policy(t(), {atom(), [String.t()]}) :: t() | {:error, String.t()}
   def add_policy(
-    %Enforcer{model: model, policies: policies} = enforcer,
+    %__MODULE__{model: model, policies: policies} = enforcer,
     {key, attrs}
   ) do
     case Model.create_policy(model, {key, attrs}) do
@@ -50,10 +55,10 @@ defmodule Acx.Enforcer do
   end
 
   @doc """
-  Adds a new policy rule with key given by `key` and attributes list
-  given by `attrs` to the `enforcer`.
+  Adds a new policy rule with key given by `key` and a list of attribute
+  values `attr_values` to the enforcer.
   """
-  def add_policy!(%Enforcer{} = enforcer, {key, attrs}) do
+  def add_policy!(%__MODULE__{} = enforcer, {key, attrs}) do
     case add_policy(enforcer, {key, attrs}) do
       {:error, reason} ->
         raise ArgumentError, message: reason
@@ -77,7 +82,7 @@ defmodule Acx.Enforcer do
   value of attributes specified in the policy definition.
   """
   def load_policies!(
-    %Enforcer{model: m, policies: old_policies} = enforcer,
+    %__MODULE__{model: m, policies: old_policies} = enforcer,
     pfile
   ) do
     new_policies =
@@ -108,7 +113,7 @@ defmodule Acx.Enforcer do
   rules in the enforcer (without filtered).
   """
   def list_policies(
-    %Enforcer{policies: policies},
+    %__MODULE__{policies: policies},
     criteria
   ) when is_map(criteria) or is_list(criteria) do
     policies
@@ -118,12 +123,12 @@ defmodule Acx.Enforcer do
     end)
   end
 
-  def list_policies(%Enforcer{policies: policies}), do: policies
+  def list_policies(%__MODULE__{policies: policies}), do: policies
 
   @doc """
   Returns `true` if `request` is allowed, otherwise `false`.
   """
-  def allow?(%Enforcer{model: model} = e, request) do
+  def allow?(%__MODULE__{model: model} = e, request) do
     matched_policies = list_matched_policies(e, request)
     Model.allow?(model, matched_policies)
   end
@@ -133,7 +138,7 @@ defmodule Acx.Enforcer do
   given `request`.
   """
   def list_matched_policies(
-    %Enforcer{model: model, policies: policies} = e,
+    %__MODULE__{model: model, policies: policies} = e,
     request
   ) do
     case Model.create_request(model, request) do
@@ -141,7 +146,11 @@ defmodule Acx.Enforcer do
         []
 
       {:ok, req} ->
-        policies |> Enum.filter(fn pol -> match?(e, req, pol) end)
+        policies
+        |> Enum.filter(fn pol ->
+          env = build_env(e, req, pol)
+          Model.match?(model, req, pol, env)
+        end)
     end
   end
 
@@ -167,19 +176,14 @@ defmodule Acx.Enforcer do
   # Helpers
   #
 
-  # Returns `true` if the given request matches the given policy.
-  # Returns `false`, otherwise.
-  defp match?(
-    %Enforcer{model: %{matchers: matchers}, env: env},
+  defp build_env(
+    %__MODULE__{env: env},
     %{key: r, attrs: r_attrs},
     %{key: p, attrs: p_attrs}
   ) do
-    environment =
-      env
-      |> Map.put(p, p_attrs)
-      |> Map.put(r, r_attrs)
-
-    !!(Matcher.eval!(matchers, environment))
+    env
+    |> Map.put(p, p_attrs)
+    |> Map.put(r, r_attrs)
   end
 
   defp init_env do

@@ -1,8 +1,11 @@
-defmodule Acx.Operator do
-  @operators [:dot, :not, :pos, :neg, :mul, :div, :add, :sub,:lt, :le,
-              :gt, :ge, :eq, :ne, :and, :or]
+defmodule Acx.Internal.Operator do
+  @moduledoc """
+  This module defines a set of operators and helper functions used when
+  parsing operators in a matcher expression.
+  """
 
-  @type t :: :dot
+  @type result() :: number() | String.t() | boolean()
+  @type t() :: :dot
   | :not
   | :pos
   | :neg
@@ -19,12 +22,13 @@ defmodule Acx.Operator do
   | :and
   | :or
 
+  @operators [:dot, :not, :pos, :neg, :mul, :div, :add, :sub,:lt, :le,
+              :gt, :ge, :eq, :ne, :and, :or]
+
   @doc """
   Converts a charlist to an operator based on the type of previous token.
   """
-
   @spec charlist_to_operator(charlist(), atom()) :: t()
-
   def charlist_to_operator('+', prev)
   when prev not in [:operand, :variable, :right_paren], do: :pos
 
@@ -37,7 +41,6 @@ defmodule Acx.Operator do
   Converts an operator to its textual representation.
   """
   @spec operator_to_charlist(t()) :: charlist()
-
   def operator_to_charlist(:dot), do: '.'
   def operator_to_charlist(:not), do: '!'
   def operator_to_charlist(:pos), do: '+'
@@ -88,10 +91,7 @@ defmodule Acx.Operator do
   @doc """
   Apply an operator to the given list of operands
   """
-
-  @type value() :: number() | String.t() | boolean()
-
-  @spec apply(t(), [value()]) :: value()
+  @spec apply(t(), [result()]) :: result()
 
   # Unary operator
 

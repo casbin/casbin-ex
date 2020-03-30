@@ -1,4 +1,4 @@
-defmodule Acx.RoleGroup do
+defmodule Acx.Model.RoleGroup do
   @moduledoc """
   This module defines a structure to manage the roles and their inheritances
   in the (H)RBAC model.
@@ -10,7 +10,7 @@ defmodule Acx.RoleGroup do
 
   defstruct name: nil, role_graph: nil
 
-  alias Acx.Digraph
+  alias Acx.Internal.Digraph
 
   @type role_type() :: term()
 

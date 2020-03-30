@@ -1,26 +1,25 @@
-defmodule Acx.Parser do
+defmodule Acx.Internal.Parser do
   @moduledoc """
-  Parser is responsible for converting a string representing a
+  `Parser` is responsible for converting a string representing a
   boolean expression:
 
     `<boolean_expr>(variables, constants, functions)`
 
   into a postfix representation.
 
-  `constants` in `<boolean_expr>` must be either string or number
+  - `constants` in `<boolean_expr>` must be either string or number
   (both integer and floating-point numbers are supported).
 
-  All `variables` and `functions` must start with a letter,
+  - All `variables` and `functions` must start with a letter,
   and must contains only alpha-numeric characters, optionally an
   underscore `_`, or a question-mark `?`.
 
-  Supported operators in `<boolean_expr>` including arithmetic operators:
-  `*, /, +, -`; relational operators: `==, !=, <, <=, >, >=`; and
-  logical operators: `&&(and), ||(or), !(not)`.
+   - Supported operators in `<boolean_expr>` including arithmetic
+   operators: `*, /, +, -`; relational operators: `==, !=, <, <=, >, >=`;
+   and logical operators: `&&(and), ||(or), !(not)`.
   """
 
-  alias Acx.Helpers
-  alias Acx.Operator
+  alias Acx.Internal.{Helpers, Operator}
 
   @operators ['.', '!', '-', '+', '*', '/', '<', '<=', '>', '>=', '==',
               '!=', '&&', '||']
@@ -45,17 +44,18 @@ defmodule Acx.Parser do
   | :or
   | {:fun, %{name: atom(), arity: non_neg_integer()}}
 
-  @type postfix_term_with_location :: %{
+  @type postfix_term_with_location() :: %{
     token: postfix_term(),
     location: %{line: non_neg_integer(), col: non_neg_integer()}
   }
 
-  @type postfix_expr :: [postfix_term_with_location()]
+  @type postfix_expr() :: [postfix_term_with_location()]
 
   @doc """
   Converts a matcher string into a postfix expression.
   """
-  @spec parse(String.t()) :: {:ok, postfix_expr()} | {:error, {atom(), map()}}
+  @spec parse(String.t()) :: {:ok, postfix_expr()}
+  | {:error, {atom(), map()}}
   def parse(matcher_str) when is_binary(matcher_str) do
     list = String.to_charlist(matcher_str)
     init_pos = %{line: 0, col: 0}

@@ -1,4 +1,4 @@
-defmodule Acx.Digraph do
+defmodule Acx.Internal.Digraph do
   @moduledoc """
   This module defines a simple directed graph structure to model the role
   inheritance in the (H)RBAC ( Hierarchical Role Based Access Control)
