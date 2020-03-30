@@ -46,10 +46,14 @@ defmodule Acx.Model.Config do
     |> File.read!
     |> parse()
     |> convert()
+    |> validate_sections()
     |> case do
-         {:error, _reason} ->
+         {:error, reason} ->
            # TODO: provide more information about the error.
-           {:error, "syntax error in the config file #{cfile}"}
+           {
+             :error,
+             "error occurred when parsing config file #{cfile}: #{reason}"
+           }
 
          {:ok, sections} ->
            %__MODULE__{sections: sections}
@@ -69,7 +73,7 @@ defmodule Acx.Model.Config do
 
   defp convert({:ok, tokens}), do: convert(tokens, [])
 
-  defp convert({:error, reason, _pos}), do: {:error, reason}
+  defp convert({:error, {reason, _pos}}), do: {:error, reason}
 
   defp convert([sec | rest], ret) when is_atom(sec) and sec != :eq do
     next_section = {sec, []}
@@ -91,11 +95,64 @@ defmodule Acx.Model.Config do
         convert(rem, [{sec, [{key, value} | data]} | ret])
 
       _ ->
-        {:error, :syntax_error}
+        {:error, "syntax error"}
     end
   end
 
   defp convert([], final), do: {:ok, final}
+
+  #
+  # Validating. (TODO: make this shit more robust and efficient)
+  #
+
+  defp validate_sections({:error, reason}), do: {:error, reason}
+
+  defp validate_sections({:ok, sections}) do
+    names = sections |> Keyword.keys()
+
+    # What????? Is this the only way to check for duplicate items
+    # in a list?
+    case names -- Enum.uniq(names) do
+      [] ->
+        validate_sections(sections, sections)
+
+      _ ->
+        {:error, "duplicate section names"}
+    end
+  end
+
+  defp validate_sections([], sections), do: {:ok, sections}
+
+  defp validate_sections([{section, []} | _], _) do
+    {:error, "section `#{section}` is empty"}
+  end
+
+  defp validate_sections([{section, key_vals} | rest], sections) do
+    keys = key_vals |> Keyword.keys()
+
+    # Again?
+    case keys -- Enum.uniq(keys) do
+      [] ->
+        case validate_pairs(key_vals) do
+          {:error, reason} ->
+            {:error, reason}
+
+          :ok ->
+            validate_sections(rest, sections)
+        end
+
+      _ ->
+        {:error, "section `#{section}` has duplicate keys"}
+    end
+  end
+
+  defp validate_pairs([]), do: :ok
+
+  defp validate_pairs([{key, ""} | _]) do
+    {:error, "empty value for key `#{key}`"}
+  end
+
+  defp validate_pairs([{_key, _val} | tail]), do: validate_pairs(tail)
 
   #
   # Parsing
@@ -114,8 +171,8 @@ defmodule Acx.Model.Config do
   defp parse([91, ch | rest], [], eq_stack, tokens, pos)
   when ?a <= ch and ch <= ?z do
     case parse_section(rest) do
-      {:error, _} ->
-        {:error, :invalid_section, pos}
+      {:error, reason} ->
+        {:error, {reason, pos}}
 
       {:ok, succeeds, rem, count} ->
         new_section = :erlang.list_to_atom([ch | succeeds])
@@ -128,8 +185,8 @@ defmodule Acx.Model.Config do
   defp parse([91, ch | rest], [prev_section], [:eq], tokens, pos)
   when ?a <= ch and ch <= ?z do
     case parse_section(rest) do
-      {:error, _} ->
-        {:error, :invalid_section, pos}
+      {:error, reason} ->
+        {:error, {reason, pos}}
 
       {:ok, succeeds, rem, count} ->
         new_section = :erlang.list_to_atom([ch | succeeds])
@@ -225,7 +282,7 @@ defmodule Acx.Model.Config do
   end
 
   # None of the above
-  defp parse(_, _, _, _, pos), do: {:error, :syntax_error, pos}
+  defp parse(_, _, _, _, pos), do: {:error, {"syntax error", pos}}
 
 
   #
@@ -279,7 +336,7 @@ defmodule Acx.Model.Config do
 
   # See any other characters or list is empty.
   defp parse_section(_rest, _count) do
-    {:error, :invalid_section}
+    {:error, "invalid section name"}
   end
 
   # Skip comment line.
