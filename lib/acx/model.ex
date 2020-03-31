@@ -19,7 +19,7 @@ defmodule Acx.Model do
   programming. A request definition is like a `class`, and a request
   is like an `instance` of that class.
 
-  - A list of policy definitions (`policy`). `Model` supports
+  - A list of policy definitions (`policies`). `Model` supports
   multiple policy definitions, each with its own key and a set of
   attributes. A policy definition defines how authorization rules
   are structured.The relationship between a policy definition and
@@ -66,7 +66,7 @@ defmodule Acx.Model do
   2. `"!some(where(p.eft==deny))"`: if there's no matched policy rules of
   type `deny`, the final effect is `allow`.
 
-  - A list of role definitions (`role_group`). (TODO)
+  - A list of role definitions (`role_mappers`). (TODO)
 
   [1] - https://vicarie.in/posts/generalized-authz.html
   """
@@ -76,7 +76,7 @@ defmodule Acx.Model do
     policies: [],
     matcher: nil,
     effect: nil,
-    roles: []
+    role_mappings: []
   ]
 
   alias Acx.Model.{
@@ -85,7 +85,6 @@ defmodule Acx.Model do
     PolicyDefinition,
     PolicyEffect,
     Matcher,
-    RoleGroup,
     Request,
     Policy
   }
@@ -95,7 +94,7 @@ defmodule Acx.Model do
     policies: [PolicyDefinition.t()],
     matcher: Matcher.t(),
     effect: PolicyEffect.t(),
-    roles: [RoleGroup.t()]
+    role_mappings: [atom()]
   }
 
   @doc """
@@ -114,7 +113,7 @@ defmodule Acx.Model do
         |> build(:policies)
         |> build(:effect)
         |> build(:matcher)
-        |> build(:roles)
+        |> build(:role_mappings)
         |> case do
              {:error, reason} ->
                {:error, reason}
@@ -302,22 +301,18 @@ defmodule Acx.Model do
   end
 
   # Build role definitions
-  defp build({:ok, model, sections}, :roles) do
+  defp build({:ok, model, sections}, :role_mappings) do
     sections
-    |> validate_role_definition()
+    |> validate_role_mappings()
     |> case do
          {:error, reason} ->
            {:error, reason}
 
-         {:ok, roles} ->
-           model = %{model | roles: roles}
+         {:ok, mappings} ->
+           model = %{model | role_mappings: mappings}
            {:ok, model, sections}
        end
   end
-
-  #
-  # Helpers.
-  #
 
   defp missing_section_error(section_name) do
     {
@@ -339,7 +334,6 @@ defmodule Acx.Model do
 
   # Validate policy definition
   defp validate_policy_definition(sections) do
-    # TODO: handle duplicate keys, value is empty string.
     sections[:policy_definition]
     |> Enum.map(fn {key, value} -> PolicyDefinition.new(key, value) end)
     |> case do
@@ -380,20 +374,32 @@ defmodule Acx.Model do
     end
   end
 
-  # Validate role definition.
-  defp validate_role_definition(sections) do
+  # Validate role mappings (a.k.a role definition)
+
+  defp validate_role_mappings(sections) do
     case sections[:role_definition] do
       nil ->
         {:ok, []}
 
       definitions ->
-        # TODO: validate whether role definition is invalid or not
-        # A valid role definition should be {key, "_,_"}
-        roles =
-          definitions
-          |> Enum.map(fn {key, _value} -> RoleGroup.new(key) end)
-        {:ok, roles}
+        case check_role_definition(definitions) do
+          {:error, reason} ->
+            {:error, reason}
+
+          :ok ->
+            {:ok, Keyword.keys(definitions)}
+        end
     end
+  end
+
+  # A valid role definition should be `{key, "_,_"}` in which
+  # `key` must be an atom.
+  defp check_role_definition([]), do: :ok
+  defp check_role_definition([{_key, "_,_"} | rest]) do
+    check_role_definition(rest)
+  end
+  defp check_role_definition([{key, val} | _]) do
+    {:error, "invalid role definition: `#{key}=#{val}`"}
   end
 
 end
