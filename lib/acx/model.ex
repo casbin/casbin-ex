@@ -295,10 +295,13 @@ defmodule Acx.Model do
 
       iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
       ...> {:ok, m} = Model.init(cfile)
-      ...> false = m |> Model.has_policy_key?(:r)
-      ...> false = m |> Model.has_policy_key?(:p2)
       ...> m |> Model.has_policy_key?(:p)
       true
+
+      iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> m |> Model.has_policy_key?(:q)
+      false
   """
   @spec has_policy_key?(t(), atom()) :: boolean()
   def has_policy_key?(%__MODULE__{policies: definitions}, key) do
@@ -322,22 +325,19 @@ defmodule Acx.Model do
 
       iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
       ...> {:ok, m} = Model.init(cfile)
-      ...> p1_attr_values = ["alice", "data1", "read"]
-      ...> p2_attr_values = ["bob", "data2", "write"]
-      ...> {:ok, p1} = m |> Model.create_policy({:p, p1_attr_values})
-      ...> {:ok, p2} = m |> Model.create_policy({:p, p2_attr_values})
-      ...> r1_attr_values = p1_attr_values
-      ...> r2_attr_values = p2_attr_values
-      ...> r3_attr_values = ["alice", "data2", "read"]
-      ...> {:ok, r1} = m |> Model.create_request(r1_attr_values)
-      ...> {:ok, r2} = m |> Model.create_request(r2_attr_values)
-      ...> {:ok, r3} = m |> Model.create_request(r3_attr_values)
-      ...> true = m |> Model.match?(r1, p1)
-      ...> true = m |> Model.match?(r2, p2)
-      ...> false = m |> Model.match?(r1, p2)
-      ...> false = m |> Model.match?(r2, p1)
-      ...> false = m |> Model.match?(r3, p1)
-      ...> m |> Model.match?(r3, p2)
+      ...> rule = ["alice", "data1", "read"]
+      ...> {:ok, p} = m |> Model.create_policy({:p, rule})
+      ...> {:ok, r} =  m |> Model.create_request(rule)
+      ...> m |> Model.match?(r, p)
+      true
+
+      iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> rule = ["alice", "data1", "read"]
+      ...> {:ok, p} = m |> Model.create_policy({:p, rule})
+      ...> request = ["alice", "data1", "write"]
+      ...> {:ok, r} =  m |> Model.create_request(request)
+      ...> m |> Model.match?(r, p)
       false
   """
   @spec match?(t(), Request.t(), Policy.t(), map()) :: boolean()
@@ -368,12 +368,24 @@ defmodule Acx.Model do
 
       iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
       ...> {:ok, m} = Model.init(cfile)
-      ...> p1_attr_values = ["alice", "data1", "read"]
-      ...> p2_attr_values = ["alice", "data2", "read", "deny"]
-      ...> {:ok, p1} = m |> Model.create_policy({:p, p1_attr_values})
-      ...> {:ok, p2} = m |> Model.create_policy({:p, p2_attr_values})
-      ...> false = m |> Model.allow?([p2])
-      ...> true = m |> Model.allow?([p1])
+      ...> allowed_rule = {:p, ["alice", "data1", "read"]}
+      ...> {:ok, p} = m |> Model.create_policy(allowed_rule)
+      ...> m |> Model.allow?([p])
+      true
+
+      iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> denied_rule = {:p, ["alice", "data1", "write", "deny"]}
+      ...> {:ok, p} = m |> Model.create_policy(denied_rule)
+      ...> m |> Model.allow?([p])
+      false
+
+      iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> allowed_rule = {:p, ["alice", "data1", "read"]}
+      ...> denied_rule = {:p, ["alice", "data1", "write", "deny"]}
+      ...> {:ok, p1} = m |> Model.create_policy(allowed_rule)
+      ...> {:ok, p2} = m |> Model.create_policy(denied_rule)
       ...> m |> Model.allow?([p1, p2])
       true
   """
