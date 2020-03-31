@@ -99,6 +99,52 @@ defmodule Acx.Model do
 
   @doc """
   Initializes a model given the config file `cfile`.
+
+  ## Examples
+
+      iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> %Model{request: rd} = m
+      ...> %RequestDefinition{key: :r, attrs: attrs} = rd
+      ...> attrs
+      [:sub, :obj, :act]
+
+      iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> %Model{policies: definitions} = m
+      ...> [%PolicyDefinition{key: :p, attrs: attrs}] = definitions
+      ...> attrs
+      [:sub, :obj, :act, :eft]
+
+      iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> %Model{effect: %PolicyEffect{rule: rule}} = m
+      ...> rule
+      "some(where(p.eft==allow))"
+
+      iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> %Model{role_mappings: mappings} = m
+      ...> mappings
+      []
+
+      iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> %Model{matcher: %Matcher{prog: prog}} = m
+      ...> prog
+      [
+        {:fetch_attr, %{attr: :sub, key: :r}},
+        {:fetch_attr, %{attr: :sub, key: :p}},
+        {:eq},
+        {:fetch_attr, %{attr: :obj, key: :r}},
+        {:fetch_attr, %{attr: :obj, key: :p}},
+        {:eq},
+        {:and},
+        {:fetch_attr, %{attr: :act, key: :r}},
+        {:fetch_attr, %{attr: :act, key: :p}},
+        {:eq},
+        {:and}
+      ]
   """
   @spec init(String.t()) :: {:ok, t()} | {:error, String.t()}
   def init(cfile) when is_binary(cfile) do
@@ -126,6 +172,23 @@ defmodule Acx.Model do
 
   @doc """
   Creates a new request.
+
+  ## Examples
+
+      iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> valid_request = ["alice", "data1", "read"]
+      ...> {:ok, r} = m |> Model.create_request(valid_request)
+      ...> %Request{key: :r, attrs: attrs} = r
+      ...> attrs
+      [sub: "alice", obj: "data1", act: "read"]
+
+      iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> invalid_request = ["alice", "data1"]
+      ...> {:error, reason} = m |> Model.create_request(invalid_request)
+      ...> reason
+      "invalid request"
   """
   @spec create_request(t(), [String.t()]) :: {:ok, Request.t()}
   | {:error, String.t()}
@@ -135,6 +198,53 @@ defmodule Acx.Model do
 
   @doc """
   Creates a new policy.
+
+  ## Examples
+
+      iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> valid_policy = {:p, ["alice", "data1", "read"]}
+      ...> {:ok, p} = m |> Model.create_policy(valid_policy)
+      ...> %Policy{key: :p, attrs: attrs} = p
+      ...> attrs
+      [sub: "alice", obj: "data1", act: "read", eft: "allow"]
+
+      iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> valid_policy = {:p, ["alice", "data1", "read", "allow"]}
+      ...> {:ok, p} = m |> Model.create_policy(valid_policy)
+      ...> %Policy{key: :p, attrs: attrs} = p
+      ...> attrs
+      [sub: "alice", obj: "data1", act: "read", eft: "allow"]
+
+      iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> valid_policy = {:p, ["alice", "data1", "read", "deny"]}
+      ...> {:ok, p} = m |> Model.create_policy(valid_policy)
+      ...> %Policy{key: :p, attrs: attrs} = p
+      ...> attrs
+      [sub: "alice", obj: "data1", act: "read", eft: "deny"]
+
+      iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> invalid_policy = {:q, ["alice", "data1", "read"]}
+      ...> {:error, reason} = m |> Model.create_policy(invalid_policy)
+      ...> reason
+      "policy with key `q` is undefined"
+
+      iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> invalid_policy = {:p, ["alice", "data1", "read", "foo"]}
+      ...> {:error, reason} = m |> Model.create_policy(invalid_policy)
+      ...> reason
+      "invalid value for the `eft` attribute: `foo`"
+
+      iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> invalid_policy = {:p, ["alice", "data1", :read]}
+      ...> {:error, reason} = m |> Model.create_policy(invalid_policy)
+      ...> reason
+      "invalid attribute value type"
   """
   @spec create_policy(t(), [String.t()]) :: {:ok, Policy.t()}
   | {:error, String.t()}
@@ -175,6 +285,15 @@ defmodule Acx.Model do
   `key` in the model.
 
   Returns `false`, otherwise.
+
+  ## Examples
+
+      iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> false = m |> Model.has_policy_key?(:r)
+      ...> false = m |> Model.has_policy_key?(:p2)
+      ...> m |> Model.has_policy_key?(:p)
+      true
   """
   @spec has_policy_key?(t(), atom()) :: boolean()
   def has_policy_key?(%__MODULE__{policies: definitions}, key) do
@@ -193,6 +312,28 @@ defmodule Acx.Model do
   Returns `true` if the given request matches the given policy.
 
   Returns `false`, otherwise.
+
+  ## Examples
+
+      iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> p1_attr_values = ["alice", "data1", "read"]
+      ...> p2_attr_values = ["bob", "data2", "write"]
+      ...> {:ok, p1} = m |> Model.create_policy({:p, p1_attr_values})
+      ...> {:ok, p2} = m |> Model.create_policy({:p, p2_attr_values})
+      ...> r1_attr_values = p1_attr_values
+      ...> r2_attr_values = p2_attr_values
+      ...> r3_attr_values = ["alice", "data2", "read"]
+      ...> {:ok, r1} = m |> Model.create_request(r1_attr_values)
+      ...> {:ok, r2} = m |> Model.create_request(r2_attr_values)
+      ...> {:ok, r3} = m |> Model.create_request(r3_attr_values)
+      ...> true = m |> Model.match?(r1, p1)
+      ...> true = m |> Model.match?(r2, p2)
+      ...> false = m |> Model.match?(r1, p2)
+      ...> false = m |> Model.match?(r2, p1)
+      ...> false = m |> Model.match?(r3, p1)
+      ...> m |> Model.match?(r3, p2)
+      false
   """
   @spec match?(t(), Request.t(), Policy.t(), map()) :: boolean()
   def match?(
@@ -211,7 +352,25 @@ defmodule Acx.Model do
 
   @doc """
   Takes a list of matched policies and determines whether the final effect
-  is `allow` or `deny` based on the `policy_effect`
+  is `allow` or `deny` based on the `policy_effect`.
+
+  ## Examples
+
+      iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> m |> Model.allow?([])
+      false
+
+      iex> cfile = "../../test/data/acl.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> p1_attr_values = ["alice", "data1", "read"]
+      ...> p2_attr_values = ["alice", "data2", "read", "deny"]
+      ...> {:ok, p1} = m |> Model.create_policy({:p, p1_attr_values})
+      ...> {:ok, p2} = m |> Model.create_policy({:p, p2_attr_values})
+      ...> false = m |> Model.allow?([p2])
+      ...> true = m |> Model.allow?([p1])
+      ...> m |> Model.allow?([p1, p2])
+      true
   """
   def allow?(%__MODULE__{effect: pe}, matched_policies) do
     pe |> PolicyEffect.allow?(matched_policies)
