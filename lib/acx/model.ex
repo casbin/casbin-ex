@@ -178,17 +178,15 @@ defmodule Acx.Model do
   """
   @spec has_policy_key?(t(), atom()) :: boolean()
   def has_policy_key?(%__MODULE__{policies: definitions}, key) do
-    found =
-      definitions
-      |> Enum.find(fn %PolicyDefinition{key: k} -> k === key end)
+    definitions
+    |> Enum.find(fn %PolicyDefinition{key: k} -> k === key end)
+    |> case do
+         nil ->
+           false
 
-    case found do
-      nil ->
-        false
-
-      _ ->
-        true
-    end
+         _ ->
+           true
+       end
   end
 
   @doc """
