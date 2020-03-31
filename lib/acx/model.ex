@@ -145,6 +145,11 @@ defmodule Acx.Model do
         {:eq},
         {:and}
       ]
+
+      iex> cfile = "../../test/data/kv.conf" |> Path.expand(__DIR__)
+      ...> {:error, reason} = Model.init(cfile)
+      ...> reason
+      "missing `request_definition` section in the config file"
   """
   @spec init(String.t()) :: {:ok, t()} | {:error, String.t()}
   def init(cfile) when is_binary(cfile) do
