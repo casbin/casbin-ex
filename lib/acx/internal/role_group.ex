@@ -1,4 +1,4 @@
-defmodule Acx.Model.RoleGroup do
+defmodule Acx.Internal.RoleGroup do
   @moduledoc """
   This module defines a structure to manage the roles and their inheritances
   in the (H)RBAC model.
