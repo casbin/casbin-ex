@@ -3,17 +3,10 @@ Acx is a access control library that can do whatever shit [Casbin](https://casbi
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `acx` to your list of dependencies in `mix.exs`:
-
 ```elixir
 def deps do
   [
-    {:acx, "~> 0.1.0"}
+    {:acx, git: "https://github.com/ngoclinhng/acx.git"}
   ]
 end
 ```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/acx](https://hexdocs.pm/acx).
