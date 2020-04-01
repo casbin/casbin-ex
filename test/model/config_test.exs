@@ -58,33 +58,5 @@ defmodule Acx.Model.ConfigTest do
       assert effects == [e: "some(where(p.eft==allow))"]
       assert matchers == [m: "g(r.sub,p.sub)&&r.obj==p.obj&&r.act==p.act"]
     end
-
-    test "returns correct number of sections for RBAC with resource roles" do
-      assert %Config{sections: sections} =
-        "../data/rbac_with_resource_roles.conf"
-        |> Path.expand(__DIR__)
-        |> Config.new
-
-      assert [
-        request_definition: requests,
-        policy_definition: policies,
-        role_definition: roles,
-        policy_effect: effects,
-        matchers: matchers
-      ] = sections
-
-
-      assert requests == [r: "sub,obj,act"]
-      assert policies == [p: "sub,obj,act"]
-      assert roles == [
-        g: "_,_",
-        g2: "_,_"
-      ]
-      assert effects == [e: "some(where(p.eft==allow))"]
-      assert matchers == [
-        m: "g(r.sub,p.sub)&&g2(r.obj,p.obj)&&r.act==p.act"
-      ]
-    end
-
   end
 end

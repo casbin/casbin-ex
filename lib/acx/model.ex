@@ -3,70 +3,7 @@ defmodule Acx.Model do
   This module defines the structure to represent a PERM (Policy, Effect,
   Request, Matchers) meta model. See [1] for more information.
 
-  The `Model` struct is structured like so:
-
-  - A request definition (`request`) defines how incoming requests are
-  structured. An example would be `r = sub, obj, act`, this means the
-  system expect all requests to be a tuple of three items, in which,
-  first item associated with an attribute named `sub`, second `obj`, and
-  third `act`, respectively. An example of a valid rquest would be
-  `["bob", "alice_data", "read"]` (Can `bob` `read` `alice_data`?). When
-  this request is sent to the system it's interpreted as:
-  `r.sub = "bob"`, `r.obj = "alice_data"`, and `r.act = "read"`.
-
-  You can think of the relationship between a request definition and
-  requests is like that of class and instances in object oriented
-  programming. A request definition is like a `class`, and a request
-  is like an `instance` of that class.
-
-  - A list of policy definitions (`policies`). `Model` supports
-  multiple policy definitions, each with its own key and a set of
-  attributes. A policy definition defines how authorization rules
-  are structured.The relationship between a policy definition and
-  policies is like that of request definition and request, except,
-  each policy rule must have a key associated with it so as to identify
-  from which definition does the policy derive.
-  (A request doesn't need a key since there is only one request
-  definition in a given model).
-
-  All policy rules have in common the `eft` attribute and it can take
-  only one of the two values `"allow"` or `"deny"`. So you don't have
-  to specify the `eft` attribute when defining a policy, and when
-  constructing a policy rule if `eft` is absent, it is defaulted to
-  `"allow"` (allowed rule).
-
-  An example of a policy definition would be `p = sub, obj, act`, this
-  means all policy rules derived from this definition would have a key
-  name `p` and a set of four attributes `sub, obj, act, eft`. Examples
-  of valid rules derived from this definition would be:
-  `p, alice, data1, read` (`eft` is implicitly `"allow"`) or
-  `p, alice, data1, read, deny` (`eft` is explicitly `"deny"`)
-
-  - `matcher`: a boolean expression used to determine how requests and
-  policies are matched. Given the request definition `r = sub, obj, act`
-  and policy definition `p = sub, obj, act`, the simplest example
-  of a matchers expression would be:
-  `m = r.sub == p.sub && r.obj == p.obj && r.act == p.act`.
-
-  When a new request is sent to our system, it is matched against
-  all the policy rules in the system using this matchers expression.
-  Then all the matched policy rules (those that make matchers
-  expression return `true`) get sent to the `effect` to make the
-  final decision.
-
-  - Policy effect `effect` defines whether the request should be approved
-  or denied if multiple policy rules match the request.
-
-  For now, only the following policy effect rules are valid:
-
-  1. `"some(where(p.eft==allow))"`: if there's any matched policy rule of
-  type `allow`, the final effect is `allow`. Which means if there's no
-  match or all matches are of type `deny`, the final effect is `deny`.
-
-  2. `"!some(where(p.eft==deny))"`: if there's no matched policy rules of
-  type `deny`, the final effect is `allow`.
-
-  - A list of role definitions (`role_mappers`). (TODO)
+  TODO
 
   [1] - https://vicarie.in/posts/generalized-authz.html
   """
@@ -314,6 +251,24 @@ defmodule Acx.Model do
          _ ->
            true
        end
+  end
+
+  @doc """
+  Returns `true` if the given model has a role mapping of the given name.
+
+  Returns `false`, otherwise.
+
+  ## Examples
+
+      iex> cfile = "../../test/data/rbac.conf" |> Path.expand(__DIR__)
+      ...> {:ok, m} = Model.init(cfile)
+      ...> false = m |> Model.has_role_mapping?(:g2)
+      ...> m |> Model.has_role_mapping?(:g)
+      true
+  """
+  @spec has_role_mapping?(t(), atom()) :: boolean()
+  def has_role_mapping?(%__MODULE__{role_mappings: mappings}, name) do
+    name in mappings
   end
 
   @doc """

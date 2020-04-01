@@ -1,2 +1,10 @@
-p, alice, data1, read
-p, bob, data2, write
+p, alice, blog_post, create
+p, alice, blog_post, delete
+p, alice, blog_post, modify
+p, alice, blog_post, read
+
+p, bob, blog_post, read
+
+p, peter, blog_post, create
+p, peter, blog_post, modify
+p, peter, blog_post, read
