@@ -116,8 +116,54 @@ defmodule Acx.Enforcer do
   in which `pkey` is the key of the policy rule, this key must match the
   policy definition in the enforcer. `attr1`, `attr2`, ... are the
   value of attributes specified in the policy definition.
+
+  ## Examples
+
+      iex> cfile = "../../test/data/rbac.conf" |> Path.expand(__DIR__)
+      ...> pfile = "../../test/data/acl.csv" |> Path.expand(__DIR__)
+      ...> {:ok, e} = Enforcer.init(cfile)
+      ...> e = e |> Enforcer.load_policies!(pfile)
+      ...> %Enforcer{policies: policies} = e
+      ...> policies
+      [
+      %Acx.Model.Policy{
+        attrs: [sub: "peter", obj: "blog_post", act: "read", eft: "allow"],
+        key: :p
+      },
+      %Acx.Model.Policy{
+        attrs: [sub: "peter", obj: "blog_post", act: "modify", eft: "allow"],
+        key: :p
+      },
+      %Acx.Model.Policy{
+        attrs: [sub: "peter", obj: "blog_post", act: "create", eft: "allow"],
+        key: :p
+      },
+      %Acx.Model.Policy{
+        attrs: [sub: "bob", obj: "blog_post", act: "read", eft: "allow"],
+        key: :p
+      },
+      %Acx.Model.Policy{
+        attrs: [sub: "alice", obj: "blog_post", act: "read", eft: "allow"],
+        key: :p
+      },
+      %Acx.Model.Policy{
+        attrs: [sub: "alice", obj: "blog_post", act: "modify", eft: "allow"],
+        key: :p
+      },
+      %Acx.Model.Policy{
+        attrs: [sub: "alice", obj: "blog_post", act: "delete", eft: "allow"],
+        key: :p
+      },
+      %Acx.Model.Policy{
+        attrs: [sub: "alice", obj: "blog_post", act: "create", eft: "allow"],
+        key: :p
+      }
+      ]
+
   """
-  def load_policies!(%__MODULE__{model: m} = enforcer, pfile) do
+  @spec load_policies!(t(), String.t()) :: t()
+  def load_policies!(%__MODULE__{model: m} = enforcer, pfile)
+  when is_binary(pfile) do
     pfile
     |> File.read!
     |> String.split("\n", trim: true)
