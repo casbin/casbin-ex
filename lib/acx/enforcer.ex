@@ -56,7 +56,8 @@ defmodule Acx.Enforcer do
   @doc """
   Returns `true` if `request` is allowed, otherwise `false`.
   """
-  def allow?(%__MODULE__{model: model} = e, request) do
+  @spec allow?(t(), [String.t()]) :: boolean()
+  def allow?(%__MODULE__{model: model} = e, request) when is_list(request) do
     matched_policies = list_matched_policies(e, request)
     Model.allow?(model, matched_policies)
   end
