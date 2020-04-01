@@ -1,6 +1,5 @@
 # Acx
-
-**TODO: Add description**
+Acx is a access control library that can do whatever shit [Casbin](https://casbin.org/) can and much more...
 
 ## Installation
 
@@ -18,4 +17,3 @@ end
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/acx](https://hexdocs.pm/acx).
-
