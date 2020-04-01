@@ -299,7 +299,15 @@ defmodule Acx.Enforcer do
   @doc """
   Returns `true` if the given string `str` matches the pattern
   string `^pattern$`.
+
+  Returns `false` otherwise.
+
+  ## Examples
+
+      iex> Enforcer.regex_match?("/alice_data/foo", "/alice_data/.*")
+      true
   """
+  @spec regex_match?(String.t(), String.t()) :: boolean()
   def regex_match?(str, pattern) do
     case Regex.compile("^#{pattern}$") do
       {:error, _} ->
