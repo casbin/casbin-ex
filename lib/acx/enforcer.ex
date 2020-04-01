@@ -187,6 +187,28 @@ defmodule Acx.Enforcer do
   By passing in an empty map or an empty list to the second argument
   of the function `list_policies/2`, you'll effectively get all policy
   rules in the enforcer (without filtered).
+
+  ## Examples
+
+      iex> cfile = "../../test/data/rbac.conf" |> Path.expand(__DIR__)
+      ...> pfile = "../../test/data/acl.csv" |> Path.expand(__DIR__)
+      ...> {:ok, e} = Enforcer.init(cfile)
+      ...> e = e |> Enforcer.load_policies!(pfile)
+      ...> e |> Enforcer.list_policies(%{sub: "peter"})
+      [
+      %Acx.Model.Policy{
+        attrs: [sub: "peter", obj: "blog_post", act: "read", eft: "allow"],
+        key: :p
+      },
+      %Acx.Model.Policy{
+        attrs: [sub: "peter", obj: "blog_post", act: "modify", eft: "allow"],
+        key: :p
+      },
+      %Acx.Model.Policy{
+        attrs: [sub: "peter", obj: "blog_post", act: "create", eft: "allow"],
+        key: :p
+      }
+      ]
   """
   @spec list_policies(t(), map() | keyword()) :: [Model.Policy.t()]
   def list_policies(
