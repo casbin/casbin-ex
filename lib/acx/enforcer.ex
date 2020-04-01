@@ -321,6 +321,18 @@ defmodule Acx.Enforcer do
 
   @doc """
   Loads mapping policies from a csv file and adds them to the enforcer.
+
+  A valid mapping policies file must be a `*.csv` file and each line of
+  that file should have the following format:
+
+    `mapping_name, role1, role2`
+
+  where `mapping_name` is one of the names given in the config file under
+  the role definition section.
+
+  Note that you don't have to have a separate mapping policies file, instead
+  you could just put all of your mapping policies inside your policy rules
+  file.
   """
   def load_mapping_policies!(%__MODULE__{model: m} = enforcer, fname)
   when is_binary(fname) do
