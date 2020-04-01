@@ -228,6 +228,7 @@ defmodule Acx.Enforcer do
   Returns a list of policy rules in the given enforcer that match the
   given `request`.
   """
+  @spec list_matched_policies(t(), [String.t()]) :: [Model.Policy.t()]
   def list_matched_policies(
     %__MODULE__{model: model, policies: policies, env: env},
     request
