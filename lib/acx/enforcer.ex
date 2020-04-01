@@ -188,6 +188,7 @@ defmodule Acx.Enforcer do
   of the function `list_policies/2`, you'll effectively get all policy
   rules in the enforcer (without filtered).
   """
+  @spec list_policies(t(), map() | keyword()) :: [Model.Policy.t()]
   def list_policies(
     %__MODULE__{policies: policies},
     criteria
