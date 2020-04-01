@@ -232,7 +232,7 @@ defmodule Acx.Enforcer do
   def list_matched_policies(
     %__MODULE__{model: model, policies: policies, env: env},
     request
-  ) do
+  ) when is_list(request) do
     case Model.create_request(model, request) do
       {:error, _reason} ->
         []
