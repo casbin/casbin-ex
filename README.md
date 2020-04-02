@@ -25,7 +25,7 @@ access control feature to it to control who can do what with the resource `blog_
 Based on this requirements, our first step is to choose an appropriate access control model. Let's say we choose to go with the ACL model. Similar to Casbin, in Acx, an access control model is abstracted into a config file based on the **[PERM Meta-Model](https://vicarie.in/posts/generalized-authz.html)**. The content of the config file for our system would look like so:
 
 ```ini
-# blog.conf
+# blog_ac_model.conf
 
 # We want each request to be a tuple of three items, in which first item
 # associated with the attribute named `sub`, second `obj` and third `act`.
@@ -59,7 +59,7 @@ m = r.sub == p.sub && r.obj == p.obj && r.act == p.act
 
 Done with the model. Our next step is to define policy rules based on the
 system requirements and the policy definition. We can choose to put these
-rules in a database or in our case a `*.csv` file:
+rules in a database or in our case a `*.csv` file named `blog_ac_rules.csv`:
 
 ```
 p, alice, blog_post, create
@@ -79,3 +79,25 @@ Note that, first of all , since we don't specify the value for the `eft`
 attribute for any of the above rules, all of our rules are of type `allow`
 (a.k.a `yes`) by default. Second, we don't have to define any `deny`
 (a.k.a `no`) rules for our system.
+
+The final step is to combine the model and policy rules and Acx to
+construct our access control system.
+
+```elixir
+alias Acx.{EnforcerSupervisor, EnforcerServer}
+
+# Starts a new enforcer process and supervises it.
+EnforcerSupervisor.start_enforcer("blog_ac", blog_ac_model.conf)
+
+# Load policy rules.
+EnforcerServer.load_policies("blog_ac", blog_ac_rules.csv)
+
+new_req = ["alice", "blog_post", "read"]
+case EnforcerServer.allow?("blog_ac", new_req) do
+  true ->
+    # Yes, `alice` is allowed to `read` `blog_post`.
+
+  false ->
+    # No, `alice` is not allowed to `read` `blog_post`.
+end
+```
