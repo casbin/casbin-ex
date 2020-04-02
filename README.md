@@ -33,18 +33,16 @@ Based on this requirements, your first step is to choose an appropriate access c
 [request_definition]
 r = sub, obj, act
 
-# Each request definition should have a key and a list of attributes separated by an equal `=` sign.
-# In Acx all policy rule have in common the `eft` attribute and it can only take value of either
-# `"allow"` or `"deny"`, so you can ommit it in your policy definition. If you're familiar with
-# object-oriented-programming, you could think of policy definition as a class and each policy rule
-# is an instance of such class.
+# Each policy definition should have a key and a list of attributes separated by an equal `=` sign.
+# In Acx all policy rules have in common the `eft` attribute and it can only take value of either
+# `"allow"` or `"deny"`, so you can ommit it in your policy definition.
 #
-# Examples of valid policy rules (along with and how Acx interprets them) based on this definition
-# and our system requirements above are:
+# Examples of valid policy rules (along with their meanings) based on this definition and our system
+# requirements above are:
 #
-#   p, alice, blog_post, read  -> [sub: "alice", obj: "blog_post", act: "read", eft: "allow"]
-#   p, alice, blog_post, create, allow -> [sub: "alice", obj: "blog_post", act: "create", eft: "allow"]
-#   p, bob, blog_post, create, deny -> [sub: "bob", obj: "blog_post", act: "create", eft: "deny"]
+#   `p, alice, blog_post, read`: allow `alice` to `read` `blog_post`
+#   `p, alice, blog_post, create, allow`: allow `alice` to `create` `blog_post`
+#   `p, bob, blog_post, create, deny`: deny `bob` to `create` `blog_post`
 [policy_definition]
 p = sub, obj, act
 
