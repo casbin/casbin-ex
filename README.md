@@ -16,7 +16,7 @@ end
 Let's say you have just built a blogging system, and now you want to add the
 access control feature to it to control who can do what with the resource `blog_post`. Our system requirements would look something like this:
 
-|       | blog_post.create | blog_post.read | blog_post.update | blog_post.delete |
+|       | blog_post.create | blog_post.read | blog_post.modify | blog_post.delete |
 | ----- |:----------------:|:--------------:|:----------------:|:----------------:|
 | alice |     yes          |       yes      |        yes       |          yes     |
 | bob   |     no           |       yes      |        no        |          yes     |
@@ -64,14 +64,14 @@ rules in a database or in our case a `*.csv` file named `blog_ac_rules.csv`:
 ```
 p, alice, blog_post, create
 p, alice, blog_post, read
-p, alice, blog_post, update
+p, alice, blog_post, modify
 p, alice, blog_post, delete
 
 p, bob, blog_post, read
 
 p, peter, blog_post, create
 p, peter, blog_post, read
-p, peter, blog_post, update
+p, peter, blog_post, modify
 
 ```
 
@@ -118,3 +118,11 @@ control model to meet new bussiness requirements. We went back to the
 drawing-board and came up with this design for our new system:
 
 ![rbac diagram](rbac.png)
+
+We assign different roles to different users, `bob` has the role `reader`,
+`peter` has the role `author` and `alice` has the role `admin`, and so on...
+We then define mappings from `role` to `permission` (instead of asking
+who can do what like in the ACL model, now it's time to ask: which role can
+do what?). We also define mappings between two different roles to represent
+inheritance. In the above diagram, we have `admin` inherits from `author`,
+which in turn inherits from 'reader'.
