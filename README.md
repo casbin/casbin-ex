@@ -140,8 +140,8 @@ r = sub, obj, act
 p = sub, obj, act
 
 # This is the name of the mapping we mentioned above, I call it `g`
-# to make it compatible with Casbin (which only allows name like
-# `g, g2, ...`) but you can name it whatever shit you like so long as
+# to make it compatible with Casbin (which for some reason only allows name
+like `g, g2, ...`) but you can name it whatever shit you like so long as
 # you're consistent.
 [role_definition]
 g = _, _
@@ -182,7 +182,7 @@ ename = "blog_ac"
 EnforcerSupervisor.start_enforcer(ename, blog_ac_model.conf)
 EnforcerServer.load_policies(ename, blog_ac_rules.csv)
 
-# You only have to add this line to load mapping rules. Unlike casbin
+# You only have to add this new line to load mapping rules. Unlike Casbin
 # Acx distinguishes from `normal` polic rules and `mapping` rules.
 # We've just happended to put the two types of rules in the same `*.csv` file.
 EnforcerServer.load_mapping_policies(ename, blog_ac_rules.csv)
@@ -197,3 +197,6 @@ case EnforcerServer.allow?(ename, new_req) do
     # Nope, `new_req` is denied (not allowed)
 end
 ```
+
+As you can see, the cost of swithching or upgrading to another access control
+mechanism is just as simple as modifying the configuration.
