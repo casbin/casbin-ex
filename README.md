@@ -1,5 +1,6 @@
 # Acx
-Acx is a access control library that can do whatever shit [Casbin](https://casbin.org/) can and much more...
+Acx is an access control library that can do whatever shit
+[Casbin](https://casbin.org/) can and much more...
 
 ## Installation
 
@@ -13,8 +14,10 @@ end
 
 ## [Access Control List (ACL)](https://en.wikipedia.org/wiki/Access-control_list)
 
-Let's say you have just built a blogging system, and now you want to add the
-access control feature to it to control who can do what with the resource `blog_post`. Our system requirements would look something like this:
+Let's say we have just built a wonderful blogging system, and now we want
+to add the access control feature to it to control **who can do what** with
+the resource named `blog_post`. Our system requirements would look something
+like this:
 
 |       | blog_post.create | blog_post.read | blog_post.modify | blog_post.delete |
 | ----- |:----------------:|:--------------:|:----------------:|:----------------:|
@@ -22,7 +25,11 @@ access control feature to it to control who can do what with the resource `blog_
 | bob   |     no           |       yes      |        no        |          yes     |
 | peter |     yes          |       yes      |        yes       |          no      |
 
-Based on this requirements, our first step is to choose an appropriate access control model. Let's say we choose to go with the ACL model. Similar to Casbin, in Acx, an access control model is abstracted into a config file based on the **[PERM Meta-Model](https://vicarie.in/posts/generalized-authz.html)**. The content of the config file for our system would look like so:
+Based on this requirements, our first step is to choose an appropriate
+access control model. Let's say we choose to go with the ACL model.
+Similar to Casbin, in Acx, an access control model is abstracted into a
+config file based on the **[PERM Meta-Model](https://vicarie.in/posts/generalized-authz.html)**. The content of the config file for our system would look
+like so:
 
 ```ini
 # blog_ac.conf
@@ -204,6 +211,7 @@ As you can see, the cost of swithching or upgrading to another access control
 mechanism is just as cheap as modifying the configuration.
 
 ## RESTful example
+TODO
 
 The config file:
 
@@ -274,3 +282,5 @@ case EnforcerServer.allow?(ename, new_req) do
     # Nope, `new_req` is denied (not allowed)
 end
 ```
+
+## TODO
