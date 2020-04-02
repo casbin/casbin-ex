@@ -139,7 +139,7 @@ r = sub, obj, act
 [policy_definition]
 p = sub, obj, act
 
-# This is the name of the mapping we mentioned before, I call it `g`
+# This is the name of the mapping we mentioned above, I call it `g`
 # to make it compatible with Casbin (which only allows name like
 # `g, g2, ...`) but you can name it whatever shit you like so long as
 # you're consistent.
@@ -155,4 +155,45 @@ e = some(where (p.eft == allow))
 [matchers]
 m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
 
+```
+
+And the content of the file `blog_ac_rules.csv` now become:
+
+```
+p, reader, blog_post, read
+p, author, blog_post, modify
+p, author, blog_post, create
+p, admin, blog_post, delete
+
+g, bob, reader
+g, peter, author
+g, alice, admin
+
+g, author, reader
+g, admin, author
+```
+
+Finally:
+
+```elixir
+alias Acx.{EnforcerSupervisor, EnforcerServer}
+
+ename = "blog_ac"
+EnforcerSupervisor.start_enforcer(ename, blog_ac_model.conf)
+EnforcerServer.load_policies(ename, blog_ac_rules.csv)
+
+# You only have to add this line to load mapping rules. Unlike casbin
+# Acx distinguishes from `normal` polic rules and `mapping` rules.
+# We've just happended to put the two types of rules in the same `*.csv` file.
+EnforcerServer.load_mapping_policies(ename, blog_ac_rules.csv)
+
+new_req = ["alice", "blog_post", "read"]
+
+case EnforcerServer.allow?(ename, new_req) do
+  true ->
+    # Yes, this `new_req` is allowed
+
+  false ->
+    # Nope, `new_req` is denied (not allowed)
+end
 ```
