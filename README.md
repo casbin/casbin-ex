@@ -80,7 +80,7 @@ attribute for any of the above rules, all of our rules are of type `allow`
 (a.k.a `yes`) by default. Second, we don't have to define any `deny`
 (a.k.a `no`) rules for our system.
 
-The final step is to combine the model and policy rules and Acx to
+The final step is to combine the model, the policy rules and Acx to
 construct our access control system.
 
 ```elixir
