@@ -86,18 +86,22 @@ construct our access control system.
 ```elixir
 alias Acx.{EnforcerSupervisor, EnforcerServer}
 
+# Specify the name for our system.
+ename = "blog_ac"
+
 # Starts a new enforcer process and supervises it.
-EnforcerSupervisor.start_enforcer("blog_ac", blog_ac_model.conf)
+EnforcerSupervisor.start_enforcer(ename, blog_ac_model.conf)
 
 # Load policy rules.
-EnforcerServer.load_policies("blog_ac", blog_ac_rules.csv)
+EnforcerServer.load_policies(ename, blog_ac_rules.csv)
 
 new_req = ["alice", "blog_post", "read"]
-case EnforcerServer.allow?("blog_ac", new_req) do
+
+case EnforcerServer.allow?(ename, new_req) do
   true ->
-    # Yes, `alice` is allowed to `read` `blog_post`.
+    # Yes, this `new_req` is allowed
 
   false ->
-    # No, `alice` is not allowed to `read` `blog_post`.
+    # Nope, `new_req` is denied (not allowed)
 end
 ```
