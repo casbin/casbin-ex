@@ -27,18 +27,20 @@ Based on this requirements, your first step is to choose an appropriate access c
 ```ini
 # blog.conf
 
-# We want each request to be a tuple of three items, in which first item associated with the
-# attribute named `sub`, second `obj` and third `act`. An example of a valid request is
+# We want each request to be a tuple of three items, in which first item
+# associated with the attribute named `sub`, second `obj` and third `act`.
+# An example of a valid request based on this definition is
 # `["alice, "blog_post", "read"]` (can `alice` `read` `blog_post`?).
 [request_definition]
 r = sub, obj, act
 
-# Each policy definition should have a key and a list of attributes separated by an equal `=` sign.
-# In Acx all policy rules have in common the `eft` attribute and it can only take value of either
-# `"allow"` or `"deny"`, so you can ommit it in your policy definition.
+# Each policy definition should have a key and a list of attributes
+# separated by an equal `=` sign. In Acx all policy rules have in common
+# the `eft` attribute and it can only take value of either `"allow"` or `"deny"`,
+# so you can ommit it in your policy definition.
 #
-# Examples of valid policy rules (along with their meanings) based on this definition and our system
-# requirements above are:
+# Examples of valid policy rules (along with their meanings) based on
+# this definition and our system requirements above are:
 #
 #           policy rule               |                  meaning
 #                                     |
