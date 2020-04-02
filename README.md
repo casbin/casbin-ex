@@ -106,3 +106,8 @@ case EnforcerServer.allow?(ename, new_req) do
     # Nope, `new_req` is denied (not allowed)
 end
 ```
+
+If you are not a fan of supervision tree or stateful server, read on to
+figure our how to use Acx without any of those.
+
+## [Role Base Access Control (RBAC)](https://en.wikipedia.org/wiki/Role-based_access_control)
