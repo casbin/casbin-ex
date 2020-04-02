@@ -126,3 +126,33 @@ We then define mappings from `role` to `permission` (instead of asking
 do what?**). We also define mappings from role to role  to represent
 inheritance. In the above diagram, we have `admin` inherits from `author`,
 which in turn inherits from `reader`.
+
+Based on this new design, the config file for our new model would look like
+so:
+
+```ini
+# blog_ac_model.conf
+
+[request_definition]
+r = sub, obj, act
+
+[policy_definition]
+p = sub, obj, act
+
+# This is the name of the mapping we mentioned before, I call it `g`
+# to make it compatible with Casbin (which only allows name like
+# `g, g2, ...`) but you can name it whatever shit you like so long as
+# you're consistent.
+[role_definition]
+g = _, _
+
+[policy_effect]
+e = some(where (p.eft == allow))
+
+# We change this part `r.sub == p.sub` of our initial matcher expression to
+# `g(r.sub, p.sub)` to mean that: if `r.sub` has role (or inherits from)
+# `p.sub` and ... and ...
+[matchers]
+m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
+
+```
