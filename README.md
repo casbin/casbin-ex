@@ -48,7 +48,17 @@ r = sub, obj, act
 [policy_definition]
 p = sub, obj, act
 
-# Policy effect
+# Policy effect defines whether the access should be approved or denied
+# if multiple policy rules match the request.
+#
+# For now, only the following policy effect rules are valid:
+#
+#  1. `"some(where(p.eft==allow))"`: if there's any matched policy rule of
+#    type `allow`, the final effect is `allow`. Which means if there's no
+#    match or all matches are of type `deny`, the final effect is `deny`.
+#
+#  2. `"!some(where(p.eft==deny))"`: if there's no matched policy rules of
+#    type `deny`, the final effect is `allow`.
 [policy_effect]
 e = some(where (p.eft == allow))
 
