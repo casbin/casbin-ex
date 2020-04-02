@@ -25,7 +25,7 @@ access control feature to it to control who can do what with the resource `blog_
 Based on this requirements, our first step is to choose an appropriate access control model. Let's say we choose to go with the ACL model. Similar to Casbin, in Acx, an access control model is abstracted into a config file based on the **[PERM Meta-Model](https://vicarie.in/posts/generalized-authz.html)**. The content of the config file for our system would look like so:
 
 ```ini
-# blog_ac_model.conf
+# blog_ac.conf
 
 # We want each request to be a tuple of three items, in which first item
 # associated with the attribute named `sub`, second `obj` and third `act`.
@@ -59,7 +59,7 @@ m = r.sub == p.sub && r.obj == p.obj && r.act == p.act
 
 Done with the model. Our next step is to define policy rules based on the
 system requirements and the policy definition. We can choose to put these
-rules in a database or in our case a `*.csv` file named `blog_ac_rules.csv`:
+rules in a database or in our case a `*.csv` file named `blog_ac.csv`:
 
 ```
 p, alice, blog_post, create
@@ -91,10 +91,10 @@ alias Acx.{EnforcerSupervisor, EnforcerServer}
 ename = "blog_ac"
 
 # Starts a new enforcer process and supervises it.
-EnforcerSupervisor.start_enforcer(ename, blog_ac_model.conf)
+EnforcerSupervisor.start_enforcer(ename, blog_ac.conf)
 
 # Load policy rules.
-EnforcerServer.load_policies(ename, blog_ac_rules.csv)
+EnforcerServer.load_policies(ename, blog_ac.csv)
 
 new_req = ["alice", "blog_post", "read"]
 
@@ -133,7 +133,7 @@ Based on this design, the config file for our new model would look like
 so:
 
 ```ini
-# blog_ac_model.conf
+# blog_ac.conf
 
 [request_definition]
 r = sub, obj, act
@@ -159,7 +159,7 @@ m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
 
 ```
 
-And the content of the file `blog_ac_rules.csv` now become:
+And the content of the file `blog_ac.csv` now become:
 
 ```
 p, reader, blog_post, read
@@ -181,13 +181,13 @@ Finally:
 alias Acx.{EnforcerSupervisor, EnforcerServer}
 
 ename = "blog_ac"
-EnforcerSupervisor.start_enforcer(ename, blog_ac_model.conf)
-EnforcerServer.load_policies(ename, blog_ac_rules.csv)
+EnforcerSupervisor.start_enforcer(ename, blog_ac.conf)
+EnforcerServer.load_policies(ename, blog_ac.csv)
 
 # You only have to add this new line to load mapping rules. Unlike Casbin
 # Acx distinguishes from `normal` policy rules and `mapping` rules.
 # We've just happended to put the two types of rules in the same `*.csv` file.
-EnforcerServer.load_mapping_policies(ename, blog_ac_rules.csv)
+EnforcerServer.load_mapping_policies(ename, blog_ac.csv)
 
 new_req = ["alice", "blog_post", "read"]
 
@@ -201,4 +201,76 @@ end
 ```
 
 As you can see, the cost of swithching or upgrading to another access control
-mechanism is just as simple as modifying the configuration.
+mechanism is just as cheap as modifying the configuration.
+
+## RESTful example
+
+The config file:
+
+```ini
+# restful_ac.conf
+
+[request_definition]
+r = sub, obj, act
+
+[policy_definition]
+p = sub, obj, act
+
+[policy_effect]
+e = some(where (p.eft == allow))
+
+# The function named `match?` will be defined later in code.
+[matchers]
+m = r.sub == p.sub && match?(r.obj, p.obj) && match?(r.act, p.act)
+```
+
+Policy rules `restful_ac.csv`:
+
+```
+p, alice, /alice_data/.*, GET
+p, alice, /alice_data/resource1, POST
+
+p, bob, /alice_data/resource2, GET
+p, bob, /bob_data/.*, POST
+
+p, peter, /peter_data, (GET)|(POST)
+```
+
+Code:
+
+```elixir
+alias Acx.{EnforcerSupervisor, EnforcerServer}
+
+ename = "blog_ac"
+EnforcerSupervisor.start_enforcer(ename, restful_ac.conf)
+EnforcerServer.load_policies(ename, restful_ac.csv)
+
+# We have to define the `match?/2` and add it to our enforcer system.
+
+# This anonymous function is idential to the built-in function
+# `regex_match?/2`, but I redifine it here to illustrate the idea of
+# how to can customize the system to meet your need.
+fun = fn str, pattern ->
+  case Regex.compile("^#{pattern}$") do
+    {:error, _} ->
+      false
+
+    {:ok, r} ->
+      Regex.match?(r, str)
+  end
+end
+
+# add `fun` to our system. Note that the name `:match?` is an atom not
+# a string.
+EnforcerServer.add_fun(ename, {:match?, fun})
+
+new_req = ["alice", "/alice_data/foo", "GET"]
+
+case EnforcerServer.allow?(ename, new_req) do
+  true ->
+    # Yes, this `new_req` is allowed
+
+  false ->
+    # Nope, `new_req` is denied (not allowed)
+end
+```
