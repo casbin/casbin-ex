@@ -127,6 +127,8 @@ do what?**). We also define mappings from role to role  to represent
 inheritance. In the above diagram, we have `admin` inherits from `author`,
 which in turn inherits from `reader`.
 
+Note that *has role* or *inherits from* relation is [transitive](https://en.wikipedia.org/wiki/Transitive_relation).
+
 Based on this new design, the config file for our new model would look like
 so:
 
@@ -141,7 +143,7 @@ p = sub, obj, act
 
 # This is the name of the mapping we mentioned above, I call it `g`
 # to make it compatible with Casbin (which for some reason only allows name
-like `g, g2, ...`) but you can name it whatever shit you like so long as
+# like `g, g2, ...`) but you can name it whatever shit you like so long as
 # you're consistent.
 [role_definition]
 g = _, _
