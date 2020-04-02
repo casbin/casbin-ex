@@ -129,7 +129,7 @@ which in turn inherits from `reader`.
 
 Note that *has role* or *inherits from* relation is [transitive](https://en.wikipedia.org/wiki/Transitive_relation).
 
-Based on this new design, the config file for our new model would look like
+Based on this design, the config file for our new model would look like
 so:
 
 ```ini
@@ -185,7 +185,7 @@ EnforcerSupervisor.start_enforcer(ename, blog_ac_model.conf)
 EnforcerServer.load_policies(ename, blog_ac_rules.csv)
 
 # You only have to add this new line to load mapping rules. Unlike Casbin
-# Acx distinguishes from `normal` polic rules and `mapping` rules.
+# Acx distinguishes from `normal` policy rules and `mapping` rules.
 # We've just happended to put the two types of rules in the same `*.csv` file.
 EnforcerServer.load_mapping_policies(ename, blog_ac_rules.csv)
 
