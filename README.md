@@ -249,7 +249,7 @@ Code:
 ```elixir
 alias Acx.{EnforcerSupervisor, EnforcerServer}
 
-ename = "blog_ac"
+ename = "restful_ac"
 EnforcerSupervisor.start_enforcer(ename, restful_ac.conf)
 EnforcerServer.load_policies(ename, restful_ac.csv)
 
