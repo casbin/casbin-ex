@@ -18,6 +18,6 @@ access control feature to it to control who can do what with the resource `blog_
 
 |       | blog_post.create | blog_post.read | blog_post.update | blog_post.delete |
 | ----- |:----------------:|:--------------:|:----------------:|:----------------:|
-| alice |     yes                 yes              yes                 yes
-| bob   |     no                  yes              no                  yes
-| peter |     yes                 yes              yes                 no
+| alice |     yes          |       yes      |        yes       |          yes     |
+| bob   |     no           |       yes      |        no        |          yes     |
+| peter |     yes          |       yes      |        yes       |          no      |
