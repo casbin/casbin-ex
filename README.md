@@ -21,3 +21,28 @@ access control feature to it to control who can do what with the resource `blog_
 | alice |     yes          |       yes      |        yes       |          yes     |
 | bob   |     no           |       yes      |        no        |          yes     |
 | peter |     yes          |       yes      |        yes       |          no      |
+
+Based on this requirements, your first step is to choose an appropriate access control model. Let's say we choose to go with the ACL model. Similar to Casbin, in Acx, an access control model is abstracted into a config file based on the **[PERM Meta-Model](https://vicarie.in/posts/generalized-authz.html)**. The content of the config file for our system would look like so:
+
+```ini
+# blog.conf
+
+# We want each request to be a tuple of three items, in which first item associated with the
+# attribute named `sub`, second `obj` and third `act`. An example of a valid request is
+# `["alice, "blog_post", "read"]` (can `alice` `read` `blog_post`?).
+[request_definition]
+r = sub, obj, act
+
+# 
+[policy_definition]
+p = sub, obj, act
+
+# Policy effect
+[policy_effect]
+e = some(where (p.eft == allow))
+
+# Matchers
+[matchers]
+m = r.sub == p.sub && r.obj == p.obj && r.act == p.act
+
+```
