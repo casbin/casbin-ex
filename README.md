@@ -122,7 +122,7 @@ drawing-board and came up with this design for our new system:
 We assign different roles to different users, `bob` has the role `reader`,
 `peter` has the role `author` and `alice` has the role `admin`, and so on...
 We then define mappings from `role` to `permission` (instead of asking
-who can do what like in the ACL model, now it's time to ask: which role can
-do what?). We also define mappings between two different roles to represent
+*who can do what* like in the ACL model, now it's time to ask **which role can
+do what?**). We also define mappings from role to role  to represent
 inheritance. In the above diagram, we have `admin` inherits from `author`,
-which in turn inherits from 'reader'.
+which in turn inherits from `reader`.
