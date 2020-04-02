@@ -77,4 +77,5 @@ p, peter, blog_post, read
 
 Note that, first of all , since we don't specify the value for the `eft`
 attribute for any of the above rules, all of our rules are of type `allow`
-by default. Second, we don't have to define any `deny` rules for our system.
+(a.k.a `yes`) by default. Second, we don't have to define any `deny`
+(a.k.a `no`) rules for our system.
