@@ -63,15 +63,15 @@ rules in a database or in our case a `*.csv` file named `blog_ac_rules.csv`:
 
 ```
 p, alice, blog_post, create
-p, alice, blog_post, delete
-p, alice, blog_post, modify
 p, alice, blog_post, read
+p, alice, blog_post, update
+p, alice, blog_post, delete
 
 p, bob, blog_post, read
 
 p, peter, blog_post, create
-p, peter, blog_post, modify
 p, peter, blog_post, read
+p, peter, blog_post, update
 
 ```
 
@@ -86,7 +86,8 @@ construct our access control system.
 ```elixir
 alias Acx.{EnforcerSupervisor, EnforcerServer}
 
-# Specify the name for our system.
+# Give our system a name so that we can reference it by its name
+# rather than the process ID (a.k.a `pid`).
 ename = "blog_ac"
 
 # Starts a new enforcer process and supervises it.
