@@ -22,7 +22,7 @@ access control feature to it to control who can do what with the resource `blog_
 | bob   |     no           |       yes      |        no        |          yes     |
 | peter |     yes          |       yes      |        yes       |          no      |
 
-Based on this requirements, your first step is to choose an appropriate access control model. Let's say we choose to go with the ACL model. Similar to Casbin, in Acx, an access control model is abstracted into a config file based on the **[PERM Meta-Model](https://vicarie.in/posts/generalized-authz.html)**. The content of the config file for our system would look like so:
+Based on this requirements, our first step is to choose an appropriate access control model. Let's say we choose to go with the ACL model. Similar to Casbin, in Acx, an access control model is abstracted into a config file based on the **[PERM Meta-Model](https://vicarie.in/posts/generalized-authz.html)**. The content of the config file for our system would look like so:
 
 ```ini
 # blog.conf
@@ -45,7 +45,7 @@ p = sub, obj, act
 # if multiple policy rules match the request.
 # We use the following policy effect for our blog system to mean that:
 # if there's any matched policy rule of type `allow` (i.e `eft` == "allow"),
-# the final effect is `allow`. Which means if there's no match or all
+# the final effect is `allow`. Which also means if there's no match or all
 # matches are of type `deny`, the final effect is `deny`.
 [policy_effect]
 e = some(where (p.eft == allow))
@@ -56,3 +56,25 @@ e = some(where (p.eft == allow))
 m = r.sub == p.sub && r.obj == p.obj && r.act == p.act
 
 ```
+
+Done with the model. Our next step is to define policy rules based on the
+system requirements and the policy definition. We can choose to put these
+rules in a database or in our case a `*.csv` file:
+
+```
+p, alice, blog_post, create
+p, alice, blog_post, delete
+p, alice, blog_post, modify
+p, alice, blog_post, read
+
+p, bob, blog_post, read
+
+p, peter, blog_post, create
+p, peter, blog_post, modify
+p, peter, blog_post, read
+
+```
+
+Note that, first of all , since we don't specify the value for the `eft`
+attribute for any of the above rules, all of our rules are of type `allow`
+by default. Second, we don't have to define any `deny` rules for our system.
