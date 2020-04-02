@@ -40,9 +40,11 @@ r = sub, obj, act
 # Examples of valid policy rules (along with their meanings) based on this definition and our system
 # requirements above are:
 #
-#   `p, alice, blog_post, read`: allow `alice` to `read` `blog_post`
-#   `p, alice, blog_post, create, allow`: allow `alice` to `create` `blog_post`
-#   `p, bob, blog_post, create, deny`: deny `bob` to `create` `blog_post`
+#           policy rule                  |                  meaning
+#                                        |
+#   p, alice, blog_post, read            |    allow `alice` to `read` `blog_post` (`eft` == "allow")
+#   p, alice, blog_post, create, allow   |    allow `alice` to `create` `blog_post` (`eft` == "allow")
+#   p, bob, blog_post, create, deny      |    deny `bob` to `create` `blog_post` (`eft` == "deny")
 [policy_definition]
 p = sub, obj, act
 
