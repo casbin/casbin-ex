@@ -36,13 +36,17 @@ r = sub, obj, act
 
 # Each policy definition should have a key and a list of attributes separated by
 # an equal `=` sign. In Acx all policy rules have in common the `eft` attribute
-# and it can only take value of either `"allow"` or `"deny"`, so you can ommit it
-# in your policy definition.
+# and it can only take value of either `"allow"` or `"deny"`, so you can ommit
+# it in your policy definition.
 [policy_definition]
 p = sub, obj, act
 
 # Policy effect defines whether the access should be approved or denied
 # if multiple policy rules match the request.
+# We use the following policy effect for our blog system to mean that:
+# if there's any matched policy rule of type `allow` (i.e `eft` == "allow"),
+# the final effect is `allow`. Which means if there's no match or all
+# matches are of type `deny`, the final effect is `deny`.
 [policy_effect]
 e = some(where (p.eft == allow))
 
