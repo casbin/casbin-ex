@@ -34,33 +34,15 @@ Based on this requirements, your first step is to choose an appropriate access c
 [request_definition]
 r = sub, obj, act
 
-# Each policy definition should have a key and a list of attributes
-# separated by an equal `=` sign. In Acx all policy rules have in common
-# the `eft` attribute and it can only take value of either `"allow"` or `"deny"`,
-# so you can ommit it in your policy definition.
-#
-# Examples of valid policy rules (along with their meanings) based on
-# this definition and our system requirements above are:
-#
-#           policy rule               |                  meaning
-#                                     |
-#  p, alice, blog_post, read          | allow `alice` to `read` `blog_post` (`eft` implicitly "allow")
-#  p, alice, blog_post, create, allow | allow `alice` to `create` `blog_post` (`eft` explicitly "allow")
-#  p, bob, blog_post, create, deny    | deny `bob` to `create` `blog_post` (`eft` explicitly "deny")
+# Each policy definition should have a key and a list of attributes separated by
+# an equal `=` sign. In Acx all policy rules have in common the `eft` attribute
+# and it can only take value of either `"allow"` or `"deny"`, so you can ommit it
+# in your policy definition.
 [policy_definition]
 p = sub, obj, act
 
 # Policy effect defines whether the access should be approved or denied
 # if multiple policy rules match the request.
-#
-# For now, only the following policy effect rules are valid:
-#
-#  1. `"some(where(p.eft==allow))"`: if there's any matched policy rule of
-#    type `allow`, the final effect is `allow`. Which means if there's no
-#    match or all matches are of type `deny`, the final effect is `deny`.
-#
-#  2. `"!some(where(p.eft==deny))"`: if there's no matched policy rules of
-#    type `deny`, the final effect is `allow`.
 [policy_effect]
 e = some(where (p.eft == allow))
 
