@@ -257,7 +257,7 @@ EnforcerServer.load_policies(ename, restful_ac.csv)
 
 # This anonymous function is idential to the built-in function
 # `regex_match?/2`, but I redifine it here to illustrate the idea of
-# how to can customize the system to meet your need.
+# how you can customize the system to meet your need.
 fun = fn str, pattern ->
   case Regex.compile("^#{pattern}$") do
     {:error, _} ->
