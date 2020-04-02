@@ -40,11 +40,11 @@ r = sub, obj, act
 # Examples of valid policy rules (along with their meanings) based on this definition and our system
 # requirements above are:
 #
-#           policy rule                  |                  meaning
-#                                        |
-#   p, alice, blog_post, read            |    allow `alice` to `read` `blog_post` (`eft` == "allow")
-#   p, alice, blog_post, create, allow   |    allow `alice` to `create` `blog_post` (`eft` == "allow")
-#   p, bob, blog_post, create, deny      |    deny `bob` to `create` `blog_post` (`eft` == "deny")
+#           policy rule               |                  meaning
+#                                     |
+#  p, alice, blog_post, read          | allow `alice` to `read` `blog_post` (`eft` implicitly "allow")
+#  p, alice, blog_post, create, allow | allow `alice` to `create` `blog_post` (`eft` explicitly "allow")
+#  p, bob, blog_post, create, deny    | deny `bob` to `create` `blog_post` (`eft` explicitly "deny")
 [policy_definition]
 p = sub, obj, act
 
@@ -62,7 +62,8 @@ p = sub, obj, act
 [policy_effect]
 e = some(where (p.eft == allow))
 
-# Matchers
+# matchers is just a boolean expression used to determine whether a request
+# matches the given policy rule.
 [matchers]
 m = r.sub == p.sub && r.obj == p.obj && r.act == p.act
 
