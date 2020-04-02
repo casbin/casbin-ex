@@ -111,3 +111,10 @@ If you are not a fan of supervision tree or stateful server, read on to
 figure our how to use Acx without any of those.
 
 ## [Role Base Access Control (RBAC)](https://en.wikipedia.org/wiki/Role-based_access_control)
+
+Our ACL access control system is working just fine for initial purpose, but
+now our bussiness is expanding like nuts, so we need a more flexible access
+control model to meet new bussiness requirements. We went back to the
+drawing-board and came up with this design for our new system:
+
+![rbac diagram](rbac.png)
