@@ -88,6 +88,13 @@ defmodule Acx.EnforcerServer do
     )
   end
 
+  def add_mapping_policy(ename, {mapping_name, role1, role2, dom}) do
+    GenServer.call(
+      via_tuple(ename),
+      {:add_mapping_policy, {mapping_name, role1, role2 <> dom}}
+    )
+  end
+
   @doc """
   Loads mapping policies from a csv file and adds them to the enforcer.
 
@@ -183,7 +190,7 @@ defmodule Acx.EnforcerServer do
 
   # Returns the name of `self`.
   defp self_name() do
-    Registry.keys(Acx.EnforcerRegistry, self()) |> List.first
+    Registry.keys(Acx.EnforcerRegistry, self()) |> List.first()
   end
 
   # Creates a new enforcer or lookups existing one in the ets table.
@@ -203,5 +210,4 @@ defmodule Acx.EnforcerServer do
         {:ok, enforcer}
     end
   end
-
 end
