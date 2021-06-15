@@ -134,6 +134,9 @@ defmodule Acx.EnforcerServer do
       {:ok, new_enforcer} ->
         :ets.insert(:enforcers_table, {self_name(), new_enforcer})
         {:reply, :ok, new_enforcer}
+      new_enforcer ->
+        :ets.insert(:enforcers_table, {self_name(), new_enforcer})
+        {:reply, :ok, new_enforcer}
     end
   end
 
