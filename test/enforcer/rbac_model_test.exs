@@ -2,11 +2,12 @@ defmodule Acx.Enforcer.RbacModelTest do
   use ExUnit.Case, async: true
   alias Acx.Enforcer
 
-  @cfile  "../data/rbac.conf" |> Path.expand(__DIR__)
-  @pfile  "../data/rbac.csv" |> Path.expand(__DIR__)
+  @cfile "../data/rbac.conf" |> Path.expand(__DIR__)
+  @pfile "../data/rbac.csv" |> Path.expand(__DIR__)
 
   setup do
     {:ok, e} = Enforcer.init(@cfile)
+
     e =
       e
       |> Enforcer.load_policies!(@pfile)
@@ -21,12 +22,10 @@ defmodule Acx.Enforcer.RbacModelTest do
       {["bob", "blog_post", "create"], false},
       {["bob", "blog_post", "modify"], false},
       {["bob", "blog_post", "delete"], false},
-
       {["peter", "blog_post", "read"], true},
       {["peter", "blog_post", "create"], true},
       {["peter", "blog_post", "modify"], true},
       {["peter", "blog_post", "delete"], false},
-
       {["alice", "blog_post", "read"], true},
       {["alice", "blog_post", "create"], true},
       {["alice", "blog_post", "modify"], true},
@@ -34,10 +33,9 @@ defmodule Acx.Enforcer.RbacModelTest do
     ]
 
     Enum.each(@test_cases, fn {req, res} ->
-      test "response `#{res}` for request #{inspect req}", %{e: e} do
+      test "response `#{res}` for request #{inspect(req)}", %{e: e} do
         assert e |> Enforcer.allow?(unquote(req)) === unquote(res)
       end
     end)
   end
-
 end
