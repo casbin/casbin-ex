@@ -227,9 +227,9 @@ p = sub, obj, act
 [policy_effect]
 e = some(where (p.eft == allow))
 
-# The function named `regex_match?` will be defined later in code.
+# The function named `match?` will be defined later in code.
 [matchers]
-m = r.sub == p.sub && regex_match?(r.obj, p.obj) && regex_match?(r.act, p.act)
+m = r.sub == p.sub && match?(r.obj, p.obj) && match?(r.act, p.act)
 ```
 
 Policy rules `restful_ac.csv`:
