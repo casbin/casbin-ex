@@ -7,7 +7,7 @@ Acx is an access control library that can do whatever shit
 ```elixir
 def deps do
   [
-    {:acx, git: "https://github.com/ngoclinhng/acx.git"}
+    {:acx, git: "https://github.com/casbin/casbin-ex"}
   ]
 end
 ```
