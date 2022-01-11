@@ -13,9 +13,9 @@ defmodule Acx.Model.RequestDefinition do
   @type attr() :: atom()
   @type attr_value() :: String.t() | number()
   @type t() :: %__MODULE__{
-    key: key(),
-    attrs: [attr()]
-  }
+          key: key(),
+          attrs: [attr()]
+        }
 
   alias Acx.Model.Request
 
@@ -61,10 +61,11 @@ defmodule Acx.Model.RequestDefinition do
       ...> reason
       "invalid request"
   """
-  @spec create_request(t(), [attr_value()]) :: {:ok, Request.t()}
-  | {:error, String.t()}
+  @spec create_request(t(), [attr_value()]) ::
+          {:ok, Request.t()}
+          | {:error, String.t()}
   def create_request(%__MODULE__{} = rd, attr_values)
-  when is_list(attr_values)do
+      when is_list(attr_values) do
     case valid_request?(rd, attr_values) do
       false ->
         {:error, "invalid request"}
@@ -76,12 +77,11 @@ defmodule Acx.Model.RequestDefinition do
   end
 
   defp valid_request?(%__MODULE__{attrs: attrs}, attr_values) do
-    (length(attrs) === length(attr_values)) &&
+    length(attrs) === length(attr_values) &&
       Enum.all?(attr_values, &valid_attr_value_type?/1)
   end
 
   defp valid_attr_value_type?(value) do
-    is_binary(value) || is_number(value)
+    is_binary(value) || is_number(value) || is_map(value)
   end
-
 end
