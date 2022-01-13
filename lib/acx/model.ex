@@ -70,15 +70,15 @@ defmodule Acx.Model do
       ...> %Model{matcher: %Matcher{prog: prog}} = m
       ...> prog
       [
-        {:fetch_attr, %{attr: :sub, key: :r}},
-        {:fetch_attr, %{attr: :sub, key: :p}},
+        {:fetch_attr, %{attr: [:sub], key: :r}},
+        {:fetch_attr, %{attr: [:sub], key: :p}},
         {:eq},
-        {:fetch_attr, %{attr: :obj, key: :r}},
-        {:fetch_attr, %{attr: :obj, key: :p}},
+        {:fetch_attr, %{attr: [:obj], key: :r}},
+        {:fetch_attr, %{attr: [:obj], key: :p}},
         {:eq},
         {:and},
-        {:fetch_attr, %{attr: :act, key: :r}},
-        {:fetch_attr, %{attr: :act, key: :p}},
+        {:fetch_attr, %{attr: [:act], key: :r}},
+        {:fetch_attr, %{attr: [:act], key: :p}},
         {:eq},
         {:and}
       ]
