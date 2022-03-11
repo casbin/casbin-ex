@@ -86,7 +86,7 @@ defmodule Acx.Internal.RoleGroup do
       false
   """
   @spec add_inheritance(t(), {role_type(), role_type()}) :: t()
-  def add_inheritance(%__MODULE__{role_graph: g} = group, {r1, r2})do
+  def add_inheritance(%__MODULE__{role_graph: g} = group, {r1, r2}) do
     %{group | role_graph: g |> Digraph.add_edge({r1, r2})}
   end
 
@@ -122,15 +122,28 @@ defmodule Acx.Internal.RoleGroup do
 
       iex> g = RoleGroup.new(:g)
       ...> g = g |> RoleGroup.add_inheritance({"admin", "member"})
-      ...> f = g |> RoleGroup.stub
+      ...> f = g |> RoleGroup.stub_2
       ...> false = f.("member", "admin")
       ...> false = f.(1, 2)
       ...> f.("admin", "member")
       true
+      ...> g = g |> RoleGroup.add_inheritance({"admin", "memberdomain"})
+      ...> f = g |> RoleGroup.stub_3
+      ...> false = f.("member", "admin", "dom")
+      ...> f.("admin", "member", "domain")
+      true
   """
-  @spec stub(t()) :: function()
-  def stub(%__MODULE__{} = group) do
-    fn arg1, arg2 -> group |> inherit_from?(arg1, arg2) end
+  def stub_2(%__MODULE__{} = group) do
+    fn
+      arg1, arg2 ->
+        group |> inherit_from?(arg1, arg2)
+    end
   end
 
+  def stub_3(%__MODULE__{} = group) do
+    fn
+      arg1, arg2, arg3 ->
+        group |> inherit_from?(arg1, arg2 <> arg3)
+    end
+  end
 end

@@ -38,7 +38,7 @@ defmodule Acx.Enforcer do
         # conflicts with sone built-in function names?
         env =
           role_groups
-          |> Enum.map(fn {name, g} -> {name, RoleGroup.stub(g)} end)
+          |> Enum.map(fn {name, g} -> {name, RoleGroup.stub_2(g)} end)
           |> Map.new()
           |> Map.merge(init_env())
 
@@ -301,7 +301,28 @@ defmodule Acx.Enforcer do
         %{
           enforcer |
           role_groups: %{groups | mapping_name => group},
-          env: %{env | mapping_name => RoleGroup.stub(group)}
+          env: %{env | mapping_name => RoleGroup.stub_2(group)}
+        }
+    end
+  end
+
+  def add_mapping_policy(
+    %__MODULE__{role_groups: groups, env: env} = enforcer,
+    {mapping_name, role1, role2, dom}
+  ) when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) and is_binary(dom) do
+    case Map.get(groups, mapping_name) do
+      nil ->
+        {:error, "mapping name not found: `#{mapping_name}`"}
+
+      group ->
+        group =
+          group
+          |> RoleGroup.add_inheritance({role1, role2 <> dom})
+
+        %{
+          enforcer |
+          role_groups: %{groups | mapping_name => group},
+          env: %{env | mapping_name => RoleGroup.stub_3(group)}
         }
     end
   end
@@ -311,6 +332,19 @@ defmodule Acx.Enforcer do
     {mapping_name, role1, role2}
   ) when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) do
     case add_mapping_policy(enforcer, {mapping_name, role1, role2}) do
+      {:error, reason} ->
+        raise ArgumentError, message: reason
+
+      enforcer ->
+        enforcer
+    end
+  end
+
+  def add_mapping_policy!(
+    %__MODULE__{} = enforcer,
+    {mapping_name, role1, role2, dom}
+  ) when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) and is_binary(dom) do
+    case add_mapping_policy(enforcer, {mapping_name, role1, role2, dom}) do
       {:error, reason} ->
         raise ArgumentError, message: reason
 
@@ -342,7 +376,10 @@ defmodule Acx.Enforcer do
     |> Enum.map(&String.split(&1, ~r{,\s*}))
     |> Enum.map(fn [key | attrs] -> [String.to_atom(key) | attrs] end)
     |> Enum.filter(fn [key | _] -> Model.has_role_mapping?(m, key) end)
-    |> Enum.map(fn [name, r1, r2] -> {name, r1, r2} end)
+    |> Enum.map(fn
+      [name, r1, r2] -> {name, r1, r2}
+      [name, r1, r2, d] -> {name, r1, r2, d}
+    end)
     |> Enum.reduce(enforcer, &add_mapping_policy!(&2, &1))
   end
 

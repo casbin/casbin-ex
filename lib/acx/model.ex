@@ -524,9 +524,15 @@ defmodule Acx.Model do
   # A valid role definition should be `{key, "_,_"}` in which
   # `key` must be an atom.
   defp check_role_definition([]), do: :ok
+
   defp check_role_definition([{_key, "_,_"} | rest]) do
     check_role_definition(rest)
   end
+
+  defp check_role_definition([{_key, "_,_,_"} | rest]) do
+    check_role_definition(rest)
+  end
+
   defp check_role_definition([{key, val} | _]) do
     {:error, "invalid role definition: `#{key}=#{val}`"}
   end
