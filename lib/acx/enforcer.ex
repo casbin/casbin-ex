@@ -407,13 +407,13 @@ defmodule Acx.Enforcer do
 
   ## Examples
 
-      iex> Enforcer.keyMatch2("foo/bar", "foo/*")
+      iex> Enforcer.key_match_2("foo/bar", "foo/*")
       true
-      iex> Enforcer.keyMatch2("foo/resource1", "foo/:resource")
+      iex> Enforcer.key_match_2("foo/resource1", "foo/:resource")
       true
   """
-  @spec keyMatch2(String.t(), String.t()) :: boolean()
-  def keyMatch2(key1, key2) do
+  @spec key_match_2(String.t(), String.t()) :: boolean()
+  def key_match_2(key1, key2) do
     key2 = String.replace(key2, "/*", "/.*")
 
     with {:ok, r1} <- Regex.compile(":[^/]+"),
@@ -432,7 +432,7 @@ defmodule Acx.Enforcer do
   defp init_env do
     %{
       regexMatch: &regex_match?/2,
-      keyMatch2: &keyMatch2/2
+      keyMatch2: &key_match_2/2
     }
   end
 

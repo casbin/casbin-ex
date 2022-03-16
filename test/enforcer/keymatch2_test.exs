@@ -2,8 +2,8 @@ defmodule Acx.Enforcer.KeyMatch2Test do
   use ExUnit.Case, async: true
   alias Acx.Enforcer
 
-  @cfile "../data/keyMatch2.conf" |> Path.expand(__DIR__)
-  @pfile "../data/keyMatch2.csv" |> Path.expand(__DIR__)
+  @cfile "../data/keymatch2.conf" |> Path.expand(__DIR__)
+  @pfile "../data/keymatch2.csv" |> Path.expand(__DIR__)
 
   setup do
     {:ok, e} = Enforcer.init(@cfile)
