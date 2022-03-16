@@ -437,13 +437,39 @@ defmodule Acx.Enforcer do
     end
   end
 
+  @doc """
+  Returns `true` if key1 matches the pattern of key2, key2 can contain a *.
+
+  Returns `false` otherwise.
+
+  ## Examples
+
+      iex> Enforcer.key_match_2("foo/bar", "foo/*")
+      true
+      iex> Enforcer.key_match_2("foo/resource1", "foo/:resource")
+      true
+  """
+  @spec key_match_2(String.t(), String.t()) :: boolean()
+  def key_match_2(key1, key2) do
+    key2 = String.replace(key2, "/*", "/.*")
+
+    with {:ok, r1} <- Regex.compile(":[^/]+"),
+         match <- Regex.replace(r1, key2, "[^/]+"),
+         {:ok, r2} <- Regex.compile("^" <> match <> "$") do
+      Regex.match?(r2, key1)
+    else
+      _ -> false
+    end
+  end
+
   #
   # Helpers
   #
 
   defp init_env do
     %{
-      regex_match?: &regex_match?/2
+      regexMatch: &regex_match?/2,
+      keyMatch2: &key_match_2/2
     }
   end
 
