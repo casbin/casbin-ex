@@ -437,13 +437,50 @@ defmodule Acx.Enforcer do
     end
   end
 
+  @doc """
+  Returns `true` if `key1` matches the pattern of `key2`.
+
+  Returns `false` otherwise.
+
+  `key_match2?/2` can handle three types of path / patterns :
+
+    URL path like `/alice_data/resource1`.
+    `:` pattern like `/alice_data/:resource`.
+    `*` pattern like `/alice_data/*`.
+
+  ## Parameters
+
+  - `key1` should be a URL path.
+  - `key2` can be a URL path, a `:` pattern or a `*` pattern.
+
+  ## Examples
+
+      iex> Enforcer.key_match2?("alice_data/resource1", "alice_data/*")
+      true
+      iex> Enforcer.key_match2?("alice_data/resource1", "alice_data/:resource")
+      true
+  """
+  @spec key_match2?(String.t(), String.t()) :: boolean()
+  def key_match2?(key1, key2) do
+    key2 = String.replace(key2, "/*", "/.*")
+
+    with {:ok, r1} <- Regex.compile(":[^/]+"),
+         match <- Regex.replace(r1, key2, "[^/]+"),
+         {:ok, r2} <- Regex.compile("^" <> match <> "$") do
+      Regex.match?(r2, key1)
+    else
+      _ -> false
+    end
+  end
+
   #
   # Helpers
   #
 
   defp init_env do
     %{
-      regex_match?: &regex_match?/2
+      regexMatch: &regex_match?/2,
+      keyMatch2: &key_match2?/2
     }
   end
 

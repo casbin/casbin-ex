@@ -284,3 +284,16 @@ end
 ```
 
 ## TODO
+
+### Global
+
+Implement all [matchers' functions](https://casbin.org/docs/en/function):
+- [x] regexMatch
+- [ ] keyMatch
+- [ ] keyGet
+- [x] KeyMatch2
+- [ ] keyGet2
+- [ ] keyMatch3
+- [ ] keyMatch4
+- [ ] ipMatch
+- [ ] globMatch
