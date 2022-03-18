@@ -88,6 +88,13 @@ defmodule Acx.EnforcerServer do
     )
   end
 
+  def add_mapping_policy(ename, {mapping_name, role1, role2, dom}) do
+    GenServer.call(
+      via_tuple(ename),
+      {:add_mapping_policy, {mapping_name, role1, role2 <> dom}}
+    )
+  end
+
   @doc """
   Loads mapping policies from a csv file and adds them to the enforcer.
 

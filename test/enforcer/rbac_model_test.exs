@@ -2,8 +2,8 @@ defmodule Acx.Enforcer.RbacModelTest do
   use ExUnit.Case, async: true
   alias Acx.Enforcer
 
-  @cfile  "../data/rbac.conf" |> Path.expand(__DIR__)
-  @pfile  "../data/rbac.csv" |> Path.expand(__DIR__)
+  @cfile "../data/rbac.conf" |> Path.expand(__DIR__)
+  @pfile "../data/rbac.csv" |> Path.expand(__DIR__)
 
   setup do
     {:ok, e} = Enforcer.init(@cfile)
