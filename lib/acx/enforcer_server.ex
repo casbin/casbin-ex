@@ -91,7 +91,7 @@ defmodule Acx.EnforcerServer do
   def add_mapping_policy(ename, {mapping_name, role1, role2, dom}) do
     GenServer.call(
       via_tuple(ename),
-      {:add_mapping_policy, {mapping_name, role1, role2 <> dom}}
+      {:add_mapping_policy, {mapping_name, role1, role2, dom}}
     )
   end
 
