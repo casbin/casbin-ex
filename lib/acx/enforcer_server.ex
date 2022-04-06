@@ -217,4 +217,22 @@ defmodule Acx.EnforcerServer do
     end
   end
 
+  # If an existing enforcer is found, replace it with a fresh one.
+  def reset_enforcer(ename, cfile) do
+    case :ets.lookup(:enforcers_table, ename) do
+      [] ->
+        {:error, "error occurred when resetting enforcer #{ename}: not existing"}
+
+      [{^ename, _}] ->
+        case Enforcer.init(cfile) do
+          {:error, reason} ->
+            {:error, reason}
+
+          {:ok, enforcer} ->
+            :ets.insert(:enforcers_table, {ename, enforcer})
+            {:ok, enforcer}
+        end
+    end
+  end
+
 end
