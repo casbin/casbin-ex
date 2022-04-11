@@ -105,6 +105,15 @@ defmodule Acx.EnforcerServer do
   end
 
   @doc """
+  Return a fresh enforcer.
+
+  See `Enforcer.init/1` for more details.
+  """
+  def reset_configuration(ename, cfile) do
+    GenServer.call(via_tuple(ename), {:reset_configuration, cfile})
+  end
+
+  @doc """
   Adds a user-defined function to the enforcer.
 
   See `Enforcer.add_fun/2` for more details.
@@ -176,6 +185,17 @@ defmodule Acx.EnforcerServer do
     new_enforcer = enforcer |> Enforcer.load_mapping_policies!(fname)
     :ets.insert(:enforcers_table, {self_name(), new_enforcer})
     {:reply, :ok, new_enforcer}
+  end
+
+  def handle_call({:reset_configuration, cfile}, _from, enforcer) do
+    case Enforcer.init(cfile) do
+      {:error, reason} ->
+        {:reply, {:error, reason}, enforcer}
+
+      {:ok, new_enforcer} ->
+        :ets.insert(:enforcers_table, {self_name(), new_enforcer})
+        {:reply, :ok, new_enforcer}
+    end
   end
 
   def handle_call({:add_fun, {fun_name, fun}}, _from, enforcer) do
