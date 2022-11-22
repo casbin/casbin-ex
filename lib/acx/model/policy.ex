@@ -19,9 +19,9 @@ defmodule Acx.Model.Policy do
   @type attr() :: atom()
   @type attr_value() :: String.t() | number()
   @type t() :: %__MODULE__{
-    key: key(),
-    attrs: [{attr(), attr_value()}]
-  }
+          key: key(),
+          attrs: [{attr(), attr_value()}]
+        }
 
   @doc """
   Create new policy based on the given `key` and the list of

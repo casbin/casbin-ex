@@ -21,41 +21,42 @@ defmodule Acx.Internal.Parser do
 
   alias Acx.Internal.{Helpers, Operator}
 
-  @operators ['.', '!', '-', '+', '*', '/', '<', '<=', '>', '>=', '==',
-              '!=', '&&', '||']
+  @operators ['.', '!', '-', '+', '*', '/', '<', '<=', '>', '>=', '==', '!=', '&&', '||']
 
-  @type postfix_term() :: {:num, number()}
-  | {:str, String.t()}
-  | {:var, atom()}
-  | :not
-  | :pos
-  | :neg
-  | :mul
-  | :div
-  | :add
-  | :sub
-  | :lt
-  | :le
-  | :gt
-  | :ge
-  | :eq
-  | :ne
-  | :and
-  | :or
-  | {:fun, %{name: atom(), arity: non_neg_integer()}}
+  @type postfix_term() ::
+          {:num, number()}
+          | {:str, String.t()}
+          | {:var, atom()}
+          | :not
+          | :pos
+          | :neg
+          | :mul
+          | :div
+          | :add
+          | :sub
+          | :lt
+          | :le
+          | :gt
+          | :ge
+          | :eq
+          | :ne
+          | :and
+          | :or
+          | {:fun, %{name: atom(), arity: non_neg_integer()}}
 
   @type postfix_term_with_location() :: %{
-    token: postfix_term(),
-    location: %{line: non_neg_integer(), col: non_neg_integer()}
-  }
+          token: postfix_term(),
+          location: %{line: non_neg_integer(), col: non_neg_integer()}
+        }
 
   @type postfix_expr() :: [postfix_term_with_location()]
 
   @doc """
   Converts a matcher string into a postfix expression.
   """
-  @spec parse(String.t()) :: {:ok, postfix_expr()}
-  | {:error, {atom(), map()}}
+  @spec parse(String.t()) ::
+          {:ok, postfix_expr()}
+          | {:error, {atom(), map()}}
   def parse(matcher_str) when is_binary(matcher_str) do
     list = String.to_charlist(matcher_str)
     init_pos = %{line: 0, col: 0}
@@ -72,12 +73,12 @@ defmodule Acx.Internal.Parser do
   end
 
   # Top of symbol stack is a left parenthesis
-  defp parse([], [%{token: 40, position: p}|_], _, _, _, _, _) do
+  defp parse([], [%{token: 40, position: p} | _], _, _, _, _, _) do
     {:error, {:mismatched_parenthesis, p}}
   end
 
   # Top of symbol stack is an operator.
-  defp parse([], [op|rest], val, arg, postfix, prev, pos) do
+  defp parse([], [op | rest], val, arg, postfix, prev, pos) do
     parse([], rest, val, arg, [op | postfix], prev, pos)
   end
 
@@ -86,13 +87,13 @@ defmodule Acx.Internal.Parser do
   #
 
   # Whitespace
-  defp parse([32|rest], sym, val, arg, postfix, prev, pos) do
+  defp parse([32 | rest], sym, val, arg, postfix, prev, pos) do
     new_pos = next_col(pos)
     parse(rest, sym, val, arg, postfix, prev, new_pos)
   end
 
   # New line
-  defp parse([10|rest], sym, val, arg, postfix, prev, pos) do
+  defp parse([10 | rest], sym, val, arg, postfix, prev, pos) do
     new_pos = next_line(pos)
     parse(rest, sym, val, arg, postfix, prev, new_pos)
   end
@@ -102,22 +103,24 @@ defmodule Acx.Internal.Parser do
   #
 
   # Interger or floating point
-  defp parse([ch|rest], sym, val, arg, postfix, _prev, pos)
-  when ?0 <= ch and ch <= ?9 do
+  defp parse([ch | rest], sym, val, arg, postfix, _prev, pos)
+       when ?0 <= ch and ch <= ?9 do
     {num_type, succeeds, rem, count} = parse_number(rest)
 
-    t = make_token(
-      {:num, list_to_number({num_type, [ch|succeeds]})},
-      pos
-    )
+    t =
+      make_token(
+        {:num, list_to_number({num_type, [ch | succeeds]})},
+        pos
+      )
+
     new_pos = next_col(pos, count + 1)
 
     case val do
       [] ->
-        parse(rem, sym, [], arg, [t|postfix], :operand, new_pos)
+        parse(rem, sym, [], arg, [t | postfix], :operand, new_pos)
 
-      [_|tail] ->
-        parse(rem, sym, [true|tail], arg, [t|postfix], :operand, new_pos)
+      [_ | tail] ->
+        parse(rem, sym, [true | tail], arg, [t | postfix], :operand, new_pos)
     end
   end
 
@@ -126,20 +129,20 @@ defmodule Acx.Internal.Parser do
   #
 
   # Double quoted String
-  defp parse([?"|rest], sym, val, arg, postfix, _prev, pos) do
+  defp parse([?" | rest], sym, val, arg, postfix, _prev, pos) do
     case parse_str(rest, pos) do
       {:error, :close_double_quote_not_found} ->
         {:error, {:unexpected_token, pos}}
 
       {:ok, succeeds, rem, new_pos} ->
         t = make_token({:str, List.to_string(succeeds)}, pos)
+
         case val do
           [] ->
-            parse(rem, sym, val, arg, [t|postfix], :operand, new_pos)
+            parse(rem, sym, val, arg, [t | postfix], :operand, new_pos)
 
-          [_|tail] ->
-            parse(rem, sym, [true|tail], arg, [t|postfix], :operand,
-              new_pos)
+          [_ | tail] ->
+            parse(rem, sym, [true | tail], arg, [t | postfix], :operand, new_pos)
         end
     end
   end
@@ -149,35 +152,35 @@ defmodule Acx.Internal.Parser do
   #
 
   # The symbol stack is empty.
-  defp parse([ch1,ch2|rest], [], arg, val, postfix, prev, pos) when
-  [ch1,ch2] in @operators do
-    t = make_token(Operator.charlist_to_operator([ch1,ch2], prev), pos)
+  defp parse([ch1, ch2 | rest], [], arg, val, postfix, prev, pos)
+       when [ch1, ch2] in @operators do
+    t = make_token(Operator.charlist_to_operator([ch1, ch2], prev), pos)
     new_pos = next_col(pos, 2)
     parse(rest, [t], arg, val, postfix, :operator, new_pos)
   end
 
   # Top of the symbol stack is a left parenthesis
-  defp parse([ch1,ch2|rest], [%{token: 40} = lp | sym], val, arg, postfix,
-    prev, pos) when [ch1,ch2] in @operators do
-    t = make_token(Operator.charlist_to_operator([ch1,ch2], prev), pos)
+  defp parse([ch1, ch2 | rest], [%{token: 40} = lp | sym], val, arg, postfix, prev, pos)
+       when [ch1, ch2] in @operators do
+    t = make_token(Operator.charlist_to_operator([ch1, ch2], prev), pos)
     new_pos = next_col(pos, 2)
-    parse(rest, [t,lp|sym], val, arg, postfix, :operator, new_pos)
+    parse(rest, [t, lp | sym], val, arg, postfix, :operator, new_pos)
   end
 
   # Top of symbol stack is a function
-  defp parse([ch1,ch2|rest], [%{token: {:fun, _}} = fun | sym], val, arg,
-    postfix, prev, pos) when [ch1,ch2] in @operators do
-    parse([ch1,ch2|rest], sym, val, arg, [fun|postfix], prev, pos)
+  defp parse([ch1, ch2 | rest], [%{token: {:fun, _}} = fun | sym], val, arg, postfix, prev, pos)
+       when [ch1, ch2] in @operators do
+    parse([ch1, ch2 | rest], sym, val, arg, [fun | postfix], prev, pos)
   end
 
   # Top of stack is an operator
-  defp parse([ch1,ch2|rest], [o|sym], val, arg, postfix, prev, pos) when
-  [ch1,ch2] in @operators do
-    op = Operator.charlist_to_operator([ch1,ch2], prev)
-    {succeeds, rem, _} = pop_operators([o|sym], op)
+  defp parse([ch1, ch2 | rest], [o | sym], val, arg, postfix, prev, pos)
+       when [ch1, ch2] in @operators do
+    op = Operator.charlist_to_operator([ch1, ch2], prev)
+    {succeeds, rem, _} = pop_operators([o | sym], op)
     t = make_token(op, pos)
     new_pos = next_col(pos, 2)
-    parse(rest, [t|rem], val, arg, succeeds ++ postfix, :operator, new_pos)
+    parse(rest, [t | rem], val, arg, succeeds ++ postfix, :operator, new_pos)
   end
 
   #
@@ -185,45 +188,45 @@ defmodule Acx.Internal.Parser do
   #
 
   # symbol stack is empty
-  defp parse([ch|rest], [], val, arg, postfix, prev, pos) when
-  [ch] in @operators do
+  defp parse([ch | rest], [], val, arg, postfix, prev, pos)
+       when [ch] in @operators do
     t = make_token(Operator.charlist_to_operator([ch], prev), pos)
     new_pos = next_col(pos, 1)
     parse(rest, [t], arg, val, postfix, :operator, new_pos)
   end
 
   # Top of symbol stack is a left parenthesis
-  defp parse([ch|rest], [%{token: 40} = lp | sym], val, arg, postfix,
-    prev, pos) when [ch] in @operators do
+  defp parse([ch | rest], [%{token: 40} = lp | sym], val, arg, postfix, prev, pos)
+       when [ch] in @operators do
     t = make_token(Operator.charlist_to_operator([ch], prev), pos)
     new_pos = next_col(pos, 1)
-    parse(rest, [t,lp|sym], val, arg, postfix, :operator, new_pos)
+    parse(rest, [t, lp | sym], val, arg, postfix, :operator, new_pos)
   end
 
   # Top of symbol stack is a function
-  defp parse([ch|rest], [%{token: {:fun, _}} = fun | sym], val, arg,
-    postfix, prev, pos) when [ch] in @operators do
-    parse([ch|rest], sym, val, arg, [fun|postfix], prev, pos)
+  defp parse([ch | rest], [%{token: {:fun, _}} = fun | sym], val, arg, postfix, prev, pos)
+       when [ch] in @operators do
+    parse([ch | rest], sym, val, arg, [fun | postfix], prev, pos)
   end
 
   # Top of symbol stack is an operator
-  defp parse([ch|rest], [o|sym], val, arg, postfix, prev, pos) when
-  [ch] in @operators do
+  defp parse([ch | rest], [o | sym], val, arg, postfix, prev, pos)
+       when [ch] in @operators do
     op = Operator.charlist_to_operator([ch], prev)
-    {succeeds, rem, _} = pop_operators([o|sym], op)
+    {succeeds, rem, _} = pop_operators([o | sym], op)
     t = make_token(op, pos)
     new_pos = next_col(pos, 1)
-    parse(rest, [t|rem], val, arg, succeeds ++ postfix, :operator, new_pos)
+    parse(rest, [t | rem], val, arg, succeeds ++ postfix, :operator, new_pos)
   end
 
   #
   # See a left parenthesis?
   #
 
-  defp parse([40|rest], sym, val, arg, postfix, _prev, pos) do
+  defp parse([40 | rest], sym, val, arg, postfix, _prev, pos) do
     t = make_token(40, pos)
     new_pos = next_col(pos, 1)
-    parse(rest, [t|sym], val, arg, postfix, :left_paren, new_pos)
+    parse(rest, [t | sym], val, arg, postfix, :left_paren, new_pos)
   end
 
   #
@@ -231,14 +234,21 @@ defmodule Acx.Internal.Parser do
   #
 
   # Symbol stack is empty.
-  defp parse([41|_rest], [], _val, _arg, _postfix, _prev, pos) do
+  defp parse([41 | _rest], [], _val, _arg, _postfix, _prev, pos) do
     {:error, {:unexpected_token, pos}}
   end
 
   # Symbol stack has a left parenthesis followed by a function.
   # And the previous value stack has a `true` on top of it.
-  defp parse([41|rest], [%{token: 40}, %{token: {:fun, _}} = fun | sym],
-    [true|val],[a|arg], postfix, _prev, pos) do
+  defp parse(
+         [41 | rest],
+         [%{token: 40}, %{token: {:fun, _}} = fun | sym],
+         [true | val],
+         [a | arg],
+         postfix,
+         _prev,
+         pos
+       ) do
     %{
       token: {:fun, %{name: name}},
       position: position
@@ -248,14 +258,22 @@ defmodule Acx.Internal.Parser do
       position: position,
       token: {:fun, %{name: name, arity: a + 1}}
     }
+
     new_pos = next_col(pos, 1)
-    parse(rest, sym, val, arg, [t|postfix], :right_paren, new_pos)
+    parse(rest, sym, val, arg, [t | postfix], :right_paren, new_pos)
   end
 
   # Symbol stack has a left parenthesis followed by a function.
   # And the previous value stack has a `false` on top of it.
-  defp parse([41|rest], [%{token: 40}, %{token: {:fun, _}} = fun |sym],
-    [false|val],[a|arg], postfix, _prev, pos) do
+  defp parse(
+         [41 | rest],
+         [%{token: 40}, %{token: {:fun, _}} = fun | sym],
+         [false | val],
+         [a | arg],
+         postfix,
+         _prev,
+         pos
+       ) do
     %{
       token: {:fun, %{name: name}},
       position: position
@@ -265,20 +283,20 @@ defmodule Acx.Internal.Parser do
       token: {:fun, %{name: name, arity: a}},
       position: position
     }
+
     new_pos = next_col(pos, 1)
-    parse(rest, sym, val, arg, [t|postfix], :right_paren, new_pos)
+    parse(rest, sym, val, arg, [t | postfix], :right_paren, new_pos)
   end
 
   # Symbol stack has a left parenthesis on top of it.
-  defp parse([41|rest], [%{token: 40} | sym], val, arg, postfix, _prev,
-    pos) do
+  defp parse([41 | rest], [%{token: 40} | sym], val, arg, postfix, _prev, pos) do
     new_pos = next_col(pos, 1)
     parse(rest, sym, val, arg, postfix, :right_paren, new_pos)
   end
 
   # Symbol stack has operator on it.
-  defp parse([41|rest], [op|sym], val, arg, postfix, prev, pos) do
-    parse([41|rest], sym, val, arg, [op|postfix], prev, pos)
+  defp parse([41 | rest], [op | sym], val, arg, postfix, prev, pos) do
+    parse([41 | rest], sym, val, arg, [op | postfix], prev, pos)
   end
 
   #
@@ -286,7 +304,7 @@ defmodule Acx.Internal.Parser do
   #
 
   # Symbol stack is empty
-  defp parse([?,|_rest], [], _val, _arg, _postfix, _prev, pos) do
+  defp parse([?, | _rest], [], _val, _arg, _postfix, _prev, pos) do
     # No left parentheses found, either this comma is misplaced
     # or parentheses mismatched.
     {:error, {:unexpected_token, pos}}
@@ -294,22 +312,20 @@ defmodule Acx.Internal.Parser do
 
   # Top of symbol stack is a left parenthesis and the previous value
   # stack has a `true` on top of it.
-  defp parse([?,|rest], [%{token: 40} = lp | sym], [true|val], [a|arg],
-    postfix, _prev, pos) do
+  defp parse([?, | rest], [%{token: 40} = lp | sym], [true | val], [a | arg], postfix, _prev, pos) do
     new_pos = next_col(pos, 1)
-    parse(rest, [lp|sym], [false|val], [a+1|arg], postfix, :comma, new_pos)
+    parse(rest, [lp | sym], [false | val], [a + 1 | arg], postfix, :comma, new_pos)
   end
 
   # Top of symbol stack is a left parenthesis.
-  defp parse([?,|rest], [%{token: 40} = lp |sym], val, arg, postfix,
-    _prev, pos) do
+  defp parse([?, | rest], [%{token: 40} = lp | sym], val, arg, postfix, _prev, pos) do
     new_pos = next_col(pos, 1)
-    parse(rest, [lp|sym], val, arg, postfix, :comma, new_pos)
+    parse(rest, [lp | sym], val, arg, postfix, :comma, new_pos)
   end
 
   # Top of symbol stack is an operator
-  defp parse([?,|rest], [op|sym], val, arg, postfix, prev, pos) do
-    parse([?,|rest], sym, val, arg, [op|postfix], prev, pos)
+  defp parse([?, | rest], [op | sym], val, arg, postfix, prev, pos) do
+    parse([?, | rest], sym, val, arg, [op | postfix], prev, pos)
   end
 
   #
@@ -317,37 +333,36 @@ defmodule Acx.Internal.Parser do
   #
 
   # previous value stack is empty.
-  defp parse([ch|rest], sym, [], arg, postfix, _prev, pos) when
-  (?a <= ch and ch <= ?z) or (?A <= ch and ch <= ?Z) do
+  defp parse([ch | rest], sym, [], arg, postfix, _prev, pos)
+       when (?a <= ch and ch <= ?z) or (?A <= ch and ch <= ?Z) do
     case parse_function_or_var(rest) do
       {:fun, succeeds, rem, count} ->
-        name = :erlang.list_to_atom([ch|succeeds])
+        name = :erlang.list_to_atom([ch | succeeds])
         t = make_token({:fun, %{name: name}}, pos)
         new_pos = next_col(pos, count + 1)
-        parse(rem, [t|sym], [false], [0|arg], postfix, :function, new_pos)
+        parse(rem, [t | sym], [false], [0 | arg], postfix, :function, new_pos)
 
       {:var, succeeds, rem, count} ->
-        t = make_token({:var, :erlang.list_to_atom([ch|succeeds])}, pos)
+        t = make_token({:var, :erlang.list_to_atom([ch | succeeds])}, pos)
         new_pos = next_col(pos, count + 1)
-        parse(rem, sym, [], arg, [t|postfix], :variable, new_pos)
+        parse(rem, sym, [], arg, [t | postfix], :variable, new_pos)
     end
   end
 
   # Previous value stack is not empty
-  defp parse([ch|rest], sym, [_|val], arg, postfix, _prev, pos) when
-  (?a <= ch and ch <= ?z) or (?A <= ch and ch <= ?Z) do
+  defp parse([ch | rest], sym, [_ | val], arg, postfix, _prev, pos)
+       when (?a <= ch and ch <= ?z) or (?A <= ch and ch <= ?Z) do
     case parse_function_or_var(rest) do
       {:fun, succeeds, rem, count} ->
-        name = :erlang.list_to_atom([ch|succeeds])
+        name = :erlang.list_to_atom([ch | succeeds])
         t = make_token({:fun, %{name: name}}, pos)
         new_pos = next_col(pos, count + 1)
-        parse(rem, [t|sym], [false,true|val], [0|arg], postfix, :function,
-          new_pos)
+        parse(rem, [t | sym], [false, true | val], [0 | arg], postfix, :function, new_pos)
 
       {:var, succeeds, rem, count} ->
-        t = make_token({:var, :erlang.list_to_atom([ch|succeeds])}, pos)
+        t = make_token({:var, :erlang.list_to_atom([ch | succeeds])}, pos)
         new_pos = next_col(pos, count + 1)
-        parse(rem, sym, [true|val], arg, [t|postfix], :variable, new_pos)
+        parse(rem, sym, [true | val], arg, [t | postfix], :variable, new_pos)
     end
   end
 
@@ -355,7 +370,7 @@ defmodule Acx.Internal.Parser do
   # Current token is non of the above.
   #
 
-  defp parse([_|_], _sym, _val, _arg, _postfix, _prev, pos) do
+  defp parse([_ | _], _sym, _val, _arg, _postfix, _prev, pos) do
     {:error, {:unexpected_token, pos}}
   end
 
@@ -369,15 +384,15 @@ defmodule Acx.Internal.Parser do
   end
 
   # See a numeric character?
-  defp parse_number([ch|rest], succeeds, count, is_float)
-  when ?0 <= ch and ch <= ?9 do
-    parse_number(rest, [ch|succeeds], count + 1, is_float)
+  defp parse_number([ch | rest], succeeds, count, is_float)
+       when ?0 <= ch and ch <= ?9 do
+    parse_number(rest, [ch | succeeds], count + 1, is_float)
   end
 
   # See a dot `.` followed by a numeric character?
-  defp parse_number([?.,ch|rest], succeeds, count, _is_float)
-  when ?0 <= ch and ch <= ?9 do
-    parse_number(rest, [ch,?.|succeeds], count + 2, true)
+  defp parse_number([?., ch | rest], succeeds, count, _is_float)
+       when ?0 <= ch and ch <= ?9 do
+    parse_number(rest, [ch, ?. | succeeds], count + 2, true)
   end
 
   # See none of the above
@@ -399,20 +414,20 @@ defmodule Acx.Internal.Parser do
   defp parse_str(list, pos), do: parse_str(list, [], pos)
 
   # See closing double quote.
-  defp parse_str([?"|rest], succeeds, pos) do
+  defp parse_str([?" | rest], succeeds, pos) do
     {:ok, Enum.reverse(succeeds), rest, next_col(pos)}
   end
 
   # See a new line char
-  defp parse_str([10|rest], succeeds, pos) do
+  defp parse_str([10 | rest], succeeds, pos) do
     new_pos = next_line(pos)
-    parse_str(rest, [10|succeeds], new_pos)
+    parse_str(rest, [10 | succeeds], new_pos)
   end
 
   # See any other character.
-  defp parse_str([ch|rest], succeeds, pos) do
+  defp parse_str([ch | rest], succeeds, pos) do
     new_pos = next_col(pos)
-    parse_str(rest, [ch|succeeds], new_pos)
+    parse_str(rest, [ch | succeeds], new_pos)
   end
 
   # Reach the end but didn't see any double quote so far.
@@ -434,27 +449,27 @@ defmodule Acx.Internal.Parser do
   end
 
   # See an alphanumeric character. Continue
-  defp parse_function_or_var([ch|rest], succeeds, count) when
-  (?0 <= ch and ch <= ?9) or
-  (?a <= ch and ch <= ?z) or
-  (?A <= ch and ch <= ?Z) or
-  ch == ?_ or
-  ch == ?? do
-    parse_function_or_var(rest, [ch|succeeds], count + 1)
+  defp parse_function_or_var([ch | rest], succeeds, count)
+       when (?0 <= ch and ch <= ?9) or
+              (?a <= ch and ch <= ?z) or
+              (?A <= ch and ch <= ?Z) or
+              ch == ?_ or
+              ch == ?? do
+    parse_function_or_var(rest, [ch | succeeds], count + 1)
   end
 
   # See a left parenthesis. It must be part of a function name
-  defp parse_function_or_var([40|rest], succeeds, count) do
-    {:fun, Enum.reverse(succeeds), [40|rest], count}
+  defp parse_function_or_var([40 | rest], succeeds, count) do
+    {:fun, Enum.reverse(succeeds), [40 | rest], count}
   end
 
   # See a whitespace followed by a left parenthesis?
-  defp parse_function_or_var([32,40|rest], succeeds, count) do
-    {:fun, Enum.reverse(succeeds), [32,40|rest], count}
+  defp parse_function_or_var([32, 40 | rest], succeeds, count) do
+    {:fun, Enum.reverse(succeeds), [32, 40 | rest], count}
   end
 
   # See a whitespace only?
-  defp parse_function_or_var([32|rest], succeeds, count) do
+  defp parse_function_or_var([32 | rest], succeeds, count) do
     parse_function_or_var(rest, succeeds, count + 1)
   end
 
@@ -468,6 +483,7 @@ defmodule Acx.Internal.Parser do
   defp list_to_number({:integer, list}) do
     :erlang.list_to_integer(list)
   end
+
   defp list_to_number({:float, list}) do
     :erlang.list_to_float(list)
   end
@@ -486,16 +502,13 @@ defmodule Acx.Internal.Parser do
     Helpers.get_while(
       fn %{token: op} ->
         Operator.operator?(op) &&
-        (
-          Operator.higher_precedence?(op, current_operator) ||
-          (
-            Operator.same_precedence?(op, current_operator) &&
-              Operator.left_associative?(current_operator)
-          )
-        )
+          (Operator.higher_precedence?(op, current_operator) ||
+             (Operator.same_precedence?(op, current_operator) &&
+                Operator.left_associative?(current_operator)))
       end,
       symbol_stack,
-      true # reverse
+      # reverse
+      true
     )
   end
 
@@ -508,5 +521,4 @@ defmodule Acx.Internal.Parser do
 
   # Update the current position by `n` number of columns.
   defp next_col(%{line: l, col: c}, n \\ 1), do: %{line: l, col: c + n}
-
 end

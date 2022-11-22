@@ -50,8 +50,9 @@ defmodule Acx.Internal.PartialRange do
       %PartialRange{type: :through, bound: 5}
   """
   @spec new(partial_range_type(), value()) :: t()
-  def new(type, bound) when (is_integer(bound) or is_float(bound)) and
-  type in @partial_range_types do
+  def new(type, bound)
+      when (is_integer(bound) or is_float(bound)) and
+             type in @partial_range_types do
     %__MODULE__{type: type, bound: bound}
   end
 
@@ -100,7 +101,7 @@ defmodule Acx.Internal.PartialRange do
   """
   @spec contains?(t(), value()) :: boolean()
   def contains?(%__MODULE__{type: type, bound: bound}, val)
-  when is_integer(val) or is_float(val) do
+      when is_integer(val) or is_float(val) do
     case type do
       :from ->
         val >= bound
@@ -225,5 +226,4 @@ defmodule Acx.Internal.PartialRange do
         nil
     end
   end
-
 end

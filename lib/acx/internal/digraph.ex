@@ -24,9 +24,9 @@ defmodule Acx.Internal.Digraph do
   @type vertex_id() :: non_neg_integer()
   @type vertex() :: term()
   @type t() :: %__MODULE__{
-    vertices: %{vertex_id() => vertex()},
-    adj: %{vertex_id() => MapSet.t()}
-  }
+          vertices: %{vertex_id() => vertex()},
+          adj: %{vertex_id() => MapSet.t()}
+        }
 
   @doc """
   Creates a new empty digraph.
@@ -65,12 +65,10 @@ defmodule Acx.Internal.Digraph do
   @spec add_vertex(t(), vertex()) :: t()
   def add_vertex(%__MODULE__{vertices: vertices, adj: adj} = g, v) do
     id = hash(v)
+
     case Map.get(vertices, id) do
       nil ->
-        %{g |
-          vertices: Map.put(vertices, id, v),
-          adj: Map.put(adj, id, MapSet.new)
-         }
+        %{g | vertices: Map.put(vertices, id, v), adj: Map.put(adj, id, MapSet.new())}
 
       _ ->
         g
@@ -106,7 +104,7 @@ defmodule Acx.Internal.Digraph do
   """
   @spec add_edge(t(), {vertex(), vertex()}) :: t()
   def add_edge(%__MODULE__{} = g, {v, w}) do
-    %{adj: adj} = g =  g |> add_vertex(v) |> add_vertex(w)
+    %{adj: adj} = g = g |> add_vertex(v) |> add_vertex(w)
     v_id = hash(v)
     v_adj = Map.get(adj, v_id) |> MapSet.put(hash(w))
     %{g | adj: %{adj | v_id => v_adj}}
@@ -128,6 +126,7 @@ defmodule Acx.Internal.Digraph do
   @spec adj(t(), vertex()) :: [vertex()]
   def adj(%__MODULE__{vertices: vertices, adj: adj}, v) do
     v_id = hash(v)
+
     case Map.get(adj, v_id) do
       nil ->
         []
@@ -157,8 +156,9 @@ defmodule Acx.Internal.Digraph do
       true
   """
   @spec has_path?(t(), vertex(), vertex()) :: boolean()
-  def has_path?(%__MODULE__{ } = g, v, w) do
+  def has_path?(%__MODULE__{} = g, v, w) do
     visited = dfs(g, hash(v))
+
     case Map.get(visited, hash(w)) do
       nil ->
         false
@@ -182,6 +182,7 @@ defmodule Acx.Internal.Digraph do
 
   defp dfs(%__MODULE__{adj: adj} = g, v, visited) do
     visited = Map.put(visited, v, true)
+
     Map.get(adj, v)
     |> Enum.reduce(visited, fn w, acc ->
       !Map.get(acc, w) && dfs(g, w, acc)
@@ -191,5 +192,4 @@ defmodule Acx.Internal.Digraph do
   # 2^32
   @max_phash 4_294_967_296
   defp hash(v), do: :erlang.phash2(v, @max_phash)
-
 end

@@ -141,6 +141,7 @@ defmodule Acx.EnforcerServer do
       {:ok, new_enforcer} ->
         :ets.insert(:enforcers_table, {self_name(), new_enforcer})
         {:reply, :ok, new_enforcer}
+
       new_enforcer ->
         :ets.insert(:enforcers_table, {self_name(), new_enforcer})
         {:reply, :ok, new_enforcer}
@@ -166,6 +167,7 @@ defmodule Acx.EnforcerServer do
       {:ok, new_enforcer} ->
         :ets.insert(:enforcers_table, {self_name(), new_enforcer})
         {:reply, :ok, new_enforcer}
+
       new_enforcer ->
         :ets.insert(:enforcers_table, {self_name(), new_enforcer})
         {:reply, :ok, new_enforcer}
@@ -196,7 +198,7 @@ defmodule Acx.EnforcerServer do
 
   # Returns the name of `self`.
   defp self_name() do
-    Registry.keys(Acx.EnforcerRegistry, self()) |> List.first
+    Registry.keys(Acx.EnforcerRegistry, self()) |> List.first()
   end
 
   # Creates a new enforcer or lookups existing one in the ets table.
@@ -216,5 +218,4 @@ defmodule Acx.EnforcerServer do
         {:ok, enforcer}
     end
   end
-
 end
