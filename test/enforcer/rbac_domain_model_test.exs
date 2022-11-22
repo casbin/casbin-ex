@@ -25,7 +25,6 @@ defmodule Acx.Enforcer.RbacDomainModelTest do
       {["alice", "domain2", "data2", "no_existing"], false},
       {["alice", "domain2", "no_existing", "read"], false},
       {["alice", "domain3", "data2", "read"], false},
-
       {["bob", "domain1", "data1", "read"], false},
       {["bob", "domain1", "data1", "write"], false},
       {["bob", "domain2", "data2", "read"], true},
@@ -33,14 +32,13 @@ defmodule Acx.Enforcer.RbacDomainModelTest do
       {["bob", "domain2", "data2", "no_existing"], false},
       {["bob", "domain2", "no_existing", "read"], false},
       {["bob", "domain3", "data2", "read"], true},
-
       {["peter", "domain1", "data1", "read"], false},
       {["peter", "domain1", "data1", "write"], false},
       {["peter", "domain2", "data2", "read"], false},
       {["peter", "domain2", "data2", "write"], false},
       {["peter", "domain2", "data2", "no_existing"], false},
       {["peter", "domain2", "no_existing", "read"], false},
-      {["peter", "domain3", "data2", "read"], false},
+      {["peter", "domain3", "data2", "read"], false}
     ]
 
     Enum.each(@test_cases, fn {req, res} ->

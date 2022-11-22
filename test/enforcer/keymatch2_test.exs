@@ -44,24 +44,20 @@ defmodule Acx.Enforcer.KeyMatch2Test do
       {"/foobar", "/foo", false},
       {"/foobar", "/foo*", false},
       {"/foobar", "/foo/*", false},
-
       {"/", "/:resource", false},
       {"/resource1", "/:resource", true},
       {"/myid", "/:id/using/:resId", false},
       {"/myid/using/myresid", "/:id/using/:resId", true},
-
       {"/proxy/myid", "/proxy/:id/*", false},
       {"/proxy/myid/", "/proxy/:id/*", true},
       {"/proxy/myid/res", "/proxy/:id/*", true},
       {"/proxy/myid/res/res2", "/proxy/:id/*", true},
       {"/proxy/myid/res/res2/res3", "/proxy/:id/*", true},
       {"/proxy/", "/proxy/:id/*", false},
-
       {"/alice", "/:id", true},
       {"/alice/all", "/:id/all", true},
       {"/alice", "/:id/all", false},
       {"/alice/all", "/:id", false},
-
       {"/alice/all", "/:/all", false}
     ]
 

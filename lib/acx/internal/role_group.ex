@@ -15,15 +15,15 @@ defmodule Acx.Internal.RoleGroup do
   @type role_type() :: term()
 
   @type t() :: %__MODULE__{
-    name: atom(),
-    role_graph: Digraph.t()
-  }
+          name: atom(),
+          role_graph: Digraph.t()
+        }
 
   @doc """
   Creates a new role group
   """
   @spec new(atom()) :: t()
-  def new(a), do: %__MODULE__{name: a, role_graph: Digraph.new}
+  def new(a), do: %__MODULE__{name: a, role_graph: Digraph.new()}
 
   @doc """
   Returns the list of all roles in the given role group.
@@ -66,7 +66,7 @@ defmodule Acx.Internal.RoleGroup do
   """
   @spec add_roles(t(), [role_type()]) :: t()
   def add_roles(%__MODULE__{role_graph: g} = group, roles)
-  when is_list(roles) do
+      when is_list(roles) do
     %{group | role_graph: g |> Digraph.add_vertices(roles)}
   end
 

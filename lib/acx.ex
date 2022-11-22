@@ -12,5 +12,4 @@ defmodule Acx do
     opts = [strategy: :one_for_one, name: Acx.Supervisor]
     Supervisor.start_link(children, opts)
   end
-
 end

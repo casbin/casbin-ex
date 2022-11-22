@@ -8,13 +8,11 @@ defmodule Acx.Model do
   [1] - https://vicarie.in/posts/generalized-authz.html
   """
 
-  defstruct [
-    request: nil,
-    policies: [],
-    matcher: nil,
-    effect: nil,
-    role_mappings: []
-  ]
+  defstruct request: nil,
+            policies: [],
+            matcher: nil,
+            effect: nil,
+            role_mappings: []
 
   alias Acx.Model.{
     Config,
@@ -26,13 +24,13 @@ defmodule Acx.Model do
     Policy
   }
 
-  @type t() :: %__MODULE__ {
-    request: RequestDefinition.t(),
-    policies: [PolicyDefinition.t()],
-    matcher: Matcher.t(),
-    effect: PolicyEffect.t(),
-    role_mappings: [atom()]
-  }
+  @type t() :: %__MODULE__{
+          request: RequestDefinition.t(),
+          policies: [PolicyDefinition.t()],
+          matcher: Matcher.t(),
+          effect: PolicyEffect.t(),
+          role_mappings: [atom()]
+        }
 
   @doc """
   Initializes a model given the config file `cfile`.
@@ -92,7 +90,7 @@ defmodule Acx.Model do
   def init(cfile) when is_binary(cfile) do
     case Config.new(cfile) do
       {:error, reason} ->
-          {:error, reason}
+        {:error, reason}
 
       %Config{sections: sections} ->
         %__MODULE__{}
@@ -103,12 +101,12 @@ defmodule Acx.Model do
         |> build(:matcher)
         |> build(:role_mappings)
         |> case do
-             {:error, reason} ->
-               {:error, reason}
+          {:error, reason} ->
+            {:error, reason}
 
-             {:ok, model, _} ->
-               {:ok, model}
-           end
+          {:ok, model, _} ->
+            {:ok, model}
+        end
     end
   end
 
@@ -132,8 +130,9 @@ defmodule Acx.Model do
       ...> reason
       "invalid request"
   """
-  @spec create_request(t(), [String.t()]) :: {:ok, Request.t()}
-  | {:error, String.t()}
+  @spec create_request(t(), [String.t()]) ::
+          {:ok, Request.t()}
+          | {:error, String.t()}
   def create_request(%__MODULE__{request: rd}, attr_values) do
     RequestDefinition.create_request(rd, attr_values)
   end
@@ -188,12 +187,13 @@ defmodule Acx.Model do
       ...> reason
       "invalid attribute value type"
   """
-  @spec create_policy(t(), [String.t()]) :: {:ok, Policy.t()}
-  | {:error, String.t()}
+  @spec create_policy(t(), [String.t()]) ::
+          {:ok, Policy.t()}
+          | {:error, String.t()}
   def create_policy(
-    %__MODULE__{policies: definitions},
-    {key, attr_values}
-  ) do
+        %__MODULE__{policies: definitions},
+        {key, attr_values}
+      ) do
     found_matched_definition =
       definitions
       |> Enum.find(fn %PolicyDefinition{key: k} -> k === key end)
@@ -245,12 +245,12 @@ defmodule Acx.Model do
     definitions
     |> Enum.find(fn %PolicyDefinition{key: k} -> k === key end)
     |> case do
-         nil ->
-           false
+      nil ->
+        false
 
-         _ ->
-           true
-       end
+      _ ->
+        true
+    end
   end
 
   @doc """
@@ -297,17 +297,17 @@ defmodule Acx.Model do
   """
   @spec match?(t(), Request.t(), Policy.t(), map()) :: boolean()
   def match?(
-    %__MODULE__{matcher: matcher},
-    %Request{key: r, attrs: r_attrs},
-    %Policy{key: p, attrs: p_attrs},
-    env \\ %{}
-  ) do
+        %__MODULE__{matcher: matcher},
+        %Request{key: r, attrs: r_attrs},
+        %Policy{key: p, attrs: p_attrs},
+        env \\ %{}
+      ) do
     environment =
       env
       |> Map.put(p, p_attrs)
       |> Map.put(r, r_attrs)
 
-    !!(Matcher.eval!(matcher, environment))
+    !!Matcher.eval!(matcher, environment)
   end
 
   @doc """
@@ -378,13 +378,13 @@ defmodule Acx.Model do
     sections
     |> validate_request_definition()
     |> case do
-         {:error, reason} ->
-           {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
 
-         {:ok, rd} ->
-           model = %{model | request: rd}
-           {:ok, model, sections}
-       end
+      {:ok, rd} ->
+        model = %{model | request: rd}
+        {:ok, model, sections}
+    end
   end
 
   # Build policy definition
@@ -392,13 +392,13 @@ defmodule Acx.Model do
     sections
     |> validate_policy_definition()
     |> case do
-         {:error, reason} ->
-           {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
 
-         {:ok, definitions} ->
-           model = %{model | policies: definitions}
-           {:ok, model, sections}
-       end
+      {:ok, definitions} ->
+        model = %{model | policies: definitions}
+        {:ok, model, sections}
+    end
   end
 
   # Build policy effect
@@ -406,13 +406,13 @@ defmodule Acx.Model do
     sections
     |> validate_effect_rule()
     |> case do
-         {:error, reason} ->
-           {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
 
-         {:ok, pe} ->
-           model = %{model | effect: pe}
-           {:ok, model, sections}
-       end
+      {:ok, pe} ->
+        model = %{model | effect: pe}
+        {:ok, model, sections}
+    end
   end
 
   # Build matcher program
@@ -420,13 +420,13 @@ defmodule Acx.Model do
     sections
     |> validate_matchers()
     |> case do
-         {:error, reason} ->
-           {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
 
-         {:ok, m} ->
-           model = %{model | matcher: m}
-           {:ok, model, sections}
-       end
+      {:ok, m} ->
+        model = %{model | matcher: m}
+        {:ok, model, sections}
+    end
   end
 
   # Build role definitions
@@ -434,13 +434,13 @@ defmodule Acx.Model do
     sections
     |> validate_role_mappings()
     |> case do
-         {:error, reason} ->
-           {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
 
-         {:ok, mappings} ->
-           model = %{model | role_mappings: mappings}
-           {:ok, model, sections}
-       end
+      {:ok, mappings} ->
+        model = %{model | role_mappings: mappings}
+        {:ok, model, sections}
+    end
   end
 
   defp missing_section_error(section_name) do
@@ -466,12 +466,12 @@ defmodule Acx.Model do
     sections[:policy_definition]
     |> Enum.map(fn {key, value} -> PolicyDefinition.new(key, value) end)
     |> case do
-         [] ->
-           {:error, "policy definition required"}
+      [] ->
+        {:error, "policy definition required"}
 
-         definitions ->
-           {:ok, definitions}
-       end
+      definitions ->
+        {:ok, definitions}
+    end
   end
 
   # Validate policy effect rule
@@ -536,5 +536,4 @@ defmodule Acx.Model do
   defp check_role_definition([{key, val} | _]) do
     {:error, "invalid role definition: `#{key}=#{val}`"}
   end
-
 end
