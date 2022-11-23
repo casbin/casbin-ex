@@ -47,15 +47,15 @@ defmodule Acx.Model.Matcher do
       ...> %Matcher{prog: prog} = Matcher.new(m)
       ...> prog
       [
-        {:fetch_attr, %{key: :r, attr: :sub}},
-        {:fetch_attr, %{key: :p, attr: :sub}},
+        {:fetch_attr, %{key: :r, attr: [:sub]}},
+        {:fetch_attr, %{key: :p, attr: [:sub]}},
         {:eq},
-        {:fetch_attr, %{key: :r, attr: :obj}},
-        {:fetch_attr, %{key: :p, attr: :obj}},
+        {:fetch_attr, %{key: :r, attr: [:obj]}},
+        {:fetch_attr, %{key: :p, attr: [:obj]}},
         {:eq},
         {:and},
-        {:fetch_attr, %{key: :r, attr: :act}},
-        {:fetch_attr, %{key: :p, attr: :act}},
+        {:fetch_attr, %{key: :r, attr: [:act]}},
+        {:fetch_attr, %{key: :p, attr: [:act]}},
         {:eq},
         {:and}
       ]
@@ -64,15 +64,15 @@ defmodule Acx.Model.Matcher do
       ...> %Matcher{prog: prog} = Matcher.new(m)
       ...> prog
       [
-        {:fetch_attr, %{attr: :sub, key: :r}},
-        {:fetch_attr, %{attr: :sub, key: :p}},
+        {:fetch_attr, %{attr: [:sub], key: :r}},
+        {:fetch_attr, %{attr: [:sub], key: :p}},
         {:eq},
-        {:fetch_attr, %{attr: :obj, key: :r}},
-        {:fetch_attr, %{attr: :obj, key: :p}},
+        {:fetch_attr, %{attr: [:obj], key: :r}},
+        {:fetch_attr, %{attr: [:obj], key: :p}},
         {:call, %{arity: 2, name: :regex_match?}},
         {:and},
-        {:fetch_attr, %{attr: :act, key: :r}},
-        {:fetch_attr, %{attr: :act, key: :p}},
+        {:fetch_attr, %{attr: [:act], key: :r}},
+        {:fetch_attr, %{attr: [:act], key: :p}},
         {:call, %{arity: 2, name: :regex_match?}},
         {:and}
       ]
@@ -81,15 +81,15 @@ defmodule Acx.Model.Matcher do
       ...> %Matcher{prog: prog} = Matcher.new(m)
       ...> prog
       [
-        {:fetch_attr, %{attr: :sub, key: :r}},
-        {:fetch_attr, %{attr: :sub, key: :p}},
+        {:fetch_attr, %{attr: [:sub], key: :r}},
+        {:fetch_attr, %{attr: [:sub], key: :p}},
         {:call, %{arity: 2, name: :g}},
-        {:fetch_attr, %{attr: :obj, key: :r}},
-        {:fetch_attr, %{attr: :obj, key: :p}},
+        {:fetch_attr, %{attr: [:obj], key: :r}},
+        {:fetch_attr, %{attr: [:obj], key: :p}},
         {:call, %{arity: 2, name: :g2}},
         {:and},
-        {:fetch_attr, %{attr: :act, key: :r}},
-        {:fetch_attr, %{attr: :act, key: :p}},
+        {:fetch_attr, %{attr: [:act], key: :r}},
+        {:fetch_attr, %{attr: [:act], key: :p}},
         {:eq},
         {:and}
       ]
@@ -98,18 +98,18 @@ defmodule Acx.Model.Matcher do
       ...> %Matcher{prog: prog} = Matcher.new(m)
       ...> prog
       [
-        {:fetch_attr, %{attr: :sub, key: :r}},
-        {:fetch_attr, %{attr: :sub, key: :p}},
+        {:fetch_attr, %{attr: [:sub], key: :r}},
+        {:fetch_attr, %{attr: [:sub], key: :p}},
         {:eq},
-        {:fetch_attr, %{attr: :obj, key: :r}},
-        {:fetch_attr, %{attr: :obj, key: :p}},
-        {:eq},
-        {:and},
-        {:fetch_attr, %{attr: :act, key: :r}},
-        {:fetch_attr, %{attr: :act, key: :p}},
+        {:fetch_attr, %{attr: [:obj], key: :r}},
+        {:fetch_attr, %{attr: [:obj], key: :p}},
         {:eq},
         {:and},
-        {:fetch_attr, %{attr: :sub, key: :r}},
+        {:fetch_attr, %{attr: [:act], key: :r}},
+        {:fetch_attr, %{attr: [:act], key: :p}},
+        {:eq},
+        {:and},
+        {:fetch_attr, %{attr: [:sub], key: :r}},
         {:push, "root"},
         {:eq},
         {:or}
@@ -328,7 +328,14 @@ defmodule Acx.Model.Matcher do
     [%{token: :dot} | rest],
     [{:var, attr}, {:var, key} | stack]
   ) do
-    convert_from_postfix(rest, [{:dot, key, attr} | stack])
+    convert_from_postfix(rest, [{:dot, key, [attr]} | stack])
+  end
+
+  defp convert_from_postfix(
+    [%{token: :dot} | rest],
+    [{:var, next_attr}, {:dot, key, attrs} | stack]
+  ) do
+    convert_from_postfix(rest, [{:dot, key, attrs ++ [next_attr]} | stack])
   end
 
   # For anything else, we consider it's a syntax error.
@@ -425,7 +432,7 @@ defmodule Acx.Model.Matcher do
         {:error, :key_not_found}
 
       attrs ->
-        case attrs[a] do
+        case get_in(attrs, a) do
           nil ->
             {:error, :attribute_not_found}
 
