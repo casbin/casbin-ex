@@ -18,8 +18,8 @@ defmodule Acx.Model.PolicyEffect do
 
   @type rule() :: String.t()
   @type t() :: %__MODULE__{
-    rule: rule()
-  }
+          rule: rule()
+        }
 
   @allow_override "some(where(p.eft==allow))"
   @deny_override "!some(where(p.eft==deny))"
@@ -82,13 +82,12 @@ defmodule Acx.Model.PolicyEffect do
   """
   @spec allow?(t(), [Policy.t()]) :: boolean()
   def allow?(%__MODULE__{rule: @allow_override}, matched_policies)
-  when is_list(matched_policies) do
+      when is_list(matched_policies) do
     Enum.any?(matched_policies, &Policy.allow?/1)
   end
 
   def allow?(%__MODULE__{rule: @deny_override}, matched_policies)
-  when is_list(matched_policies) do
+      when is_list(matched_policies) do
     Enum.all?(matched_policies, &Policy.allow?/1)
   end
-
 end

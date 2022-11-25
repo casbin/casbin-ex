@@ -29,8 +29,8 @@ defmodule Acx.Model.Config do
   @type section_name() :: atom()
   @type section() :: {section_name(), [{key(), value()}]}
   @type t() :: %__MODULE__{
-    sections: [section()]
-  }
+          sections: [section()]
+        }
 
   @whitespace 32
   @new_line 10
@@ -43,21 +43,21 @@ defmodule Acx.Model.Config do
   @spec new(String.t()) :: t() | {:error, String.t()}
   def new(cfile) when is_binary(cfile) do
     cfile
-    |> File.read!
+    |> File.read!()
     |> parse()
     |> convert()
     |> validate_sections()
     |> case do
-         {:error, reason} ->
-           # TODO: provide more information about the error.
-           {
-             :error,
-             "error occurred when parsing config file #{cfile}: #{reason}"
-           }
+      {:error, reason} ->
+        # TODO: provide more information about the error.
+        {
+          :error,
+          "error occurred when parsing config file #{cfile}: #{reason}"
+        }
 
-         {:ok, sections} ->
-           %__MODULE__{sections: sections}
-       end
+      {:ok, sections} ->
+        %__MODULE__{sections: sections}
+    end
   end
 
   #
@@ -169,7 +169,7 @@ defmodule Acx.Model.Config do
 
   # Sections stack is empty.
   defp parse([91, ch | rest], [], eq_stack, tokens, pos)
-  when ?a <= ch and ch <= ?z do
+       when ?a <= ch and ch <= ?z do
     case parse_section(rest) do
       {:error, reason} ->
         {:error, {reason, pos}}
@@ -183,7 +183,7 @@ defmodule Acx.Model.Config do
 
   # Sections stack is not empty.
   defp parse([91, ch | rest], [prev_section], [:eq], tokens, pos)
-  when ?a <= ch and ch <= ?z do
+       when ?a <= ch and ch <= ?z do
     case parse_section(rest) do
       {:error, reason} ->
         {:error, {reason, pos}}
@@ -191,23 +191,21 @@ defmodule Acx.Model.Config do
       {:ok, succeeds, rem, count} ->
         new_section = :erlang.list_to_atom([ch | succeeds])
         next_pos = next_col(pos, count + 2)
-        parse(rem, [new_section], [], [prev_section, :eq | tokens],
-          next_pos)
+        parse(rem, [new_section], [], [prev_section, :eq | tokens], next_pos)
     end
   end
 
   # See one of thes ==, != , >=, <=
 
   defp parse([ch, ?= | rest], [], eq_stack, tokens, pos)
-  when ch in '=!><' do
+       when ch in '=!><' do
     next_token = [ch, ?=]
     next_pos = next_col(pos, 2)
-    parse(rest, [@default_section], eq_stack, [next_token | tokens],
-      next_pos)
+    parse(rest, [@default_section], eq_stack, [next_token | tokens], next_pos)
   end
 
   defp parse([ch, ?= | rest], secs, eq_stack, tokens, pos)
-  when ch in '=!><' do
+       when ch in '=!><' do
     next_token = [ch, ?=]
     next_pos = next_col(pos, 2)
     parse(rest, secs, eq_stack, [next_token | tokens], next_pos)
@@ -260,8 +258,7 @@ defmodule Acx.Model.Config do
     {succeeds, rem, count} = parse_token(rest)
     next_token = [ch | succeeds]
     next_pos = next_col(pos, count + 1)
-    parse(rem, [@default_section], eq_stack, [next_token | tokens],
-      next_pos)
+    parse(rem, [@default_section], eq_stack, [next_token | tokens], next_pos)
   end
 
   defp parse([ch | rest], secs, eq_stack, tokens, pos) do
@@ -284,7 +281,6 @@ defmodule Acx.Model.Config do
   # None of the above
   defp parse(_, _, _, _, pos), do: {:error, {"syntax error", pos}}
 
-
   #
   # Helpers.
   #
@@ -303,7 +299,7 @@ defmodule Acx.Model.Config do
   end
 
   defp parse_token([ch | rest], count) do
-    case (ch == @new_line ) || (ch == @whitespace) || (ch == @eq) do
+    case ch == @new_line || ch == @whitespace || ch == @eq do
       true ->
         {[], [ch | rest], 0}
 
@@ -324,7 +320,7 @@ defmodule Acx.Model.Config do
 
   # See lowercase character or _
   defp parse_section([ch | rest], count)
-  when (?a <= ch and ch <= ?z) or (?0 <= ch and ch <= ?9) or ch == ?_ do
+       when (?a <= ch and ch <= ?z) or (?0 <= ch and ch <= ?9) or ch == ?_ do
     case parse_section(rest, count + 1) do
       {:error, reason} ->
         {:error, reason}
@@ -349,10 +345,9 @@ defmodule Acx.Model.Config do
     {[@new_line | rest], count}
   end
 
-  defp skip_comment([_|rest], count) do
+  defp skip_comment([_ | rest], count) do
     skip_comment(rest, count + 1)
   end
-
 
   # Update position.
 
@@ -375,5 +370,4 @@ defmodule Acx.Model.Config do
   defp get_key_val([token | rest], succeeds) do
     get_key_val(rest, [token | succeeds])
   end
-
 end

@@ -5,35 +5,54 @@ defmodule Acx.Internal.Operator do
   """
 
   @type result() :: number() | String.t() | boolean()
-  @type t() :: :dot
-  | :not
-  | :pos
-  | :neg
-  | :mul
-  | :div
-  | :add
-  | :sub
-  | :lt
-  | :le
-  | :gt
-  | :ge
-  | :eq
-  | :ne
-  | :and
-  | :or
+  @type t() ::
+          :dot
+          | :not
+          | :pos
+          | :neg
+          | :mul
+          | :div
+          | :add
+          | :sub
+          | :lt
+          | :le
+          | :gt
+          | :ge
+          | :eq
+          | :ne
+          | :and
+          | :or
 
-  @operators [:dot, :not, :pos, :neg, :mul, :div, :add, :sub,:lt, :le,
-              :gt, :ge, :eq, :ne, :and, :or]
+  @operators [
+    :dot,
+    :not,
+    :pos,
+    :neg,
+    :mul,
+    :div,
+    :add,
+    :sub,
+    :lt,
+    :le,
+    :gt,
+    :ge,
+    :eq,
+    :ne,
+    :and,
+    :or
+  ]
 
   @doc """
   Converts a charlist to an operator based on the type of previous token.
   """
   @spec charlist_to_operator(charlist(), atom()) :: t()
   def charlist_to_operator('+', prev)
-  when prev not in [:operand, :variable, :right_paren], do: :pos
+      when prev not in [:operand, :variable, :right_paren],
+      do: :pos
 
   def charlist_to_operator('-', prev)
-  when prev not in [:operand, :variable, :right_paren], do: :neg
+      when prev not in [:operand, :variable, :right_paren],
+      do: :neg
 
   def charlist_to_operator(list, _), do: charlist_to_operator(list)
 
@@ -124,7 +143,7 @@ defmodule Acx.Internal.Operator do
 
   # Binary operator.
 
-  def apply(:mul, [x,y]) do
+  def apply(:mul, [x, y]) do
     try do
       {:ok, x * y}
     rescue
@@ -133,7 +152,7 @@ defmodule Acx.Internal.Operator do
     end
   end
 
-  def apply(:div, [x,y]) do
+  def apply(:div, [x, y]) do
     try do
       {:ok, x / y}
     rescue
@@ -142,7 +161,7 @@ defmodule Acx.Internal.Operator do
     end
   end
 
-  def apply(:add, [x,y]) do
+  def apply(:add, [x, y]) do
     try do
       {:ok, x + y}
     rescue
@@ -151,7 +170,7 @@ defmodule Acx.Internal.Operator do
     end
   end
 
-  def apply(:sub, [x,y]) do
+  def apply(:sub, [x, y]) do
     try do
       {:ok, x - y}
     rescue
@@ -160,7 +179,7 @@ defmodule Acx.Internal.Operator do
     end
   end
 
-  def apply(:lt, [x,y]) do
+  def apply(:lt, [x, y]) do
     try do
       {:ok, x < y}
     rescue
@@ -169,7 +188,7 @@ defmodule Acx.Internal.Operator do
     end
   end
 
-  def apply(:le, [x,y]) do
+  def apply(:le, [x, y]) do
     try do
       {:ok, x <= y}
     rescue
@@ -178,7 +197,7 @@ defmodule Acx.Internal.Operator do
     end
   end
 
-  def apply(:gt, [x,y]) do
+  def apply(:gt, [x, y]) do
     try do
       {:ok, x > y}
     rescue
@@ -187,7 +206,7 @@ defmodule Acx.Internal.Operator do
     end
   end
 
-  def apply(:ge, [x,y]) do
+  def apply(:ge, [x, y]) do
     try do
       {:ok, x >= y}
     rescue
@@ -196,7 +215,7 @@ defmodule Acx.Internal.Operator do
     end
   end
 
-  def apply(:eq, [x,y]) do
+  def apply(:eq, [x, y]) do
     try do
       {:ok, x == y}
     rescue
@@ -205,7 +224,7 @@ defmodule Acx.Internal.Operator do
     end
   end
 
-  def apply(:ne, [x,y]) do
+  def apply(:ne, [x, y]) do
     try do
       {:ok, x != y}
     rescue
@@ -214,7 +233,7 @@ defmodule Acx.Internal.Operator do
     end
   end
 
-  def apply(:and, [x,y]) do
+  def apply(:and, [x, y]) do
     try do
       {:ok, x && y}
     rescue
@@ -223,7 +242,7 @@ defmodule Acx.Internal.Operator do
     end
   end
 
-  def apply(:or, [x,y]) do
+  def apply(:or, [x, y]) do
     try do
       {:ok, x || y}
     rescue

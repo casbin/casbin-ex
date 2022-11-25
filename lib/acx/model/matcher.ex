@@ -5,38 +5,38 @@ defmodule Acx.Model.Matcher do
 
   defstruct prog: nil
 
-  @type instr() :: {:push, number()}
-  | {:push, String.t()}
-  | {:fetch, atom()}
-  | {:fetch_attr, %{key: atom(), attr: atom()}}
-  | {:not}
-  | {:pos}
-  | {:neg}
-  | {:mul}
-  | {:div}
-  | {:add}
-  | {:sub}
-  | {:lt}
-  | {:le}
-  | {:gt}
-  | {:ge}
-  | {:eq}
-  | {:ne}
-  | {:and}
-  | {:or}
-  | {:call, %{name: atom(), arity: non_neg_integer()}}
+  @type instr() ::
+          {:push, number()}
+          | {:push, String.t()}
+          | {:fetch, atom()}
+          | {:fetch_attr, %{key: atom(), attr: atom()}}
+          | {:not}
+          | {:pos}
+          | {:neg}
+          | {:mul}
+          | {:div}
+          | {:add}
+          | {:sub}
+          | {:lt}
+          | {:le}
+          | {:gt}
+          | {:ge}
+          | {:eq}
+          | {:ne}
+          | {:and}
+          | {:or}
+          | {:call, %{name: atom(), arity: non_neg_integer()}}
 
   @type program() :: [instr()]
 
   @type t() :: %__MODULE__{
-    prog: program()
-  }
+          prog: program()
+        }
 
   alias Acx.Internal.{Helpers, Parser, Operator}
 
   @unary_operators [:not, :pos, :neg]
-  @binary_operators [:mul, :div, :add, :sub, :lt, :le, :gt, :ge, :eq,
-                     :ne, :and, :or]
+  @binary_operators [:mul, :div, :add, :sub, :lt, :le, :gt, :ge, :eq, :ne, :and, :or]
 
   @doc """
   Converts the given matcher string `str` to a matcher program.
@@ -122,12 +122,12 @@ defmodule Acx.Model.Matcher do
     |> Parser.parse()
     |> convert_from_postfix()
     |> case do
-         {:error, reason} ->
-           {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
 
-         {:ok, postfix} ->
-           %__MODULE__{prog: postfix |> compile()}
-       end
+      {:ok, postfix} ->
+        %__MODULE__{prog: postfix |> compile()}
+    end
   end
 
   @doc """
@@ -154,26 +154,27 @@ defmodule Acx.Model.Matcher do
   # #################################################
 
   # Matcher expression
-  @type expr() :: {:num, number()}
-  | {:str, String.t()}
-  | {:var, atom()}
-  | {:dot, atom(), atom()}
-  | {:not, expr()}
-  | {:pos, expr()}
-  | {:neg, expr()}
-  | {:mul, expr(), expr()}
-  | {:div, expr(), expr()}
-  | {:add, expr(), expr()}
-  | {:sub, expr(), expr()}
-  | {:lt, expr(), expr()}
-  | {:le, expr(), expr()}
-  | {:gt, expr(), expr()}
-  | {:ge, expr(), expr()}
-  | {:eq, expr(), expr()}
-  | {:ne, expr(), expr()}
-  | {:and, expr(), expr()}
-  | {:or, expr(), expr()}
-  | {:call, atom(), [expr()]}
+  @type expr() ::
+          {:num, number()}
+          | {:str, String.t()}
+          | {:var, atom()}
+          | {:dot, atom(), atom()}
+          | {:not, expr()}
+          | {:pos, expr()}
+          | {:neg, expr()}
+          | {:mul, expr(), expr()}
+          | {:div, expr(), expr()}
+          | {:add, expr(), expr()}
+          | {:sub, expr(), expr()}
+          | {:lt, expr(), expr()}
+          | {:le, expr(), expr()}
+          | {:gt, expr(), expr()}
+          | {:ge, expr(), expr()}
+          | {:eq, expr(), expr()}
+          | {:ne, expr(), expr()}
+          | {:and, expr(), expr()}
+          | {:or, expr(), expr()}
+          | {:call, atom(), [expr()]}
 
   @spec compile(expr()) :: program()
   defp compile({:num, x}), do: [{:push, x}]
@@ -195,10 +196,13 @@ defmodule Acx.Model.Matcher do
   defp compile({:ne, e1, e2}), do: compile(e1) ++ compile(e2) ++ [{:ne}]
   defp compile({:and, e1, e2}), do: compile(e1) ++ compile(e2) ++ [{:and}]
   defp compile({:or, e1, e2}), do: compile(e1) ++ compile(e2) ++ [{:or}]
+
   defp compile({:call, name, args}) do
-    ins = Enum.reduce(args, [], fn e, acc ->
-      acc ++ compile(e)
-    end)
+    ins =
+      Enum.reduce(args, [], fn e, acc ->
+        acc ++ compile(e)
+      end)
+
     ins ++ [{:call, %{name: name, arity: length(args)}}]
   end
 
@@ -206,13 +210,15 @@ defmodule Acx.Model.Matcher do
   # ###############################################
 
   @type virtual_machine() :: [result()]
-  @spec run(program(), environment()) :: {:ok, result()}
-  | {:error, String.t()}
+  @spec run(program(), environment()) ::
+          {:ok, result()}
+          | {:error, String.t()}
 
   defp run(pro, env), do: run(pro, env, [])
 
-  @spec run(program(), environment(), virtual_machine()) :: {:ok, result()}
-  | {:error, String.t()}
+  @spec run(program(), environment(), virtual_machine()) ::
+          {:ok, result()}
+          | {:error, String.t()}
 
   defp run([{:push, x} | continue], env, stack) do
     run(continue, env, [x | stack])
@@ -242,7 +248,7 @@ defmodule Acx.Model.Matcher do
   end
 
   defp run([{op} | continue], env, [head | tail])
-  when op in @unary_operators do
+       when op in @unary_operators do
     case Operator.apply(op, [head]) do
       {:error, reason} ->
         {:error, reason}
@@ -253,7 +259,7 @@ defmodule Acx.Model.Matcher do
   end
 
   defp run([{op} | continue], env, [rhs, lhs | tail])
-  when op in @binary_operators do
+       when op in @binary_operators do
     case Operator.apply(op, [lhs, rhs]) do
       {:error, reason} ->
         {:error, reason}
@@ -265,6 +271,7 @@ defmodule Acx.Model.Matcher do
 
   defp run([{:call, fun} | continue], env, stack) do
     %{name: name, arity: arity} = fun
+
     case lookup_function(fun, env) do
       {:error, :not_found} ->
         {:error, "undefined function #{name}/#{arity}"}
@@ -277,7 +284,6 @@ defmodule Acx.Model.Matcher do
   end
 
   defp run([], _env, [result]), do: {:ok, result}
-
 
   # Convert from a postfix expression to a matcher expression.
   # #########################################################
@@ -325,9 +331,9 @@ defmodule Acx.Model.Matcher do
   #
 
   defp convert_from_postfix(
-    [%{token: :dot} | rest],
-    [{:var, attr}, {:var, key} | stack]
-  ) do
+         [%{token: :dot} | rest],
+         [{:var, attr}, {:var, key} | stack]
+       ) do
     convert_from_postfix(rest, [{:dot, key, attr} | stack])
   end
 
@@ -341,12 +347,12 @@ defmodule Acx.Model.Matcher do
   #
 
   defp convert_from_postfix([%{token: op} | rest], [head | tail])
-  when op in @unary_operators do
+       when op in @unary_operators do
     convert_from_postfix(rest, [{op, head} | tail])
   end
 
   defp convert_from_postfix([%{token: op} = token | _], [])
-  when op in @unary_operators do
+       when op in @unary_operators do
     syntax_error(token)
   end
 
@@ -355,12 +361,12 @@ defmodule Acx.Model.Matcher do
   #
 
   defp convert_from_postfix([%{token: op} | rest], [rhs, lhs | tail])
-  when op in @binary_operators do
+       when op in @binary_operators do
     convert_from_postfix(rest, [{op, lhs, rhs} | tail])
   end
 
-  defp convert_from_postfix([%{token: op} = token | _], _) when
-  op in @binary_operators do
+  defp convert_from_postfix([%{token: op} = token | _], _)
+       when op in @binary_operators do
     syntax_error(token)
   end
 
@@ -370,6 +376,7 @@ defmodule Acx.Model.Matcher do
 
   defp convert_from_postfix([%{token: {:fun, fun}} = t | rest], stack) do
     %{name: name, arity: arity} = fun
+
     case Helpers.pop_stack(stack, arity) do
       {:error, _} ->
         # There was a discrepancy between function arity and the number
@@ -391,7 +398,7 @@ defmodule Acx.Model.Matcher do
 
   # Operator syntax error.
   defp syntax_error(%{token: op} = arg)
-  when op in @unary_operators or op in @binary_operators do
+       when op in @unary_operators or op in @binary_operators do
     {
       :error,
       {:syntax_error, %{arg | token: Operator.operator_to_charlist(op)}}
@@ -405,7 +412,6 @@ defmodule Acx.Model.Matcher do
       {:syntax_error, %{arg | token: :erlang.atom_to_list(name)}}
     }
   end
-
 
   # Lookup variable name `v` in the given environment `env`.
   defp lookup(v, env) do
@@ -448,5 +454,4 @@ defmodule Acx.Model.Matcher do
         {:ok, f}
     end
   end
-
 end

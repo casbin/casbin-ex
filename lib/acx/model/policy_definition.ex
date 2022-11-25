@@ -14,9 +14,9 @@ defmodule Acx.Model.PolicyDefinition do
   @type attr() :: atom()
   @type attr_value() :: String.t() | number()
   @type t() :: %__MODULE__{
-    key: key(),
-    attrs: [attr()]
-  }
+          key: key(),
+          attrs: [attr()]
+        }
 
   alias Acx.Model.Policy
 
@@ -98,8 +98,9 @@ defmodule Acx.Model.PolicyDefinition do
       ...> r
       "invalid attribute value type"
   """
-  @spec create_policy(t(), [attr_value()]) :: {:ok, Policy.t()}
-  | {:error, String.t()}
+  @spec create_policy(t(), [attr_value()]) ::
+          {:ok, Policy.t()}
+          | {:error, String.t()}
   def create_policy(%__MODULE__{} = pd, values) when is_list(values) do
     case validate_policy(pd, values) do
       {:error, reason} ->
@@ -140,5 +141,4 @@ defmodule Acx.Model.PolicyDefinition do
   defp valid_attr_value_type?(value) do
     is_binary(value) || is_number(value)
   end
-
 end

@@ -25,5 +25,4 @@ defmodule Acx.EnforcerSupervisor do
 
     DynamicSupervisor.start_child(__MODULE__, child_spec)
   end
-
 end

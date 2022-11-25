@@ -1,6 +1,7 @@
 defmodule Acx.ModelTest do
   use ExUnit.Case, async: true
   alias Acx.Model
+
   alias Acx.Model.{
     RequestDefinition,
     PolicyDefinition,
@@ -9,5 +10,6 @@ defmodule Acx.ModelTest do
     Request,
     Policy
   }
+
   doctest Acx.Model
 end

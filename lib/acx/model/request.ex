@@ -15,9 +15,9 @@ defmodule Acx.Model.Request do
   @type attr() :: atom()
   @type attr_value() :: String.t() | number()
   @type t() :: %__MODULE__{
-    key: key(),
-    attrs: [{attr(), attr_value()}]
-  }
+          key: key(),
+          attrs: [{attr(), attr_value()}]
+        }
 
   @doc """
   Creates a new request based on the given `key` and a list of attributes.
@@ -25,5 +25,4 @@ defmodule Acx.Model.Request do
   def new(key, attrs) do
     %__MODULE__{key: key, attrs: attrs}
   end
-
 end

@@ -25,7 +25,6 @@ defmodule Acx.Enforcer.G3WithDomain do
       {["alice", "3", "/data/organizations/3/", "GET"], true},
       {["alice", "3", "/data/organizations/3/", "POST"], true},
       {["alice", "1", "/data/organizations/1/", "no_existing"], false},
-
       {["alice", "1", "no_existing", "GET"], false},
       {["bob", "1", "/data/organizations/1/", "GET"], true},
       {["bob", "1", "/data/organizations/1/", "POST"], true},
@@ -35,7 +34,6 @@ defmodule Acx.Enforcer.G3WithDomain do
       {["bob", "3", "/data/organizations/3/", "POST"], false},
       {["bob", "1", "/data/organizations/1/", "no_existing"], false},
       {["bob", "1", "no_existing", "GET"], false},
-
       {["peter", "1", "/data/organizations/1/", "GET"], false},
       {["peter", "1", "/data/organizations/1/", "POST"], false},
       {["peter", "2", "/data/organizations/2/", "GET"], true},
@@ -44,7 +42,6 @@ defmodule Acx.Enforcer.G3WithDomain do
       {["peter", "3", "/data/organizations/3/", "POST"], false},
       {["peter", "1", "/data/organizations/1/", "no_existing"], false},
       {["peter", "1", "no_existing", "GET"], false},
-
       {["john", "1", "/data/organizations/1/", "GET"], false},
       {["john", "1", "/data/organizations/1/", "POST"], false},
       {["john", "2", "/data/organizations/2/", "GET"], true},

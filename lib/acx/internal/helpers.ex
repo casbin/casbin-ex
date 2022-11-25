@@ -1,5 +1,4 @@
 defmodule Acx.Internal.Helpers do
-
   @doc """
   Returns a tuple `{succeeds, remainder, count}` where `succeeds` is
   the initial segment of the given `list`, in which all elements have
@@ -21,8 +20,9 @@ defmodule Acx.Internal.Helpers do
       {[:a, :b], [1, :c, :d], 2}
   """
   def get_while(p, list, reverse \\ true)
-  when is_function(p, 1) and is_list(list) do
+      when is_function(p, 1) and is_list(list) do
     {succeeds, remainder, count} = get_while_reverse(p, list, [], 0)
+
     case reverse do
       true ->
         {succeeds, remainder, count}
@@ -86,5 +86,4 @@ defmodule Acx.Internal.Helpers do
     keys = Keyword.keys(list)
     length(keys) != length(Enum.uniq(keys))
   end
-
 end

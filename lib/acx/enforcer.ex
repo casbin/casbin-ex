@@ -3,22 +3,20 @@ defmodule Acx.Enforcer do
   TODO
   """
 
-  defstruct [
-    model: nil,
-    policies: [],
-    role_groups: [],
-    env: %{}
-  ]
+  defstruct model: nil,
+            policies: [],
+            role_groups: [],
+            env: %{}
 
   alias Acx.Model
   alias Acx.Internal.RoleGroup
 
   @type t() :: %__MODULE__{
-    model: Model.t(),
-    policies: [Model.Policy.t()],
-    role_groups: %{atom() => RoleGroup.t()},
-    env: map()
-  }
+          model: Model.t(),
+          policies: [Model.Policy.t()],
+          role_groups: %{atom() => RoleGroup.t()},
+          env: map()
+        }
 
   @doc """
   Loads and contructs a model from the given config file `cfile`.
@@ -46,7 +44,7 @@ defmodule Acx.Enforcer do
           :ok,
           %__MODULE__{
             model: model,
-            role_groups: role_groups |> Map.new,
+            role_groups: role_groups |> Map.new(),
             env: env
           }
         }
@@ -72,9 +70,9 @@ defmodule Acx.Enforcer do
   """
   @spec add_policy(t(), {atom(), [String.t()]}) :: t() | {:error, String.t()}
   def add_policy(
-    %__MODULE__{model: model, policies: policies} = enforcer,
-    {key, attrs}
-  ) do
+        %__MODULE__{model: model, policies: policies} = enforcer,
+        {key, attrs}
+      ) do
     case Model.create_policy(model, {key, attrs}) do
       {:error, reason} ->
         {:error, reason}
@@ -159,13 +157,12 @@ defmodule Acx.Enforcer do
         key: :p
       }
       ]
-
   """
   @spec load_policies!(t(), String.t()) :: t()
   def load_policies!(%__MODULE__{model: m} = enforcer, pfile)
-  when is_binary(pfile) do
+      when is_binary(pfile) do
     pfile
-    |> File.read!
+    |> File.read!()
     |> String.split("\n", trim: true)
     |> Enum.map(&String.split(&1, ~r{,\s*}))
     |> Enum.map(fn [key | attrs] -> [String.to_atom(key) | attrs] end)
@@ -212,9 +209,10 @@ defmodule Acx.Enforcer do
   """
   @spec list_policies(t(), map() | keyword()) :: [Model.Policy.t()]
   def list_policies(
-    %__MODULE__{policies: policies},
-    criteria
-  ) when is_map(criteria) or is_list(criteria) do
+        %__MODULE__{policies: policies},
+        criteria
+      )
+      when is_map(criteria) or is_list(criteria) do
     policies
     |> Enum.filter(fn %{key: key, attrs: attrs} ->
       list = [{:key, key} | attrs]
@@ -230,9 +228,10 @@ defmodule Acx.Enforcer do
   """
   @spec list_matched_policies(t(), [String.t()]) :: [Model.Policy.t()]
   def list_matched_policies(
-    %__MODULE__{model: model, policies: policies, env: env},
-    request
-  ) when is_list(request) do
+        %__MODULE__{model: model, policies: policies, env: env},
+        request
+      )
+      when is_list(request) do
     case Model.create_request(model, request) do
       {:error, _reason} ->
         []
@@ -284,11 +283,12 @@ defmodule Acx.Enforcer do
       "mapping name not found: `g2`"
   """
   @spec add_mapping_policy(t(), {atom(), String.t(), String.t()}) ::
-  t() | {:error, String.t()}
+          t() | {:error, String.t()}
   def add_mapping_policy(
-    %__MODULE__{role_groups: groups, env: env} = enforcer,
-    {mapping_name, role1, role2}
-  ) when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) do
+        %__MODULE__{role_groups: groups, env: env} = enforcer,
+        {mapping_name, role1, role2}
+      )
+      when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) do
     case Map.get(groups, mapping_name) do
       nil ->
         {:error, "mapping name not found: `#{mapping_name}`"}
@@ -299,17 +299,18 @@ defmodule Acx.Enforcer do
           |> RoleGroup.add_inheritance({role1, role2})
 
         %{
-          enforcer |
-          role_groups: %{groups | mapping_name => group},
-          env: %{env | mapping_name => RoleGroup.stub_2(group)}
+          enforcer
+          | role_groups: %{groups | mapping_name => group},
+            env: %{env | mapping_name => RoleGroup.stub_2(group)}
         }
     end
   end
 
   def add_mapping_policy(
-    %__MODULE__{role_groups: groups, env: env} = enforcer,
-    {mapping_name, role1, role2, dom}
-  ) when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) and is_binary(dom) do
+        %__MODULE__{role_groups: groups, env: env} = enforcer,
+        {mapping_name, role1, role2, dom}
+      )
+      when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) and is_binary(dom) do
     case Map.get(groups, mapping_name) do
       nil ->
         {:error, "mapping name not found: `#{mapping_name}`"}
@@ -320,17 +321,18 @@ defmodule Acx.Enforcer do
           |> RoleGroup.add_inheritance({role1, role2 <> dom})
 
         %{
-          enforcer |
-          role_groups: %{groups | mapping_name => group},
-          env: %{env | mapping_name => RoleGroup.stub_3(group)}
+          enforcer
+          | role_groups: %{groups | mapping_name => group},
+            env: %{env | mapping_name => RoleGroup.stub_3(group)}
         }
     end
   end
 
   def add_mapping_policy!(
-    %__MODULE__{} = enforcer,
-    {mapping_name, role1, role2}
-  ) when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) do
+        %__MODULE__{} = enforcer,
+        {mapping_name, role1, role2}
+      )
+      when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) do
     case add_mapping_policy(enforcer, {mapping_name, role1, role2}) do
       {:error, reason} ->
         raise ArgumentError, message: reason
@@ -341,9 +343,10 @@ defmodule Acx.Enforcer do
   end
 
   def add_mapping_policy!(
-    %__MODULE__{} = enforcer,
-    {mapping_name, role1, role2, dom}
-  ) when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) and is_binary(dom) do
+        %__MODULE__{} = enforcer,
+        {mapping_name, role1, role2, dom}
+      )
+      when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) and is_binary(dom) do
     case add_mapping_policy(enforcer, {mapping_name, role1, role2, dom}) do
       {:error, reason} ->
         raise ArgumentError, message: reason
@@ -369,9 +372,9 @@ defmodule Acx.Enforcer do
   file.
   """
   def load_mapping_policies!(%__MODULE__{model: m} = enforcer, fname)
-  when is_binary(fname) do
+      when is_binary(fname) do
     fname
-    |> File.read!
+    |> File.read!()
     |> String.split("\n", trim: true)
     |> Enum.map(&String.split(&1, ~r{,\s*}))
     |> Enum.map(fn [key | attrs] -> [String.to_atom(key) | attrs] end)
@@ -407,7 +410,7 @@ defmodule Acx.Enforcer do
   """
   @spec add_fun(t(), {atom(), function()}) :: t()
   def add_fun(%__MODULE__{env: env} = enforcer, {fun_name, fun})
-  when is_atom(fun_name) and is_function(fun) do
+      when is_atom(fun_name) and is_function(fun) do
     %{enforcer | env: Map.put(env, fun_name, fun)}
   end
 
@@ -483,5 +486,4 @@ defmodule Acx.Enforcer do
       keyMatch2: &key_match2?/2
     }
   end
-
 end
