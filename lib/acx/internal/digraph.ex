@@ -111,6 +111,35 @@ defmodule Acx.Internal.Digraph do
   end
 
   @doc """
+  If the edge exists in the digraph, the edge will be removed.
+
+  ## Examples
+
+      iex> g = Digraph.new
+      ...>   |> Digraph.add_edge({:a, :b})
+      ...>   |> Digraph.add_edge({:b, :c})
+      ...>   |> Digraph.add_edge({:a, :c})
+      ...> [:c] = Digraph.list_vertices(g) -- [:a, :b]
+      ...> [:c] = g |> Digraph.adj(:b)
+      ...> [:b, :c] = g |> Digraph.adj(:a)
+      ...> g = g |> Digraph.remove_edge({:a, :b})
+      ...> [:c] = g |> Digraph.adj(:b)
+      ...> [:c] = g |> Digraph.adj(:a)
+  """
+  @spec remove_edge(t(), {vertex(), vertex()}) :: t()
+  def remove_edge(%__MODULE__{adj: adj} = g, {v, w}) do
+    with v_id <- hash(v),
+         w_id <- hash(w),
+         v_adj when not is_nil(v_adj) <- Map.get(adj, v_id) do
+        v_adj = v_adj |> MapSet.delete(w_id)
+        %{g | adj: %{adj | v_id => v_adj}}
+      else
+        nil -> g
+      end
+  end
+
+
+  @doc """
   Returns a list of vertices that are adjacent to the given vertex `v`.
   Adjacent here means there are direct edges from `v` pointing to those
   vertices.

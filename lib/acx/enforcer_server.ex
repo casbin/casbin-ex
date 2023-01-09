@@ -49,6 +49,16 @@ defmodule Acx.EnforcerServer do
   end
 
   @doc """
+  Removes the matching policy rule or rules with key given by `key` and a list of
+  attribute values `attr_values` to the enforcer.
+
+  See `Enforcer.remove_policy/2` for more information.
+  """
+  def remove_policy(ename, {key, attrs}) do
+    GenServer.call(via_tuple(ename), {:remove_policy, {key, attrs}})
+  end
+
+  @doc """
   Loads policy rules from external file given by the name `pfile` and
   adds them to the enforcer.
 
@@ -66,6 +76,15 @@ defmodule Acx.EnforcerServer do
   """
   def list_policies(ename, criteria) do
     GenServer.call(via_tuple(ename), {:list_policies, criteria})
+  end
+
+  @doc """
+  Saves the current set of policies using the configured PersistAdapter.
+
+  See `Enforcer.save_policies/1`
+  """
+  def save_policies(ename) do
+    GenServer.call(via_tuple(ename),{:save_policies})
   end
 
   @doc """
@@ -96,6 +115,46 @@ defmodule Acx.EnforcerServer do
   end
 
   @doc """
+  Removes a mapping policy and its role inheritence. The `mapping_name`
+  should be one of the names given in the model configuration file under
+  the `role_definition` section. For example if your role definition look
+  like this:
+
+  [role_definition]
+  g = _, _
+
+  then `mapping_name` should be the atom `:g`.
+
+  See `Enforcer.remove_mapping_policy/2` for more details.
+  """
+  def remove_mapping_policy(ename, {mapping_name, role1, role2}) do
+    GenServer.call(
+      via_tuple(ename),
+      {:remove_mapping_policy, {mapping_name, role1, role2}}
+    )
+  end
+
+  def remove_mapping_policy(ename, {mapping_name, role1, role2, dom}) do
+    GenServer.call(
+      via_tuple(ename),
+      {:remove_mapping_policy, {mapping_name, role1, role2, dom}}
+    )
+  end
+
+  @doc """
+  Removes policies with attributes that match the filter fields
+  starting at the index.any()
+
+  see `Enforecer.remove_filtered_policy/4
+  """
+  def remove_filtered_policy(ename, req_key, idx, req) do
+    GenServer.call(
+      via_tuple(ename),
+      {:remove_filtered_policy, req_key, idx, req}
+    )
+  end
+
+  @doc """
   Loads mapping policies from a csv file and adds them to the enforcer.
 
   See `Enforcer.load_mapping_policies!/2` for more details.
@@ -120,6 +179,14 @@ defmodule Acx.EnforcerServer do
   """
   def add_fun(ename, {fun_name, fun}) do
     GenServer.call(via_tuple(ename), {:add_fun, {fun_name, fun}})
+  end
+
+  @doc """
+    Set the persist adapter for the enforcer. If not explicitly set the Enforcer
+    will use a read-only file adapter for backwards compatibility.
+  """
+  def set_persist_adapter(ename, adapter) do
+    GenServer.call(via_tuple(ename), {:set_persist_adapter, adapter})
   end
 
   #
@@ -157,6 +224,21 @@ defmodule Acx.EnforcerServer do
     end
   end
 
+  def handle_call({:remove_policy, {key, attrs}}, _from, enforcer) do
+    case Enforcer.remove_policy(enforcer, {key, attrs}) do
+      {:error, reason} ->
+        {:reply, {:error, reason}, enforcer}
+
+      {:ok, new_enforcer} ->
+        :ets.insert(:enforcers_table, {self_name(), new_enforcer})
+        {:reply, :ok, new_enforcer}
+
+      new_enforcer ->
+        :ets.insert(:enforcers_table, {self_name(), new_enforcer})
+        {:reply, :ok, new_enforcer}
+    end
+  end
+
   def handle_call({:load_policies, pfile}, _from, enforcer) do
     new_enforcer = enforcer |> Enforcer.load_policies!(pfile)
     :ets.insert(:enforcers_table, {self_name(), new_enforcer})
@@ -166,6 +248,11 @@ defmodule Acx.EnforcerServer do
   def handle_call({:list_policies, criteria}, _from, enforcer) do
     policies = enforcer |> Enforcer.list_policies(criteria)
     {:reply, policies, enforcer}
+  end
+
+  def handle_call({:save_policies}, _from, enforcer) do
+    new_enforcer = enforcer |> Enforcer.save_policies
+    {:reply, :ok, new_enforcer}
   end
 
   def handle_call({:add_mapping_policy, mapping}, _from, enforcer) do
@@ -189,6 +276,36 @@ defmodule Acx.EnforcerServer do
     {:reply, :ok, new_enforcer}
   end
 
+  def handle_call({:remove_mapping_policy, mapping}, _from, enforcer) do
+    case Enforcer.remove_mapping_policy(enforcer, mapping) do
+      {:error, reason} ->
+        {:reply, {:error, reason}, enforcer}
+
+      {:ok, new_enforcer} ->
+        :ets.insert(:enforcers_table, {self_name(), new_enforcer})
+        {:reply, :ok, new_enforcer}
+
+      new_enforcer ->
+        :ets.insert(:enforcers_table, {self_name(), new_enforcer})
+        {:reply, :ok, new_enforcer}
+    end
+  end
+
+  def handle_call({:remove_filtered_policy, key, idx, attrs}, _from, enforcer) do
+    case Enforcer.remove_filtered_policy(enforcer, key, idx, attrs) do
+      {:error, reason} ->
+        {:reply, {:error, reason}, enforcer}
+
+      {:ok, new_enforcer} ->
+        :ets.insert(:enforcers_table, {self_name(), new_enforcer})
+        {:reply, :ok, new_enforcer}
+
+      new_enforcer ->
+        :ets.insert(:enforcers_table, {self_name(), new_enforcer})
+        {:reply, :ok, new_enforcer}
+    end
+  end
+
   def handle_call({:reset_configuration, cfile}, _from, enforcer) do
     case Enforcer.init(cfile) do
       {:error, reason} ->
@@ -204,6 +321,16 @@ defmodule Acx.EnforcerServer do
     new_enforcer = enforcer |> Enforcer.add_fun({fun_name, fun})
     :ets.insert(:enforcers_table, {self_name(), new_enforcer})
     {:reply, :ok, new_enforcer}
+  end
+
+  def handle_call({:set_persist_adapter, adapter}, _from, enforcer) do
+    case Enforcer.set_persist_adapter(enforcer, adapter) do
+      {:error, reason} -> {:reply, {:error, reason}, enforcer}
+
+      {:ok, new_enforcer} ->
+        :ets.insert(:enforcers_table, {self_name(), new_enforcer})
+        {:reply, :ok, new_enforcer}
+    end
   end
 
   #
