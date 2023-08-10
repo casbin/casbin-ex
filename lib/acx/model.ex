@@ -5,7 +5,7 @@ defmodule Acx.Model do
 
   TODO
 
-  [1] - https://vicarie.in/posts/generalized-authz.html
+  [1] - https://casbin.org/docs/how-it-works
   """
 
   defstruct request: nil,

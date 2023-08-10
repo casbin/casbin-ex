@@ -28,7 +28,7 @@ like this:
 Based on this requirements, our first step is to choose an appropriate
 access control model. Let's say we choose to go with the ACL model.
 Similar to Casbin, in Acx, an access control model is abstracted into a
-config file based on the **[PERM Meta-Model](https://vicarie.in/posts/generalized-authz.html)**. The content of the config file for our system would look
+config file based on the **[PERM Meta-Model](https://casbin.org/docs/how-it-works)**. The content of the config file for our system would look
 like so:
 
 ```ini
@@ -287,7 +287,7 @@ end
 
 ### Global
 
-Implement all [matchers' functions](https://casbin.org/docs/en/function):
+Implement all [matchers' functions](https://casbin.org/docs/function):
 - [x] regexMatch
 - [ ] keyMatch
 - [ ] keyGet
