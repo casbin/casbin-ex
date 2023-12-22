@@ -91,6 +91,23 @@ defmodule Acx.Internal.RoleGroup do
   end
 
   @doc """
+  Removes the inheritance connection between roles
+
+  ## Examples
+
+      iex> pair = {"admin", "member"}
+      ...> g = RoleGroup.new(:g) |> RoleGroup.add_inheritance(pair)
+      ...> true = g |> RoleGroup.inherit_from?("admin", "member")
+      ...> false = g |> RoleGroup.inherit_from?("member", "admin")
+      ...> g = g |> RoleGroup.remove_inheritance(pair)
+      ...> false = g |> RoleGroup.inherit_from?("admin", "member")
+  """
+  @spec remove_inheritance(t(), {role_type(), role_type()}) :: t()
+  def remove_inheritance(%__MODULE__{role_graph: g} = group, {r1, r2}) do
+    %{group | role_graph: g |> Digraph.remove_edge({r1, r2})}
+  end
+
+  @doc """
   Returns `true` if role `r1` inherits from role `r2`.
   Returns `false`, otherwise.
 
@@ -102,6 +119,7 @@ defmodule Acx.Internal.RoleGroup do
       iex> g = RoleGroup.new(:g)
       ...> g = g |> RoleGroup.add_inheritance({"author", "reader"})
       ...> g = g |> RoleGroup.add_inheritance({"admin", "author"})
+      ...> true = g |> RoleGroup.inherit_from?("author","author")
       ...> true = g |> RoleGroup.inherit_from?("author", "reader")
       ...> false = g |> RoleGroup.inherit_from?("reader", "author")
       ...> true = g |> RoleGroup.inherit_from?("admin", "author")
@@ -112,7 +130,7 @@ defmodule Acx.Internal.RoleGroup do
   """
   @spec inherit_from?(t(), role_type(), role_type()) :: boolean()
   def inherit_from?(%__MODULE__{role_graph: g}, r1, r2) do
-    g |> Digraph.has_path?(r1, r2)
+    r1 === r2 || g |> Digraph.has_path?(r1, r2)
   end
 
   @doc """
