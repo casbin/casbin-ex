@@ -327,7 +327,7 @@ defmodule Acx.EnforcerServer do
     case Enforcer.set_persist_adapter(enforcer, adapter) do
       {:error, reason} -> {:reply, {:error, reason}, enforcer}
 
-      {:ok, new_enforcer} ->
+      new_enforcer ->
         :ets.insert(:enforcers_table, {self_name(), new_enforcer})
         {:reply, :ok, new_enforcer}
     end
