@@ -5,7 +5,7 @@ defmodule Acx.MixProject do
     [
       app: :acx,
       version: "0.1.1",
-      elixir: "~> 1.13",
+      elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps()
@@ -27,7 +27,9 @@ defmodule Acx.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ecto_sql, "~> 3.6"}
+      {:ecto_sql, "~> 3.6"},
+      {:horde, "~> 0.8.0"},
+      {:libcluster, "~> 3.3.0"}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]
