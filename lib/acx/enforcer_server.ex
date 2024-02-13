@@ -340,12 +340,14 @@ defmodule Acx.EnforcerServer do
   # Returns a tuple used to register and lookup an enforcer process
   # by name
   defp via_tuple(ename) do
-    {:via, Registry, {Acx.EnforcerRegistry, ename}}
+    {type, name} = Application.get_env(:acx, :registry, {Registry, Acx.EnforcerRegistry})
+    {:via, type, {name, ename}}
   end
 
   # Returns the name of `self`.
   defp self_name() do
-    Registry.keys(Acx.EnforcerRegistry, self()) |> List.first()
+    {type, name} = Application.get_env(:acx, :registry, {Registry, Acx.EnforcerRegistry})
+    type.keys(name, self()) |> List.first()
   end
 
   # Creates a new enforcer or lookups existing one in the ets table.
