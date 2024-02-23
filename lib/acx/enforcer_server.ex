@@ -220,7 +220,6 @@ defmodule Acx.EnforcerServer do
 
       {:ok, enforcer} ->
         Logger.info("Spawned an enforcer process named '#{ename}'")
-        IO.inspect(enforcer, label: "AFTER INIT")
         {:ok, enforcer}
     end
   end
@@ -261,7 +260,7 @@ defmodule Acx.EnforcerServer do
   end
 
   def handle_call(:load_policies, _from, enforcer) do
-    new_enforcer = enforcer |> Enforcer.load_policies!() |> IO.inspect(label: "AFTER LOAD POLICIES")
+    new_enforcer = enforcer |> Enforcer.load_policies!()
     :ets.insert(:enforcers_table, {self_name(), new_enforcer})
     {:reply, :ok, new_enforcer}
   end
@@ -298,7 +297,7 @@ defmodule Acx.EnforcerServer do
   end
 
   def handle_call(:load_mapping_policies, _from, enforcer) do
-    new_enforcer = enforcer |> Enforcer.load_mapping_policies!() |> IO.inspect(label: "AFTER LOAD MAPPING POLICIES")
+    new_enforcer = enforcer |> Enforcer.load_mapping_policies!()
     :ets.insert(:enforcers_table, {self_name(), new_enforcer})
     {:reply, :ok, new_enforcer}
   end
