@@ -94,7 +94,7 @@ defmodule Acx.EnforcerServer do
   See `Enforcer.save_policies/1`
   """
   def save_policies(ename) do
-    GenServer.call(via_tuple(ename),{:save_policies})
+    GenServer.call(via_tuple(ename), {:save_policies})
   end
 
   @doc """
@@ -277,7 +277,7 @@ defmodule Acx.EnforcerServer do
   end
 
   def handle_call({:save_policies}, _from, enforcer) do
-    new_enforcer = enforcer |> Enforcer.save_policies
+    new_enforcer = enforcer |> Enforcer.save_policies()
     {:reply, :ok, new_enforcer}
   end
 
@@ -357,7 +357,8 @@ defmodule Acx.EnforcerServer do
 
   def handle_call({:set_persist_adapter, adapter}, _from, enforcer) do
     case Enforcer.set_persist_adapter(enforcer, adapter) do
-      {:error, reason} -> {:reply, {:error, reason}, enforcer}
+      {:error, reason} ->
+        {:reply, {:error, reason}, enforcer}
 
       new_enforcer ->
         :ets.insert(:enforcers_table, {self_name(), new_enforcer})
@@ -372,12 +373,14 @@ defmodule Acx.EnforcerServer do
   # Returns a tuple used to register and lookup an enforcer process
   # by name
   defp via_tuple(ename) do
-    {:via, Registry, {Acx.EnforcerRegistry, ename}}
+    {type, name} = Application.get_env(:acx, :registry, {Registry, Acx.EnforcerRegistry})
+    {:via, type, {name, ename}}
   end
 
   # Returns the name of `self`.
   defp self_name() do
-    Registry.keys(Acx.EnforcerRegistry, self()) |> List.first()
+    {type, name} = Application.get_env(:acx, :registry, {Registry, Acx.EnforcerRegistry})
+    type.keys(name, self()) |> List.first()
   end
 
   # Creates a new enforcer or lookups existing one in the ets table.
