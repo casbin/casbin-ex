@@ -14,8 +14,9 @@ defmodule Acx.Persist.EctoRbacDomainTest do
     adapter = Acx.Persist.EctoAdapter.new(@repo)
     {:ok, e} = Enforcer.init(@cfile, adapter)
 
-    e = Enforcer.load_policies!(e)
-    |> Enforcer.load_mapping_policies!
+    e =
+      Enforcer.load_policies!(e)
+      |> Enforcer.load_mapping_policies!()
 
     {:ok, e: e}
   end

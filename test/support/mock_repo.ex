@@ -1,20 +1,20 @@
 defmodule Acx.Persist.MockRepo do
-
   defmacro __using__(opts) do
     pfile = opts[:pfile]
+
     quote do
       alias Ecto.Changeset
       alias Acx.Persist.EctoAdapter.CasbinRule
 
       def to_changeset(id, rule) do
         Enum.zip([:ptype, :v0, :v1, :v2, :v3, :v4, :v5, :v6], rule)
-        |> Map.new
+        |> Map.new()
         |> then(&Map.merge(%Acx.Persist.EctoAdapter.CasbinRule{id: id}, &1))
       end
 
       def all(CasbinRule, _opts \\ []) do
         unquote(pfile)
-        |> File.read!
+        |> File.read!()
         |> String.split("\n", trim: true)
         |> Enum.map(&String.split(&1, ~r{,\s*}))
         |> Enum.with_index(1)
@@ -36,5 +36,4 @@ defmodule Acx.Persist.MockRepo do
       end
     end
   end
-
 end

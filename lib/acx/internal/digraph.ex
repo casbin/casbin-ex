@@ -131,13 +131,12 @@ defmodule Acx.Internal.Digraph do
     with v_id <- hash(v),
          w_id <- hash(w),
          v_adj when not is_nil(v_adj) <- Map.get(adj, v_id) do
-        v_adj = v_adj |> MapSet.delete(w_id)
-        %{g | adj: %{adj | v_id => v_adj}}
-      else
-        nil -> g
-      end
+      v_adj = v_adj |> MapSet.delete(w_id)
+      %{g | adj: %{adj | v_id => v_adj}}
+    else
+      nil -> g
+    end
   end
-
 
   @doc """
   Returns a list of vertices that are adjacent to the given vertex `v`.

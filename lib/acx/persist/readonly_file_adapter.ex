@@ -22,18 +22,20 @@ defmodule Acx.Persist.ReadonlyFileAdapter do
     end
 
     def load_policies(adapter) do
-      policies = adapter.policy_file
-      |> File.read!
-      |> String.split("\n", trim: true)
-      |> Enum.map(&String.split(&1, ~r{,\s*}))
+      policies =
+        adapter.policy_file
+        |> File.read!()
+        |> String.split("\n", trim: true)
+        |> Enum.map(&String.split(&1, ~r{,\s*}))
 
       {:ok, policies}
     end
 
     def load_policies(_adapter, pfile) do
-      policies = File.read!(pfile)
-      |> String.split("\n", trim: true)
-      |> Enum.map(&String.split(&1, ~r{,\s*}))
+      policies =
+        File.read!(pfile)
+        |> String.split("\n", trim: true)
+        |> Enum.map(&String.split(&1, ~r{,\s*}))
 
       {:ok, policies}
     end
@@ -46,13 +48,12 @@ defmodule Acx.Persist.ReadonlyFileAdapter do
       {:ok, adapter}
     end
 
-    def remove_policy(adapter, _policy)  do
+    def remove_policy(adapter, _policy) do
       {:ok, adapter}
     end
 
     def remove_filtered_policy(adapter, _key, _idx, _attrs) do
       {:ok, adapter}
     end
-
   end
 end

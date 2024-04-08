@@ -15,16 +15,15 @@ defmodule Acx.Persist.EctoAdapter do
     @columns [:ptype, :v0, :v1, :v2, :v3, :v4, :v5, :v6]
 
     schema "casbin_rule" do
-      field :ptype, :string
-      field :v0, :string
-      field :v1, :string
-      field :v2, :string
-      field :v3, :string
-      field :v4, :string
-      field :v5, :string
-      field :v6, :string
+      field(:ptype, :string)
+      field(:v0, :string)
+      field(:v1, :string)
+      field(:v2, :string)
+      field(:v3, :string)
+      field(:v4, :string)
+      field(:v5, :string)
+      field(:v6, :string)
     end
-
 
     @doc """
 
@@ -39,16 +38,19 @@ defmodule Acx.Persist.EctoAdapter do
     """
     @spec policy_to_map({atom(), [String.t()]}) :: %{}
     def policy_to_map({key, attrs}) do
-      Enum.zip( @columns, [Atom.to_string(key) | attrs]) |> Map.new
+      Enum.zip(@columns, [Atom.to_string(key) | attrs]) |> Map.new()
     end
 
     def policy_to_map({key, attrs}, idx) do
       [kcol | cols] = @columns
+
       arr =
         cols
         |> Enum.slice(idx, length(attrs))
-        |> (&([&2 | &1])).(kcol)
-        |> Enum.zip([Atom.to_string(key) | attrs]) |> Map.new
+        |> (&[&2 | &1]).(kcol)
+        |> Enum.zip([Atom.to_string(key) | attrs])
+        |> Map.new()
+
       arr
     end
 
@@ -57,9 +59,27 @@ defmodule Acx.Persist.EctoAdapter do
       changeset(%CasbinRule{}, policy_to_map(policy))
     end
 
-    @spec create_changeset(String.t(),String.t(),String.t(),String.t(),String.t(),String.t(),String.t(),String.t()) :: %CasbinRule{}
+    @spec create_changeset(
+            String.t(),
+            String.t(),
+            String.t(),
+            String.t(),
+            String.t(),
+            String.t(),
+            String.t(),
+            String.t()
+          ) :: %CasbinRule{}
     def create_changeset(ptype, v0, v1, v2 \\ nil, v3 \\ nil, v4 \\ nil, v5 \\ nil, v6 \\ nil) do
-      changeset(%CasbinRule{}, %{ptype: ptype, v0: v0, v1: v1, v2: v2, v3: v3, v4: v4, v5: v5, v6: v6})
+      changeset(%CasbinRule{}, %{
+        ptype: ptype,
+        v0: v0,
+        v1: v1,
+        v2: v2,
+        v3: v3,
+        v4: v4,
+        v5: v5,
+        v6: v6
+      })
     end
 
     def changeset(rule, params \\ %{}) do
@@ -69,19 +89,19 @@ defmodule Acx.Persist.EctoAdapter do
     end
 
     def changeset_to_list(%{ptype: ptype, v0: v0, v1: v1, v2: v2, v3: v3, v4: v4, v5: v5, v6: v6}) do
-      [ptype, v0,v1,v2,v3,v4,v5,v6] |> Enum.filter(fn a -> !Kernel.is_nil(a) end)
+      [ptype, v0, v1, v2, v3, v4, v5, v6] |> Enum.filter(fn a -> !Kernel.is_nil(a) end)
     end
 
     def changeset_to_queryable({_key, _attrs} = policy, idx) do
       arr =
         policy_to_map(policy, idx)
-        |> Map.to_list
+        |> Map.to_list()
 
       Ecto.Query.from(CasbinRule, where: ^arr)
     end
 
     def changeset_to_queryable({key, attrs}) do
-      arr = Enum.zip( @columns, [Atom.to_string(key) | attrs])
+      arr = Enum.zip(@columns, [Atom.to_string(key) | attrs])
       Ecto.Query.from(CasbinRule, where: ^arr)
     end
   end
@@ -106,7 +126,8 @@ defmodule Acx.Persist.EctoAdapter do
     end
 
     def load_policies(adapter) do
-      policies = adapter.repo.all(CasbinRule)
+      policies =
+        adapter.repo.all(CasbinRule)
         |> Enum.map(&CasbinRule.changeset_to_list(&1))
 
       {:ok, policies}
@@ -129,10 +150,11 @@ defmodule Acx.Persist.EctoAdapter do
     end
 
     def add_policy(
-        %Acx.Persist.EctoAdapter{repo: repo} = adapter,
-        {_key, _attrs} = policy
-      ) do
+          %Acx.Persist.EctoAdapter{repo: repo} = adapter,
+          {_key, _attrs} = policy
+        ) do
       changeset = CasbinRule.create_changeset(policy)
+
       case repo.insert(changeset) do
         {:ok, _casbin} -> {:ok, adapter}
         {:error, changeset} -> {:error, changeset.errors}
@@ -158,10 +180,11 @@ defmodule Acx.Persist.EctoAdapter do
     end
 
     def remove_policy(
-        %Acx.Persist.EctoAdapter{repo: repo} = adapter,
-        {_key, _attr} = policy
-      ) do
+          %Acx.Persist.EctoAdapter{repo: repo} = adapter,
+          {_key, _attr} = policy
+        ) do
       f = CasbinRule.changeset_to_queryable(policy)
+
       case repo.delete_all(f) do
         {:error, changeset} -> {:error, changeset.errors}
         _ -> {:ok, adapter}
@@ -169,18 +192,18 @@ defmodule Acx.Persist.EctoAdapter do
     end
 
     def remove_filtered_policy(
-      %Acx.Persist.EctoAdapter{repo: repo} = adapter,
-      key,
-      idx,
-      attrs
-    ) do
+          %Acx.Persist.EctoAdapter{repo: repo} = adapter,
+          key,
+          idx,
+          attrs
+        ) do
       f = CasbinRule.changeset_to_queryable({key, attrs}, idx)
+
       case repo.delete_all(f) do
         {:error, changeset} -> {:error, changeset.errors}
         _ -> {:ok, adapter}
       end
     end
-
 
     @doc """
     Truncates the table and inserts the provided policies.
@@ -199,19 +222,21 @@ defmodule Acx.Persist.EctoAdapter do
     end
 
     def save_policies(
-        %Acx.Persist.EctoAdapter{repo: repo} = adapter,
-        policies
-      ) do
-      repo.transaction fn ->
+          %Acx.Persist.EctoAdapter{repo: repo} = adapter,
+          policies
+        ) do
+      repo.transaction(fn ->
         repo.delete_all(CasbinRule)
+
         Enum.each(policies, fn policy ->
           changeset = CasbinRule.create_changeset(policy)
+
           case repo.insert(changeset) do
             {:ok, _casbin} -> adapter
             {:error, changeset} -> {:error, changeset.errors}
           end
         end)
-      end
+      end)
     end
   end
 end
