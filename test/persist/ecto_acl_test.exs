@@ -17,7 +17,6 @@ defmodule Acx.Persist.EctoAclTest do
     {:ok, e: e}
   end
 
-
   describe "allow?/2" do
     @test_cases [
       {["alice", "blog_post", "create"], true},
@@ -44,5 +43,4 @@ defmodule Acx.Persist.EctoAclTest do
       end
     end)
   end
-
 end

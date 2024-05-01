@@ -14,8 +14,9 @@ defmodule Acx.Persist.EctoRbacTest do
     adapter = Acx.Persist.EctoAdapter.new(@repo)
     {:ok, e} = Enforcer.init(@cfile, adapter)
 
-    e = Enforcer.load_policies!(e)
-    |> Enforcer.load_mapping_policies!
+    e =
+      Enforcer.load_policies!(e)
+      |> Enforcer.load_mapping_policies!()
 
     {:ok, e: e}
   end
@@ -50,6 +51,7 @@ defmodule Acx.Persist.EctoRbacTest do
 
   describe "when removed mapping policy author -> reader" do
     setup [:setup_delete_author_role]
+
     @test_cases [
       {["bob", "blog_post", "read"], true},
       {["bob", "blog_post", "create"], false},
@@ -71,6 +73,4 @@ defmodule Acx.Persist.EctoRbacTest do
       end
     end)
   end
-
-
 end
