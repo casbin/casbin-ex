@@ -120,7 +120,7 @@ defmodule Acx.Persist.EctoAdapter do
         iex> PersistAdapter.load_policies(%Acx.Persist.EctoAdapter{repo: nil})
         ...> {:error, "repo is not set"}
     """
-    @spec load_policies(EctoAdapter.t()) :: [Model.Policy.t()]
+    @spec load_policies(EctoAdapter.t()) :: {:ok, [Model.Policy.t()]}
     def load_policies(%Acx.Persist.EctoAdapter{repo: nil}) do
       {:error, "repo is not set"}
     end

@@ -88,6 +88,10 @@ defmodule Acx.EnforcerServer do
     GenServer.call(via_tuple(ename), {:list_policies, criteria})
   end
 
+  def list_mapping_policies(ename, criteria) do
+    GenServer.call(via_tuple(ename), {:list_mapping_policies, criteria})
+  end
+
   @doc """
   Saves the current set of policies using the configured PersistAdapter.
 
@@ -273,6 +277,11 @@ defmodule Acx.EnforcerServer do
 
   def handle_call({:list_policies, criteria}, _from, enforcer) do
     policies = enforcer |> Enforcer.list_policies(criteria)
+    {:reply, policies, enforcer}
+  end
+
+  def handle_call({:list_mapping_policies, criteria}, _from, enforcer) do
+    policies = enforcer |> Enforcer.list_mapping_policies(criteria)
     {:reply, policies, enforcer}
   end
 
