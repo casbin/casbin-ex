@@ -1,4 +1,7 @@
 defmodule Acx.Internal.Helpers do
+  @moduledoc """
+  Helper functions used internally by Acx.
+  """
   @doc """
   Returns a tuple `{succeeds, remainder, count}` where `succeeds` is
   the initial segment of the given `list`, in which all elements have

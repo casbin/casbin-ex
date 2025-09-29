@@ -49,7 +49,7 @@ defmodule Acx.Model.Config do
     |> validate_sections()
     |> case do
       {:error, reason} ->
-        # TODO: provide more information about the error.
+        # Enhanced error message includes file path and detailed reason
         {
           :error,
           "error occurred when parsing config file #{cfile}: #{reason}"

@@ -1,4 +1,7 @@
 defmodule Acx do
+  @moduledoc """
+  Acx is an Elixir implementation of the Casbin authorization library.
+  """
   use Application
 
   def start(_type, _args) do

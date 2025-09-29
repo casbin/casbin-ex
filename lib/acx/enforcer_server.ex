@@ -84,7 +84,7 @@ defmodule Acx.EnforcerServer do
   See `Enforcer.save_policies/1`
   """
   def save_policies(ename) do
-    GenServer.call(via_tuple(ename),{:save_policies})
+    GenServer.call(via_tuple(ename), {:save_policies})
   end
 
   @doc """
@@ -251,7 +251,7 @@ defmodule Acx.EnforcerServer do
   end
 
   def handle_call({:save_policies}, _from, enforcer) do
-    new_enforcer = enforcer |> Enforcer.save_policies
+    new_enforcer = enforcer |> Enforcer.save_policies()
     {:reply, :ok, new_enforcer}
   end
 
@@ -325,7 +325,8 @@ defmodule Acx.EnforcerServer do
 
   def handle_call({:set_persist_adapter, adapter}, _from, enforcer) do
     case Enforcer.set_persist_adapter(enforcer, adapter) do
-      {:error, reason} -> {:reply, {:error, reason}, enforcer}
+      {:error, reason} ->
+        {:reply, {:error, reason}, enforcer}
 
       new_enforcer ->
         :ets.insert(:enforcers_table, {self_name(), new_enforcer})
@@ -344,7 +345,7 @@ defmodule Acx.EnforcerServer do
   end
 
   # Returns the name of `self`.
-  defp self_name() do
+  defp self_name do
     Registry.keys(Acx.EnforcerRegistry, self()) |> List.first()
   end
 

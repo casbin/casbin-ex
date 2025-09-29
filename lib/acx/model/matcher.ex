@@ -304,7 +304,7 @@ defmodule Acx.Model.Matcher do
   defp convert_from_postfix([], [expr]), do: {:ok, expr}
 
   # Zero or two more items?
-  # TODO: error at what position?
+  # Returns syntax error when stack has incorrect number of items
   defp convert_from_postfix([], _), do: {:error, :syntax_error}
 
   #

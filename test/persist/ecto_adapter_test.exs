@@ -14,19 +14,22 @@ defmodule Acx.Persist.EctoAdapterTest do
     @repo MockTestRepo
 
     test "loads policies from the database" do
-      expected = {:ok, [
-        ["p", "alice", "blog_post", "create"],
-        ["p", "alice", "blog_post", "delete"],
-        ["p", "alice", "blog_post", "modify"],
-        ["p", "alice", "blog_post", "read"],
-        ["p", "bob", "blog_post", "read"],
-        ["p", "peter", "blog_post", "create"],
-        ["p", "peter", "blog_post", "modify"],
-        ["p", "peter", "blog_post", "read"]
-      ]}
+      expected =
+        {:ok,
+         [
+           ["p", "alice", "blog_post", "create"],
+           ["p", "alice", "blog_post", "delete"],
+           ["p", "alice", "blog_post", "modify"],
+           ["p", "alice", "blog_post", "read"],
+           ["p", "bob", "blog_post", "read"],
+           ["p", "peter", "blog_post", "create"],
+           ["p", "peter", "blog_post", "modify"],
+           ["p", "peter", "blog_post", "read"]
+         ]}
 
-      loaded = Acx.Persist.EctoAdapter.new(@repo)
-      |> Acx.Persist.PersistAdapter.load_policies
+      loaded =
+        Acx.Persist.EctoAdapter.new(@repo)
+        |> Acx.Persist.PersistAdapter.load_policies()
 
       assert loaded === expected
     end
