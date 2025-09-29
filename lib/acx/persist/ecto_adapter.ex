@@ -31,11 +31,11 @@ defmodule Acx.Persist.EctoAdapter do
     @doc """
 
       # Examples
-        iex> CasbinRule.policy_to_map({:p, ["admin"]}, 1) |> Map.to_list
+        iex> CasbinRule.policy_to_map({:p, ["admin"]}, 1) |> Map.to_list |> Enum.sort
         [ptype: "p", v1: "admin"]
 
 
-        iex> CasbinRule.policy_to_map({:p, ["admin"]}) |> Map.to_list
+        iex> CasbinRule.policy_to_map({:p, ["admin"]}) |> Map.to_list |> Enum.sort
         [ptype: "p", v0: "admin"]
 
     """

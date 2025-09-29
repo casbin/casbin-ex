@@ -393,7 +393,7 @@ defmodule Acx.Model.Matcher do
 
   # Dot syntax error.
   defp syntax_error(%{token: :dot} = arg) do
-    {:error, {:syntax_error, %{arg | token: '.'}}}
+    {:error, {:syntax_error, %{arg | token: ~c"."}}}
   end
 
   # Operator syntax error.

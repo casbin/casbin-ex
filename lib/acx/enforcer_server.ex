@@ -292,18 +292,9 @@ defmodule Acx.EnforcerServer do
   end
 
   def handle_call({:remove_filtered_policy, key, idx, attrs}, _from, enforcer) do
-    case Enforcer.remove_filtered_policy(enforcer, key, idx, attrs) do
-      {:error, reason} ->
-        {:reply, {:error, reason}, enforcer}
-
-      {:ok, new_enforcer} ->
-        :ets.insert(:enforcers_table, {self_name(), new_enforcer})
-        {:reply, :ok, new_enforcer}
-
-      new_enforcer ->
-        :ets.insert(:enforcers_table, {self_name(), new_enforcer})
-        {:reply, :ok, new_enforcer}
-    end
+    new_enforcer = Enforcer.remove_filtered_policy(enforcer, key, idx, attrs)
+    :ets.insert(:enforcers_table, {self_name(), new_enforcer})
+    {:reply, :ok, new_enforcer}
   end
 
   def handle_call({:reset_configuration, cfile}, _from, enforcer) do
@@ -324,14 +315,9 @@ defmodule Acx.EnforcerServer do
   end
 
   def handle_call({:set_persist_adapter, adapter}, _from, enforcer) do
-    case Enforcer.set_persist_adapter(enforcer, adapter) do
-      {:error, reason} ->
-        {:reply, {:error, reason}, enforcer}
-
-      new_enforcer ->
-        :ets.insert(:enforcers_table, {self_name(), new_enforcer})
-        {:reply, :ok, new_enforcer}
-    end
+    new_enforcer = Enforcer.set_persist_adapter(enforcer, adapter)
+    :ets.insert(:enforcers_table, {self_name(), new_enforcer})
+    {:reply, :ok, new_enforcer}
   end
 
   #

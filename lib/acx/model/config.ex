@@ -198,14 +198,14 @@ defmodule Acx.Model.Config do
   # See one of thes ==, != , >=, <=
 
   defp parse([ch, ?= | rest], [], eq_stack, tokens, pos)
-       when ch in '=!><' do
+       when ch in ~c"=!><" do
     next_token = [ch, ?=]
     next_pos = next_col(pos, 2)
     parse(rest, [@default_section], eq_stack, [next_token | tokens], next_pos)
   end
 
   defp parse([ch, ?= | rest], secs, eq_stack, tokens, pos)
-       when ch in '=!><' do
+       when ch in ~c"=!><" do
     next_token = [ch, ?=]
     next_pos = next_col(pos, 2)
     parse(rest, secs, eq_stack, [next_token | tokens], next_pos)
@@ -293,7 +293,7 @@ defmodule Acx.Model.Config do
     {[], [], 0}
   end
 
-  defp parse_token([ch, ?= | rest], count) when ch in '!<>=' do
+  defp parse_token([ch, ?= | rest], count) when ch in ~c"!<>=" do
     {succeeds, rem, c} = parse_token(rest, 0)
     {[ch, ?= | succeeds], rem, count + 2 + c}
   end

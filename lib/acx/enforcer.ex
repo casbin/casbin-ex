@@ -242,13 +242,7 @@ defmodule Acx.Enforcer do
         req
       )
       when is_atom(req_key) and is_integer(idx) and is_list(req) do
-    case remove_filtered_policy(enforcer, req_key, idx, req) do
-      {:error, reason} ->
-        raise ArgumentError, message: reason
-
-      enforcer ->
-        enforcer
-    end
+    remove_filtered_policy(enforcer, req_key, idx, req)
   end
 
   @doc """
