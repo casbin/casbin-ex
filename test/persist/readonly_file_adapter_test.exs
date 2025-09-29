@@ -1,6 +1,7 @@
 defmodule Acx.Persist.ReadonlyFileAdapterTest do
   use ExUnit.Case, async: true
   alias Acx.Persist.PersistAdapter
+  alias Acx.Persist.ReadonlyFileAdapter
   doctest Acx.Persist.ReadonlyFileAdapter
 
   describe "given a policy file" do
@@ -21,7 +22,7 @@ defmodule Acx.Persist.ReadonlyFileAdapterTest do
          ]}
 
       loaded =
-        Acx.Persist.ReadonlyFileAdapter.new(@pfile)
+        ReadonlyFileAdapter.new(@pfile)
         |> PersistAdapter.load_policies()
 
       assert loaded === expected

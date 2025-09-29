@@ -1,7 +1,8 @@
 defmodule Acx.Persist.EctoAdapterTest do
   use ExUnit.Case, async: true
-  alias Acx.Persist.PersistAdapter
+  alias Acx.Persist.EctoAdapter
   alias Acx.Persist.EctoAdapter.CasbinRule
+  alias Acx.Persist.PersistAdapter
   doctest Acx.Persist.EctoAdapter
   doctest Acx.Persist.PersistAdapter.Acx.Persist.EctoAdapter
   doctest Acx.Persist.EctoAdapter.CasbinRule
@@ -28,8 +29,8 @@ defmodule Acx.Persist.EctoAdapterTest do
          ]}
 
       loaded =
-        Acx.Persist.EctoAdapter.new(@repo)
-        |> Acx.Persist.PersistAdapter.load_policies()
+        EctoAdapter.new(@repo)
+        |> PersistAdapter.load_policies()
 
       assert loaded === expected
     end

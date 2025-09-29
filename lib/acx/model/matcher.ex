@@ -33,7 +33,7 @@ defmodule Acx.Model.Matcher do
           prog: program()
         }
 
-  alias Acx.Internal.{Helpers, Parser, Operator}
+  alias Acx.Internal.{Helpers, Operator, Parser}
 
   @unary_operators [:not, :pos, :neg]
   @binary_operators [:mul, :div, :add, :sub, :lt, :le, :gt, :ge, :eq, :ne, :and, :or]

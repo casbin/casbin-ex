@@ -1,6 +1,7 @@
 defmodule Acx.Persist.EctoRbacDomainTest do
   use ExUnit.Case, async: true
   alias Acx.Enforcer
+  alias Acx.Persist.EctoAdapter
 
   @cfile "../data/rbac_domain.conf" |> Path.expand(__DIR__)
 
@@ -11,7 +12,7 @@ defmodule Acx.Persist.EctoRbacDomainTest do
   @repo MockAclRepo
 
   setup do
-    adapter = Acx.Persist.EctoAdapter.new(@repo)
+    adapter = EctoAdapter.new(@repo)
     {:ok, e} = Enforcer.init(@cfile, adapter)
 
     e =

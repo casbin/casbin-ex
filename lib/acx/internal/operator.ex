@@ -115,140 +115,110 @@ defmodule Acx.Internal.Operator do
   # Unary operator
 
   def apply(:not, [x]) do
-    try do
-      {:ok, !x}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": !#{x}"}
-    end
+    {:ok, !x}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": !#{x}"}
   end
 
   def apply(:pos, [x]) do
-    try do
-      {:ok, +x}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": +#{x}"}
-    end
+    {:ok, +x}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": +#{x}"}
   end
 
   def apply(:neg, [x]) do
-    try do
-      {:ok, -x}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": -#{x}"}
-    end
+    {:ok, -x}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": -#{x}"}
   end
 
   # Binary operator.
 
   def apply(:mul, [x, y]) do
-    try do
-      {:ok, x * y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} * #{y}"}
-    end
+    {:ok, x * y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} * #{y}"}
   end
 
   def apply(:div, [x, y]) do
-    try do
-      {:ok, x / y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} / #{y}"}
-    end
+    {:ok, x / y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} / #{y}"}
   end
 
   def apply(:add, [x, y]) do
-    try do
-      {:ok, x + y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} + #{y}"}
-    end
+    {:ok, x + y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} + #{y}"}
   end
 
   def apply(:sub, [x, y]) do
-    try do
-      {:ok, x - y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} - #{y}"}
-    end
+    {:ok, x - y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} - #{y}"}
   end
 
   def apply(:lt, [x, y]) do
-    try do
-      {:ok, x < y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} < #{y}"}
-    end
+    {:ok, x < y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} < #{y}"}
   end
 
   def apply(:le, [x, y]) do
-    try do
-      {:ok, x <= y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} <= #{y}"}
-    end
+    {:ok, x <= y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} <= #{y}"}
   end
 
   def apply(:gt, [x, y]) do
-    try do
-      {:ok, x > y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} > #{y}"}
-    end
+    {:ok, x > y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} > #{y}"}
   end
 
   def apply(:ge, [x, y]) do
-    try do
-      {:ok, x >= y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} >= #{y}"}
-    end
+    {:ok, x >= y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} >= #{y}"}
   end
 
   def apply(:eq, [x, y]) do
-    try do
-      {:ok, x == y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} == #{y}"}
-    end
+    {:ok, x == y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} == #{y}"}
   end
 
   def apply(:ne, [x, y]) do
-    try do
-      {:ok, x != y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} != #{y}"}
-    end
+    {:ok, x != y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} != #{y}"}
   end
 
   def apply(:and, [x, y]) do
-    try do
-      {:ok, x && y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} && #{y}"}
-    end
+    {:ok, x && y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} && #{y}"}
   end
 
   def apply(:or, [x, y]) do
-    try do
-      {:ok, x || y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} || #{y}"}
-    end
+    {:ok, x || y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} || #{y}"}
   end
 
   #

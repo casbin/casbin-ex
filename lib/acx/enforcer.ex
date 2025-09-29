@@ -13,6 +13,7 @@ defmodule Acx.Enforcer do
   alias Acx.Internal.RoleGroup
   alias Acx.Model
   alias Acx.Persist.PersistAdapter
+  alias Acx.Persist.ReadonlyFileAdapter
 
   @type mapping() ::
           {atom(), String.t(), String.t()}
@@ -69,7 +70,7 @@ defmodule Acx.Enforcer do
           %__MODULE__{
             model: model,
             role_groups: role_groups |> Map.new(),
-            persist_adapter: Acx.Persist.ReadonlyFileAdapter.new(),
+            persist_adapter: ReadonlyFileAdapter.new(),
             env: env
           }
         }
@@ -334,7 +335,7 @@ defmodule Acx.Enforcer do
   @spec load_policies!(t(), String.t()) :: t()
   def load_policies!(%__MODULE__{model: m} = enforcer, pfile)
       when is_binary(pfile) do
-    adapter = Acx.Persist.ReadonlyFileAdapter.new(pfile)
+    adapter = ReadonlyFileAdapter.new(pfile)
     enforcer = %{enforcer | persist_adapter: adapter}
 
     case PersistAdapter.load_policies(adapter) do
