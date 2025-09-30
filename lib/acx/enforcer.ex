@@ -230,11 +230,16 @@ defmodule Acx.Enforcer do
         [key | attr_values] === [req_key | req]
       end)
 
-    {:ok, adapter} = PersistAdapter.remove_filtered_policy(adapter, req_key, idx, req)
-    %{enforcer | policies: filtered_policies, persist_adapter: adapter}
+    case PersistAdapter.remove_filtered_policy(adapter, req_key, idx, req) do
+      {:ok, adapter} ->
+        %{enforcer | policies: filtered_policies, persist_adapter: adapter}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
-  @spec remove_filtered_policy!(t(), atom(), integer(), keyword()) :: t() | {:error, any()}
+  @spec remove_filtered_policy!(t(), atom(), integer(), keyword()) :: t()
   def remove_filtered_policy!(
         %__MODULE__{} = enforcer,
         req_key,
@@ -242,7 +247,13 @@ defmodule Acx.Enforcer do
         req
       )
       when is_atom(req_key) and is_integer(idx) and is_list(req) do
-    remove_filtered_policy(enforcer, req_key, idx, req)
+    case remove_filtered_policy(enforcer, req_key, idx, req) do
+      {:error, reason} ->
+        raise ArgumentError, message: reason
+
+      enforcer ->
+        enforcer
+    end
   end
 
   @doc """

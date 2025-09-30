@@ -292,9 +292,14 @@ defmodule Acx.EnforcerServer do
   end
 
   def handle_call({:remove_filtered_policy, key, idx, attrs}, _from, enforcer) do
-    new_enforcer = Enforcer.remove_filtered_policy(enforcer, key, idx, attrs)
-    :ets.insert(:enforcers_table, {self_name(), new_enforcer})
-    {:reply, :ok, new_enforcer}
+    case Enforcer.remove_filtered_policy(enforcer, key, idx, attrs) do
+      {:error, reason} ->
+        {:reply, {:error, reason}, enforcer}
+
+      new_enforcer ->
+        :ets.insert(:enforcers_table, {self_name(), new_enforcer})
+        {:reply, :ok, new_enforcer}
+    end
   end
 
   def handle_call({:reset_configuration, cfile}, _from, enforcer) do
