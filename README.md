@@ -1,4 +1,7 @@
 # Acx
+
+[![CI](https://github.com/casbin/casbin-ex/actions/workflows/ci.yml/badge.svg)](https://github.com/casbin/casbin-ex/actions/workflows/ci.yml)
+
 Acx is an access control library that can do whatever shit
 [Casbin](https://casbin.org/) can and much more...
 

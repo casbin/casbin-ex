@@ -7,7 +7,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "sed -i 's/version: \"[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+\"/version: \"${nextRelease.version}\"/' mix.exs"
+        "prepareCmd": "sed -i 's/version: \"[0-9]\\.[0-9]\\+\\.[0-9]\\+\"/version: \"${nextRelease.version}\"/' mix.exs"
       }
     ],
     [
