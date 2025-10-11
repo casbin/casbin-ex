@@ -32,12 +32,20 @@ jobs:
       - name: Restore dependencies cache
         uses: actions/cache@v3
         with:
-          path: deps
+          path: |
+            deps
+            _build
           key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
           restore-keys: ${{ runner.os }}-mix-
       
       - name: Install dependencies
         run: mix deps.get
+      
+      - name: Compile dependencies
+        run: mix deps.compile
+      
+      - name: Compile application
+        run: mix compile --warnings-as-errors
       
       - name: Check formatting
         run: mix format --check-formatted

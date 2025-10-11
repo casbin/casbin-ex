@@ -1,6 +1,9 @@
 # Acx
 
-[![CI](https://github.com/casbin/casbin-ex/actions/workflows/ci.yml/badge.svg)](https://github.com/casbin/casbin-ex/actions/workflows/ci.yml)
+[![GitHub Actions](https://github.com/casbin/casbin-ex/actions/workflows/ci.yml/badge.svg)](https://github.com/casbin/casbin-ex/actions/workflows/ci.yml)
+[![Hex.pm](https://img.shields.io/hexpm/v/acx.svg)](https://hex.pm/packages/acx)
+[![Release](https://img.shields.io/github/release/casbin/casbin-ex.svg)](https://github.com/casbin/casbin-ex/releases/latest)
+[![Discord](https://img.shields.io/discord/1022748306096537660?logo=discord&label=discord&color=5865F2)](https://discord.gg/S5UjpzGZjN)
 
 Acx is an access control library that can do whatever shit
 [Casbin](https://casbin.org/) can and much more...
