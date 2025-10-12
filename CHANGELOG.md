@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/casbin/casbin-ex/compare/v1.0.0...v1.1.0) (2025-10-12)
+
+
+### Features
+
+* improve styles: Credo fixes, git pre-push hook ([#24](https://github.com/casbin/casbin-ex/issues/24)) ([e74ea15](https://github.com/casbin/casbin-ex/commit/e74ea15c9677d11cdb01c3b68e5dc72ebfded01e))
+
 # 1.0.0 (2025-10-12)
 
 
