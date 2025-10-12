@@ -1,6 +1,7 @@
 defmodule Acx.Persist.EctoRbacTest do
   use ExUnit.Case, async: true
   alias Acx.Enforcer
+  alias Acx.Persist.EctoAdapter
 
   @cfile "../data/rbac.conf" |> Path.expand(__DIR__)
 
@@ -11,11 +12,12 @@ defmodule Acx.Persist.EctoRbacTest do
   @repo MockAclRepo
 
   setup do
-    adapter = Acx.Persist.EctoAdapter.new(@repo)
+    adapter = EctoAdapter.new(@repo)
     {:ok, e} = Enforcer.init(@cfile, adapter)
 
-    e = Enforcer.load_policies!(e)
-    |> Enforcer.load_mapping_policies!
+    e =
+      Enforcer.load_policies!(e)
+      |> Enforcer.load_mapping_policies!()
 
     {:ok, e: e}
   end
@@ -50,6 +52,7 @@ defmodule Acx.Persist.EctoRbacTest do
 
   describe "when removed mapping policy author -> reader" do
     setup [:setup_delete_author_role]
+
     @test_cases [
       {["bob", "blog_post", "read"], true},
       {["bob", "blog_post", "create"], false},
@@ -71,6 +74,4 @@ defmodule Acx.Persist.EctoRbacTest do
       end
     end)
   end
-
-
 end

@@ -33,7 +33,7 @@ defmodule Acx.Model.Matcher do
           prog: program()
         }
 
-  alias Acx.Internal.{Helpers, Parser, Operator}
+  alias Acx.Internal.{Helpers, Operator, Parser}
 
   @unary_operators [:not, :pos, :neg]
   @binary_operators [:mul, :div, :add, :sub, :lt, :le, :gt, :ge, :eq, :ne, :and, :or]
@@ -304,7 +304,7 @@ defmodule Acx.Model.Matcher do
   defp convert_from_postfix([], [expr]), do: {:ok, expr}
 
   # Zero or two more items?
-  # TODO: error at what position?
+  # Returns syntax error when stack has incorrect number of items
   defp convert_from_postfix([], _), do: {:error, :syntax_error}
 
   #
@@ -393,7 +393,7 @@ defmodule Acx.Model.Matcher do
 
   # Dot syntax error.
   defp syntax_error(%{token: :dot} = arg) do
-    {:error, {:syntax_error, %{arg | token: '.'}}}
+    {:error, {:syntax_error, %{arg | token: "."}}}
   end
 
   # Operator syntax error.

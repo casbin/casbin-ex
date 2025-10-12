@@ -21,7 +21,22 @@ defmodule Acx.Internal.Parser do
 
   alias Acx.Internal.{Helpers, Operator}
 
-  @operators ['.', '!', '-', '+', '*', '/', '<', '<=', '>', '>=', '==', '!=', '&&', '||']
+  @operators [
+    ~c".",
+    ~c"!",
+    ~c"-",
+    ~c"+",
+    ~c"*",
+    ~c"/",
+    ~c"<",
+    ~c"<=",
+    ~c">",
+    ~c">=",
+    ~c"==",
+    ~c"!=",
+    ~c"&&",
+    ~c"||"
+  ]
 
   @type postfix_term() ::
           {:num, number()}

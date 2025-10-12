@@ -1,7 +1,8 @@
 defmodule Acx.Persist.EctoAdapterTest do
   use ExUnit.Case, async: true
-  alias Acx.Persist.PersistAdapter
+  alias Acx.Persist.EctoAdapter
   alias Acx.Persist.EctoAdapter.CasbinRule
+  alias Acx.Persist.PersistAdapter
   doctest Acx.Persist.EctoAdapter
   doctest Acx.Persist.PersistAdapter.Acx.Persist.EctoAdapter
   doctest Acx.Persist.EctoAdapter.CasbinRule
@@ -14,19 +15,22 @@ defmodule Acx.Persist.EctoAdapterTest do
     @repo MockTestRepo
 
     test "loads policies from the database" do
-      expected = {:ok, [
-        ["p", "alice", "blog_post", "create"],
-        ["p", "alice", "blog_post", "delete"],
-        ["p", "alice", "blog_post", "modify"],
-        ["p", "alice", "blog_post", "read"],
-        ["p", "bob", "blog_post", "read"],
-        ["p", "peter", "blog_post", "create"],
-        ["p", "peter", "blog_post", "modify"],
-        ["p", "peter", "blog_post", "read"]
-      ]}
+      expected =
+        {:ok,
+         [
+           ["p", "alice", "blog_post", "create"],
+           ["p", "alice", "blog_post", "delete"],
+           ["p", "alice", "blog_post", "modify"],
+           ["p", "alice", "blog_post", "read"],
+           ["p", "bob", "blog_post", "read"],
+           ["p", "peter", "blog_post", "create"],
+           ["p", "peter", "blog_post", "modify"],
+           ["p", "peter", "blog_post", "read"]
+         ]}
 
-      loaded = Acx.Persist.EctoAdapter.new(@repo)
-      |> Acx.Persist.PersistAdapter.load_policies
+      loaded =
+        EctoAdapter.new(@repo)
+        |> PersistAdapter.load_policies()
 
       assert loaded === expected
     end

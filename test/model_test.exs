@@ -3,12 +3,12 @@ defmodule Acx.ModelTest do
   alias Acx.Model
 
   alias Acx.Model.{
-    RequestDefinition,
+    Matcher,
+    Policy,
     PolicyDefinition,
     PolicyEffect,
-    Matcher,
     Request,
-    Policy
+    RequestDefinition
   }
 
   doctest Acx.Model

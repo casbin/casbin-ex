@@ -1,14 +1,12 @@
 defmodule Acx.Persist.ReadonlyFileAdapter do
+  @moduledoc """
+  A read-only file adapter for loading policies from files.
+  """
   alias Acx.Persist.PersistAdapter
-
-  # @callback load_policies() :: any()
-  # @callback update_policy(id :: Integer.t, ptype :: String.t, v0 :: String.t, v1 :: String.t, v2 :: String.t, v3 :: String.t, v4 :: String.t, v5 :: String.t, v6 :: String.t) :: any()
-  # @callback remove_policy(id :: Integrer.t) :: any()
-  # @callback save_policy() :: any()
 
   defstruct policy_file: nil
 
-  def new() do
+  def new do
     %__MODULE__{policy_file: nil}
   end
 
@@ -22,18 +20,20 @@ defmodule Acx.Persist.ReadonlyFileAdapter do
     end
 
     def load_policies(adapter) do
-      policies = adapter.policy_file
-      |> File.read!
-      |> String.split("\n", trim: true)
-      |> Enum.map(&String.split(&1, ~r{,\s*}))
+      policies =
+        adapter.policy_file
+        |> File.read!()
+        |> String.split("\n", trim: true)
+        |> Enum.map(&String.split(&1, ~r{,\s*}))
 
       {:ok, policies}
     end
 
     def load_policies(_adapter, pfile) do
-      policies = File.read!(pfile)
-      |> String.split("\n", trim: true)
-      |> Enum.map(&String.split(&1, ~r{,\s*}))
+      policies =
+        File.read!(pfile)
+        |> String.split("\n", trim: true)
+        |> Enum.map(&String.split(&1, ~r{,\s*}))
 
       {:ok, policies}
     end
@@ -46,13 +46,12 @@ defmodule Acx.Persist.ReadonlyFileAdapter do
       {:ok, adapter}
     end
 
-    def remove_policy(adapter, _policy)  do
+    def remove_policy(adapter, _policy) do
       {:ok, adapter}
     end
 
     def remove_filtered_policy(adapter, _key, _idx, _attrs) do
       {:ok, adapter}
     end
-
   end
 end

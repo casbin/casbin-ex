@@ -46,11 +46,11 @@ defmodule Acx.Internal.Operator do
   Converts a charlist to an operator based on the type of previous token.
   """
   @spec charlist_to_operator(charlist(), atom()) :: t()
-  def charlist_to_operator('+', prev)
+  def charlist_to_operator(~c"+", prev)
       when prev not in [:operand, :variable, :right_paren],
       do: :pos
 
-  def charlist_to_operator('-', prev)
+  def charlist_to_operator(~c"-", prev)
       when prev not in [:operand, :variable, :right_paren],
       do: :neg
 
@@ -60,22 +60,22 @@ defmodule Acx.Internal.Operator do
   Converts an operator to its textual representation.
   """
   @spec operator_to_charlist(t()) :: charlist()
-  def operator_to_charlist(:dot), do: '.'
-  def operator_to_charlist(:not), do: '!'
-  def operator_to_charlist(:pos), do: '+'
-  def operator_to_charlist(:neg), do: '-'
-  def operator_to_charlist(:mul), do: '*'
-  def operator_to_charlist(:div), do: '/'
-  def operator_to_charlist(:add), do: '+'
-  def operator_to_charlist(:sub), do: '-'
-  def operator_to_charlist(:lt), do: '<'
-  def operator_to_charlist(:le), do: '<='
-  def operator_to_charlist(:gt), do: '>'
-  def operator_to_charlist(:ge), do: '>='
-  def operator_to_charlist(:eq), do: '=='
-  def operator_to_charlist(:ne), do: '!='
-  def operator_to_charlist(:and), do: '&&'
-  def operator_to_charlist(:or), do: '||'
+  def operator_to_charlist(:dot), do: ~c"."
+  def operator_to_charlist(:not), do: ~c"!"
+  def operator_to_charlist(:pos), do: ~c"+"
+  def operator_to_charlist(:neg), do: ~c"-"
+  def operator_to_charlist(:mul), do: ~c"*"
+  def operator_to_charlist(:div), do: ~c"/"
+  def operator_to_charlist(:add), do: ~c"+"
+  def operator_to_charlist(:sub), do: ~c"-"
+  def operator_to_charlist(:lt), do: ~c"<"
+  def operator_to_charlist(:le), do: ~c"<="
+  def operator_to_charlist(:gt), do: ~c">"
+  def operator_to_charlist(:ge), do: ~c">="
+  def operator_to_charlist(:eq), do: ~c"=="
+  def operator_to_charlist(:ne), do: ~c"!="
+  def operator_to_charlist(:and), do: ~c"&&"
+  def operator_to_charlist(:or), do: ~c"||"
 
   @doc """
   Returns `true` if `op1` has higher precedence than `op2`, or `false`
@@ -115,140 +115,110 @@ defmodule Acx.Internal.Operator do
   # Unary operator
 
   def apply(:not, [x]) do
-    try do
-      {:ok, !x}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": !#{x}"}
-    end
+    {:ok, !x}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": !#{x}"}
   end
 
   def apply(:pos, [x]) do
-    try do
-      {:ok, +x}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": +#{x}"}
-    end
+    {:ok, +x}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": +#{x}"}
   end
 
   def apply(:neg, [x]) do
-    try do
-      {:ok, -x}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": -#{x}"}
-    end
+    {:ok, -x}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": -#{x}"}
   end
 
   # Binary operator.
 
   def apply(:mul, [x, y]) do
-    try do
-      {:ok, x * y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} * #{y}"}
-    end
+    {:ok, x * y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} * #{y}"}
   end
 
   def apply(:div, [x, y]) do
-    try do
-      {:ok, x / y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} / #{y}"}
-    end
+    {:ok, x / y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} / #{y}"}
   end
 
   def apply(:add, [x, y]) do
-    try do
-      {:ok, x + y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} + #{y}"}
-    end
+    {:ok, x + y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} + #{y}"}
   end
 
   def apply(:sub, [x, y]) do
-    try do
-      {:ok, x - y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} - #{y}"}
-    end
+    {:ok, x - y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} - #{y}"}
   end
 
   def apply(:lt, [x, y]) do
-    try do
-      {:ok, x < y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} < #{y}"}
-    end
+    {:ok, x < y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} < #{y}"}
   end
 
   def apply(:le, [x, y]) do
-    try do
-      {:ok, x <= y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} <= #{y}"}
-    end
+    {:ok, x <= y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} <= #{y}"}
   end
 
   def apply(:gt, [x, y]) do
-    try do
-      {:ok, x > y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} > #{y}"}
-    end
+    {:ok, x > y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} > #{y}"}
   end
 
   def apply(:ge, [x, y]) do
-    try do
-      {:ok, x >= y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} >= #{y}"}
-    end
+    {:ok, x >= y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} >= #{y}"}
   end
 
   def apply(:eq, [x, y]) do
-    try do
-      {:ok, x == y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} == #{y}"}
-    end
+    {:ok, x == y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} == #{y}"}
   end
 
   def apply(:ne, [x, y]) do
-    try do
-      {:ok, x != y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} != #{y}"}
-    end
+    {:ok, x != y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} != #{y}"}
   end
 
   def apply(:and, [x, y]) do
-    try do
-      {:ok, x && y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} && #{y}"}
-    end
+    {:ok, x && y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} && #{y}"}
   end
 
   def apply(:or, [x, y]) do
-    try do
-      {:ok, x || y}
-    rescue
-      e in ArithmeticError ->
-        {:error, e.message <> ": #{x} || #{y}"}
-    end
+    {:ok, x || y}
+  rescue
+    e in ArithmeticError ->
+      {:error, e.message <> ": #{x} || #{y}"}
   end
 
   #
@@ -274,18 +244,18 @@ defmodule Acx.Internal.Operator do
   defp precedence(:or), do: 1
 
   # Converts from charlist to an operator.
-  defp charlist_to_operator('.'), do: :dot
-  defp charlist_to_operator('!'), do: :not
-  defp charlist_to_operator('*'), do: :mul
-  defp charlist_to_operator('/'), do: :div
-  defp charlist_to_operator('+'), do: :add
-  defp charlist_to_operator('-'), do: :sub
-  defp charlist_to_operator('<'), do: :lt
-  defp charlist_to_operator('<='), do: :le
-  defp charlist_to_operator('>'), do: :gt
-  defp charlist_to_operator('>='), do: :ge
-  defp charlist_to_operator('=='), do: :eq
-  defp charlist_to_operator('!='), do: :ne
-  defp charlist_to_operator('&&'), do: :and
-  defp charlist_to_operator('||'), do: :or
+  defp charlist_to_operator(~c"."), do: :dot
+  defp charlist_to_operator(~c"!"), do: :not
+  defp charlist_to_operator(~c"*"), do: :mul
+  defp charlist_to_operator(~c"/"), do: :div
+  defp charlist_to_operator(~c"+"), do: :add
+  defp charlist_to_operator(~c"-"), do: :sub
+  defp charlist_to_operator(~c"<"), do: :lt
+  defp charlist_to_operator(~c"<="), do: :le
+  defp charlist_to_operator(~c">"), do: :gt
+  defp charlist_to_operator(~c">="), do: :ge
+  defp charlist_to_operator(~c"=="), do: :eq
+  defp charlist_to_operator(~c"!="), do: :ne
+  defp charlist_to_operator(~c"&&"), do: :and
+  defp charlist_to_operator(~c"||"), do: :or
 end

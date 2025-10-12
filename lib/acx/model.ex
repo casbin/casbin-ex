@@ -16,12 +16,12 @@ defmodule Acx.Model do
 
   alias Acx.Model.{
     Config,
-    RequestDefinition,
+    Matcher,
+    Policy,
     PolicyDefinition,
     PolicyEffect,
-    Matcher,
     Request,
-    Policy
+    RequestDefinition
   }
 
   @type t() :: %__MODULE__{

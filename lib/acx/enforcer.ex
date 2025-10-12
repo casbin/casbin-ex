@@ -10,12 +10,14 @@ defmodule Acx.Enforcer do
             env: %{},
             persist_adapter: nil
 
-  alias Acx.Model
   alias Acx.Internal.RoleGroup
+  alias Acx.Model
   alias Acx.Persist.PersistAdapter
+  alias Acx.Persist.ReadonlyFileAdapter
 
-  @type mapping() :: {atom(), String.t(), String.t()} |
-                     {atom(), String.t(), String.t(), String.t()}
+  @type mapping() ::
+          {atom(), String.t(), String.t()}
+          | {atom(), String.t(), String.t(), String.t()}
 
   @type t() :: %__MODULE__{
           model: Model.t(),
@@ -25,8 +27,6 @@ defmodule Acx.Enforcer do
           env: map(),
           persist_adapter: PersistAdapter.t()
         }
-
-
 
   @doc """
   Loads and contructs a model from the given config file `cfile`.
@@ -57,8 +57,8 @@ defmodule Acx.Enforcer do
           role_mappings
           |> Enum.map(fn m -> {m, RoleGroup.new(m)} end)
 
-        # TODO: What if one of the mapping name in `role_mappings`
-        # conflicts with sone built-in function names?
+        # Merge role group functions with built-in functions, prioritizing built-ins
+        # to prevent role mapping names from overriding core functionality
         env =
           role_groups
           |> Enum.map(fn {name, g} -> {name, RoleGroup.stub_2(g)} end)
@@ -70,7 +70,7 @@ defmodule Acx.Enforcer do
           %__MODULE__{
             model: model,
             role_groups: role_groups |> Map.new(),
-            persist_adapter: Acx.Persist.ReadonlyFileAdapter.new(),
+            persist_adapter: ReadonlyFileAdapter.new(),
             env: env
           }
         }
@@ -96,11 +96,11 @@ defmodule Acx.Enforcer do
   """
   @spec add_policy(t(), {atom(), [String.t()]}) :: t() | {:error, String.t()}
   def add_policy(
-      %__MODULE__{persist_adapter: adapter} = enforcer,
-      {_key, _attrs} = rule
-    ) do
-    with  {:ok, enforcer} <- load_policy(enforcer, rule),
-          {:ok, adapter} <- PersistAdapter.add_policy(adapter, rule) do
+        %__MODULE__{persist_adapter: adapter} = enforcer,
+        {_key, _attrs} = rule
+      ) do
+    with {:ok, enforcer} <- load_policy(enforcer, rule),
+         {:ok, adapter} <- PersistAdapter.add_policy(adapter, rule) do
       %{enforcer | persist_adapter: adapter}
     else
       {:error, reason} -> {:error, reason}
@@ -124,12 +124,12 @@ defmodule Acx.Enforcer do
 
   @spec load_policy(t(), {atom(), [String.t()]}) :: t() | {:error, String.t()}
   defp load_policy(
-      %__MODULE__{model: model, policies: policies, persist_adapter: adapter} = enforcer,
-      {key, attrs}
-    ) do
-    with  {:ok, policy} <- Model.create_policy(model, {key, attrs}),
-          false <- Enum.member?(policies, policy) do
-            enforcer = %{enforcer | policies: [policy | policies], persist_adapter: adapter}
+         %__MODULE__{model: model, policies: policies, persist_adapter: adapter} = enforcer,
+         {key, attrs}
+       ) do
+    with {:ok, policy} <- Model.create_policy(model, {key, attrs}),
+         false <- Enum.member?(policies, policy) do
+      enforcer = %{enforcer | policies: [policy | policies], persist_adapter: adapter}
       {:ok, enforcer}
     else
       {:error, reason} -> {:error, reason}
@@ -151,13 +151,13 @@ defmodule Acx.Enforcer do
   Removes the policy rule or rules that match from the enforcer.
   """
   def remove_policy(
-    %__MODULE__{model: model, policies: policies, persist_adapter: adapter} = enforcer,
-    {key, attrs}
-  ) do
+        %__MODULE__{model: model, policies: policies, persist_adapter: adapter} = enforcer,
+        {key, attrs}
+      ) do
     with {:ok, policy} <- Model.create_policy(model, {key, attrs}),
-          true <- Enum.member?(policies, policy),
-          {:ok, _adapter} <- PersistAdapter.remove_policy(adapter, {key, attrs}),
-          policies <- Enum.reject(policies, fn p -> p == policy end) do
+         true <- Enum.member?(policies, policy),
+         {:ok, _adapter} <- PersistAdapter.remove_policy(adapter, {key, attrs}),
+         policies <- Enum.reject(policies, fn p -> p == policy end) do
       %{enforcer | policies: policies}
     else
       false -> {:error, :nonexistent}
@@ -213,29 +213,38 @@ defmodule Acx.Enforcer do
   """
   @spec remove_filtered_policy(t(), atom(), integer(), keyword()) :: t() | {:error, any()}
   def remove_filtered_policy(
-    %__MODULE__{policies: policies, persist_adapter: adapter} = enforcer,
-    req_key, idx, req
-  )
-    when is_atom(req_key) and is_integer(idx) and is_list(req) do
-      filtered_policies =
-        policies
-        |> Enum.reject(fn %{key: key, attrs: attrs} ->
-          attr_values =
-            attrs
-            |> Enum.map(&elem(&1, 1))
-            |> Enum.slice(idx, length(req))
+        %__MODULE__{policies: policies, persist_adapter: adapter} = enforcer,
+        req_key,
+        idx,
+        req
+      )
+      when is_atom(req_key) and is_integer(idx) and is_list(req) do
+    filtered_policies =
+      policies
+      |> Enum.reject(fn %{key: key, attrs: attrs} ->
+        attr_values =
+          attrs
+          |> Enum.map(&elem(&1, 1))
+          |> Enum.slice(idx, length(req))
 
-          [key | attr_values] === [req_key | req]
-        end)
+        [key | attr_values] === [req_key | req]
+      end)
 
-      {:ok, adapter} = PersistAdapter.remove_filtered_policy(adapter, req_key, idx, req)
-      %{enforcer | policies: filtered_policies, persist_adapter: adapter}
+    case PersistAdapter.remove_filtered_policy(adapter, req_key, idx, req) do
+      {:ok, adapter} ->
+        %{enforcer | policies: filtered_policies, persist_adapter: adapter}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
-  @spec remove_filtered_policy!(t(), atom(), integer(), keyword()) :: t() | {:error, any()}
+  @spec remove_filtered_policy!(t(), atom(), integer(), keyword()) :: t()
   def remove_filtered_policy!(
         %__MODULE__{} = enforcer,
-        req_key, idx, req
+        req_key,
+        idx,
+        req
       )
       when is_atom(req_key) and is_integer(idx) and is_list(req) do
     case remove_filtered_policy(enforcer, req_key, idx, req) do
@@ -319,7 +328,8 @@ defmodule Acx.Enforcer do
   @spec load_policies!(t()) :: t() | {:error, any()}
   def load_policies!(%__MODULE__{model: m, persist_adapter: adapter} = enforcer) do
     case PersistAdapter.load_policies(adapter) do
-      {:ok, policies} -> policies
+      {:ok, policies} ->
+        policies
         |> Enum.map(fn [key | attrs] -> [String.to_atom(key) | attrs] end)
         |> Enum.filter(fn [key | _] -> Model.has_policy_key?(m, key) end)
         |> Enum.map(fn [key | attrs] -> {key, attrs} end)
@@ -330,15 +340,16 @@ defmodule Acx.Enforcer do
   @spec load_policies!(t(), String.t()) :: t()
   def load_policies!(%__MODULE__{model: m} = enforcer, pfile)
       when is_binary(pfile) do
-        adapter = Acx.Persist.ReadonlyFileAdapter.new(pfile)
-        enforcer = %{enforcer | persist_adapter: adapter}
+    adapter = ReadonlyFileAdapter.new(pfile)
+    enforcer = %{enforcer | persist_adapter: adapter}
 
-        case PersistAdapter.load_policies(adapter) do
-          {:ok, policies} -> policies
-            |> Enum.map(fn [key | attrs] -> [String.to_atom(key) | attrs] end)
-            |> Enum.filter(fn [key | _] -> Model.has_policy_key?(m, key) end)
-            |> Enum.map(fn [key | attrs] -> {key, attrs} end)
-            |> Enum.reduce(enforcer, &load_policy!(&2, &1))
+    case PersistAdapter.load_policies(adapter) do
+      {:ok, policies} ->
+        policies
+        |> Enum.map(fn [key | attrs] -> [String.to_atom(key) | attrs] end)
+        |> Enum.filter(fn [key | _] -> Model.has_policy_key?(m, key) end)
+        |> Enum.map(fn [key | attrs] -> {key, attrs} end)
+        |> Enum.reduce(enforcer, &load_policy!(&2, &1))
     end
   end
 
@@ -418,72 +429,76 @@ defmodule Acx.Enforcer do
   #
 
   @spec load_mapping_policy(t(), {atom(), String.t(), String.t()}) ::
-  t() | {:error, String.t()}
+          t() | {:error, String.t()}
   defp load_mapping_policy(
-        %__MODULE__{
-          mapping_policies: mappings,
-          role_groups: groups,
-          env: env,
-          persist_adapter: adapter
-        } = enforcer,
-        {mapping_name, role1, role2} = mapping
-      )
-      when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) do
-        with group when not is_nil(group) <- Map.get(groups, mapping_name),
-            false <- Enum.member?(mappings, mapping),
-            group <- RoleGroup.add_inheritance(group, {role1, role2}) do
-        new_enforcer = %{
-          enforcer
-          | role_groups: %{groups | mapping_name => group},
-            mapping_policies: [mapping | mappings],
-            persist_adapter: adapter,
-            env: %{env | mapping_name => RoleGroup.stub_2(group)}
-        }
-        {:ok, new_enforcer}
-      else
-        nil ->
-          {:error, "mapping name not found: `#{mapping_name}`"}
-        true ->
-          {:error, :already_existed}
+         %__MODULE__{
+           mapping_policies: mappings,
+           role_groups: groups,
+           env: env,
+           persist_adapter: adapter
+         } = enforcer,
+         {mapping_name, role1, role2} = mapping
+       )
+       when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) do
+    with group when not is_nil(group) <- Map.get(groups, mapping_name),
+         false <- Enum.member?(mappings, mapping),
+         group <- RoleGroup.add_inheritance(group, {role1, role2}) do
+      new_enforcer = %{
+        enforcer
+        | role_groups: %{groups | mapping_name => group},
+          mapping_policies: [mapping | mappings],
+          persist_adapter: adapter,
+          env: %{env | mapping_name => RoleGroup.stub_2(group)}
+      }
+
+      {:ok, new_enforcer}
+    else
+      nil ->
+        {:error, "mapping name not found: `#{mapping_name}`"}
+
+      true ->
+        {:error, :already_existed}
     end
   end
 
   @spec load_mapping_policy(t(), {atom(), String.t(), String.t(), String.t()}) ::
-  t() | {:error, String.t()}
+          t() | {:error, String.t()}
   defp load_mapping_policy(
-        %__MODULE__{
-          mapping_policies: mappings,
-          role_groups: groups,
-          env: env,
-          persist_adapter: adapter
-        } = enforcer,
-        {mapping_name, role1, role2, dom} = mapping
-      )
-      when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) and is_binary(dom) do
-        with group when not is_nil(group) <- Map.get(groups, mapping_name),
-            false <- Enum.member?(mappings, mapping),
-            group <- RoleGroup.add_inheritance(group, {role1, role2 <> dom}) do
-          new_enforcer = %{
-            enforcer
-            | role_groups: %{groups | mapping_name => group},
-            mapping_policies: [mapping | mappings],
-              persist_adapter: adapter,
-              env: %{env | mapping_name => RoleGroup.stub_3(group)}
-          }
-          {:ok, new_enforcer}
-        else
-          nil ->
-            {:error, "mapping name not found: `#{mapping_name}`"}
-          true ->
-            {:error, :already_existed}
+         %__MODULE__{
+           mapping_policies: mappings,
+           role_groups: groups,
+           env: env,
+           persist_adapter: adapter
+         } = enforcer,
+         {mapping_name, role1, role2, dom} = mapping
+       )
+       when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) and is_binary(dom) do
+    with group when not is_nil(group) <- Map.get(groups, mapping_name),
+         false <- Enum.member?(mappings, mapping),
+         group <- RoleGroup.add_inheritance(group, {role1, role2 <> dom}) do
+      new_enforcer = %{
+        enforcer
+        | role_groups: %{groups | mapping_name => group},
+          mapping_policies: [mapping | mappings],
+          persist_adapter: adapter,
+          env: %{env | mapping_name => RoleGroup.stub_3(group)}
+      }
+
+      {:ok, new_enforcer}
+    else
+      nil ->
+        {:error, "mapping name not found: `#{mapping_name}`"}
+
+      true ->
+        {:error, :already_existed}
     end
   end
 
   defp load_mapping_policy!(
-        %__MODULE__{} = enforcer,
-        {mapping_name, role1, role2}
-      )
-      when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) do
+         %__MODULE__{} = enforcer,
+         {mapping_name, role1, role2}
+       )
+       when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) do
     case load_mapping_policy(enforcer, {mapping_name, role1, role2}) do
       {:error, :already_existed} ->
         enforcer
@@ -497,10 +512,10 @@ defmodule Acx.Enforcer do
   end
 
   defp load_mapping_policy!(
-        %__MODULE__{} = enforcer,
-        {mapping_name, role1, role2, dom}
-      )
-      when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) and is_binary(dom) do
+         %__MODULE__{} = enforcer,
+         {mapping_name, role1, role2, dom}
+       )
+       when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) and is_binary(dom) do
     case load_mapping_policy(enforcer, {mapping_name, role1, role2, dom}) do
       {:error, :already_existed} ->
         enforcer
@@ -512,7 +527,6 @@ defmodule Acx.Enforcer do
         enforcer
     end
   end
-
 
   @doc """
   Makes `role1` inherit from (or has role ) `role2`. The `mapping_name`
@@ -563,12 +577,12 @@ defmodule Acx.Enforcer do
         {mapping_name, role1, role2} = mapping
       )
       when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) do
-        with {:ok, new_enforcer} <- load_mapping_policy(enforcer, mapping),
-            {:ok, adapter} <- PersistAdapter.add_policy(adapter, {mapping_name, [role1, role2]}) do
-        %{new_enforcer | persist_adapter: adapter}
-      else
-        {:error, reason} ->
-          {:error, reason}
+    with {:ok, new_enforcer} <- load_mapping_policy(enforcer, mapping),
+         {:ok, adapter} <- PersistAdapter.add_policy(adapter, {mapping_name, [role1, role2]}) do
+      %{new_enforcer | persist_adapter: adapter}
+    else
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -577,15 +591,14 @@ defmodule Acx.Enforcer do
         {mapping_name, role1, role2, dom} = mapping
       )
       when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) and is_binary(dom) do
-        with {:ok, new_enforcer} <- load_mapping_policy(enforcer, mapping),
-             {:ok, adapter} <- PersistAdapter.add_policy(adapter, {mapping_name, [role1, role2, dom]}) do
-              %{new_enforcer | persist_adapter: adapter}
-        else
-          {:error, reason} ->
-            {:error, reason}
+    with {:ok, new_enforcer} <- load_mapping_policy(enforcer, mapping),
+         {:ok, adapter} <- PersistAdapter.add_policy(adapter, {mapping_name, [role1, role2, dom]}) do
+      %{new_enforcer | persist_adapter: adapter}
+    else
+      {:error, reason} ->
+        {:error, reason}
     end
   end
-
 
   def add_mapping_policy!(
         %__MODULE__{} = enforcer,
@@ -620,14 +633,15 @@ defmodule Acx.Enforcer do
   """
   def load_mapping_policies!(%__MODULE__{model: m, persist_adapter: adapter} = enforcer) do
     case PersistAdapter.load_policies(adapter) do
-      {:ok, policies} -> policies
-      |> Enum.map(fn [key | attrs] -> [String.to_atom(key) | attrs] end)
-      |> Enum.filter(fn [key | _] -> Model.has_role_mapping?(m, key) end)
-      |> Enum.map(fn
+      {:ok, policies} ->
+        policies
+        |> Enum.map(fn [key | attrs] -> [String.to_atom(key) | attrs] end)
+        |> Enum.filter(fn [key | _] -> Model.has_role_mapping?(m, key) end)
+        |> Enum.map(fn
           [name, r1, r2] -> {name, r1, r2}
           [name, r1, r2, d] -> {name, r1, r2, d}
         end)
-      |> Enum.reduce(enforcer, &load_mapping_policy!(&2, &1))
+        |> Enum.reduce(enforcer, &load_mapping_policy!(&2, &1))
     end
   end
 
@@ -667,47 +681,59 @@ defmodule Acx.Enforcer do
   """
   @spec remove_mapping_policy(t(), {atom(), String.t(), String.t()}) :: t() | {:error, String.t()}
   def remove_mapping_policy(
-        %__MODULE__{mapping_policies: mappings, role_groups: groups, env: env, persist_adapter: adapter} = enforcer,
+        %__MODULE__{
+          mapping_policies: mappings,
+          role_groups: groups,
+          env: env,
+          persist_adapter: adapter
+        } = enforcer,
         {mapping_name, role1, role2} = mapping
       )
       when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) do
-        with group when not is_nil(group) <- Map.get(groups, mapping_name),
-            group <- RoleGroup.remove_inheritance(group, {role1, role2}),
-            mappings <- Enum.reject(mappings, fn m -> m == mapping end),
-            {:ok, adapter} <- PersistAdapter.remove_policy(adapter, {mapping_name, [role1, role2]}) do
-        %{
-          enforcer
-          | role_groups: %{groups | mapping_name => group},
-            mapping_policies: mappings,
-            persist_adapter: adapter,
-            env: %{env | mapping_name => RoleGroup.stub_2(group)}
-        }
-      else
-        nil ->
-          {:error, "mapping name not found: `#{mapping_name}`"}
+    with group when not is_nil(group) <- Map.get(groups, mapping_name),
+         group <- RoleGroup.remove_inheritance(group, {role1, role2}),
+         mappings <- Enum.reject(mappings, fn m -> m == mapping end),
+         {:ok, adapter} <- PersistAdapter.remove_policy(adapter, {mapping_name, [role1, role2]}) do
+      %{
+        enforcer
+        | role_groups: %{groups | mapping_name => group},
+          mapping_policies: mappings,
+          persist_adapter: adapter,
+          env: %{env | mapping_name => RoleGroup.stub_2(group)}
+      }
+    else
+      nil ->
+        {:error, "mapping name not found: `#{mapping_name}`"}
     end
   end
 
-  @spec remove_mapping_policy(t(), {atom(), String.t(), String.t(), String.t()}) :: t() | {:error, String.t()}
+  @spec remove_mapping_policy(t(), {atom(), String.t(), String.t(), String.t()}) ::
+          t() | {:error, String.t()}
   def remove_mapping_policy(
-        %__MODULE__{mapping_policies: mappings, role_groups: groups, env: env, persist_adapter: adapter} = enforcer,
+        %__MODULE__{
+          mapping_policies: mappings,
+          role_groups: groups,
+          env: env,
+          persist_adapter: adapter
+        } = enforcer,
         {mapping_name, role1, role2, dom} = mapping
       )
       when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) and is_binary(dom) do
-        with group when not is_nil(group) <- Map.get(groups, mapping_name),
-             group <- RoleGroup.remove_inheritance(group, {role1, role2 <> dom}),
-             mappings <- Enum.reject(mappings, fn m -> m == mapping end),
-             {:ok, _adpater} <- PersistAdapter.remove_policy(adapter, {mapping_name, [role1, role2, dom]}) do
-          %{
-            enforcer
-            | role_groups: %{groups | mapping_name => group},
-              mapping_policies: mappings,
-              persist_adapter: adapter,
-              env: %{env | mapping_name => RoleGroup.stub_3(group)}
-          }
-        else
-          nil ->
-            {:error, "mapping name not found: `#{mapping_name}`"}
+    with group when not is_nil(group) <- Map.get(groups, mapping_name),
+         group <- RoleGroup.remove_inheritance(group, {role1, role2 <> dom}),
+         mappings <- Enum.reject(mappings, fn m -> m == mapping end),
+         {:ok, _adpater} <-
+           PersistAdapter.remove_policy(adapter, {mapping_name, [role1, role2, dom]}) do
+      %{
+        enforcer
+        | role_groups: %{groups | mapping_name => group},
+          mapping_policies: mappings,
+          persist_adapter: adapter,
+          env: %{env | mapping_name => RoleGroup.stub_3(group)}
+      }
+    else
+      nil ->
+        {:error, "mapping name not found: `#{mapping_name}`"}
     end
   end
 
@@ -783,10 +809,11 @@ defmodule Acx.Enforcer do
   """
   @spec list_mapping_policies(t(), integer(), keyword()) :: [mapping()]
   def list_mapping_policies(
-    %__MODULE__{mapping_policies: mapping_policies},
-    idx,
-    criteria
-  ) when is_list(criteria) and is_integer(idx) do
+        %__MODULE__{mapping_policies: mapping_policies},
+        idx,
+        criteria
+      )
+      when is_list(criteria) and is_integer(idx) do
     mapping_policies
     |> Enum.filter(fn mapping ->
       Tuple.to_list(mapping)
@@ -797,9 +824,10 @@ defmodule Acx.Enforcer do
 
   @spec list_mapping_policies(Acx.Enforcer.t(), maybe_improper_list) :: [mapping()]
   def list_mapping_policies(
-    %__MODULE__{mapping_policies: mapping_policies},
-    criteria
-  ) when is_list(criteria) do
+        %__MODULE__{mapping_policies: mapping_policies},
+        criteria
+      )
+      when is_list(criteria) do
     mapping_policies
     |> Enum.filter(fn mapping ->
       list = Tuple.to_list(mapping)
@@ -816,12 +844,17 @@ defmodule Acx.Enforcer do
   policies from one source and saving to another after changing adapters.
   """
   def save_policies(
-    %__MODULE__{persist_adapter: adapter, policies: policies, mapping_policies: mapping_policies} = enforcer
-    ) do
-    policies =  mapping_policies
-    |> Enum.map(&Tuple.to_list(&1))
-    |> Enum.map(fn [key | attrs] -> %{key: key, attrs: attrs} end)
-    |> Enum.concat(policies)
+        %__MODULE__{
+          persist_adapter: adapter,
+          policies: policies,
+          mapping_policies: mapping_policies
+        } = enforcer
+      ) do
+    policies =
+      mapping_policies
+      |> Enum.map(&Tuple.to_list(&1))
+      |> Enum.map(fn [key | attrs] -> %{key: key, attrs: attrs} end)
+      |> Enum.concat(policies)
 
     case PersistAdapter.save_policies(adapter, policies) do
       {:error, errors} -> {:error, errors}

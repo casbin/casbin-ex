@@ -1,6 +1,7 @@
 defmodule Acx.Persist.EctoAclTest do
   use ExUnit.Case, async: true
   alias Acx.Enforcer
+  alias Acx.Persist.EctoAdapter
 
   defmodule MockAclRepo do
     use Acx.Persist.MockRepo, pfile: "../data/acl.csv" |> Path.expand(__DIR__)
@@ -10,13 +11,12 @@ defmodule Acx.Persist.EctoAclTest do
   @repo MockAclRepo
 
   setup do
-    adapter = Acx.Persist.EctoAdapter.new(@repo)
+    adapter = EctoAdapter.new(@repo)
 
     {:ok, e} = Enforcer.init(@cfile, adapter)
     e = Enforcer.load_policies!(e)
     {:ok, e: e}
   end
-
 
   describe "allow?/2" do
     @test_cases [
@@ -44,5 +44,4 @@ defmodule Acx.Persist.EctoAclTest do
       end
     end)
   end
-
 end

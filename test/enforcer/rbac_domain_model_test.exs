@@ -48,7 +48,7 @@ defmodule Acx.Enforcer.RbacDomainModelTest do
     end)
   end
 
-  describe "removed role allow?/2"  do
+  describe "removed role allow?/2" do
     @test_cases [
       {["alice", "domain1", "data1", "read"], false},
       {["alice", "domain1", "data1", "write"], false},
@@ -56,7 +56,7 @@ defmodule Acx.Enforcer.RbacDomainModelTest do
       {["alice", "domain2", "data2", "write"], true},
       {["alice", "domain2", "data2", "no_existing"], false},
       {["alice", "domain2", "no_existing", "read"], false},
-      {["alice", "domain3", "data2", "read"], false},
+      {["alice", "domain3", "data2", "read"], false}
     ]
 
     Enum.each(@test_cases, fn {req, res} ->
