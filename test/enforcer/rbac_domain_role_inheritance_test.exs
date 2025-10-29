@@ -10,6 +10,28 @@ defmodule Acx.Enforcer.RbacDomainRoleInheritanceTest do
   end
 
   describe "role-to-role inheritance with domains" do
+    test "reproduces issue scenario: admin → author → reader chain", %{e: e} do
+      # This test reproduces the exact scenario from the GitHub issue
+      domain = "org:abc"
+
+      # Set up permissions: viewer role has read, member has write, admin has delete
+      e = e |> Enforcer.add_policy!({:p, ["viewer", domain, "resource", "read"]})
+      e = e |> Enforcer.add_policy!({:p, ["member", domain, "resource", "write"]})
+      e = e |> Enforcer.add_policy!({:p, ["admin", domain, "resource", "delete"]})
+
+      # Set up role inheritance chain: admin → member → viewer
+      e = e |> Enforcer.add_mapping_policy!({:g, "member", "viewer", domain})
+      e = e |> Enforcer.add_mapping_policy!({:g, "admin", "member", domain})
+
+      # Assign user alice to admin role
+      e = e |> Enforcer.add_mapping_policy!({:g, "alice", "admin", domain})
+
+      # Alice should have all permissions through the inheritance chain
+      assert e |> Enforcer.allow?(["alice", domain, "resource", "delete"]) === true
+      assert e |> Enforcer.allow?(["alice", domain, "resource", "write"]) === true
+      assert e |> Enforcer.allow?(["alice", domain, "resource", "read"]) === true
+    end
+
     test "user inherits permissions through role chain within domain", %{e: e} do
       domain = "org:test123"
 
