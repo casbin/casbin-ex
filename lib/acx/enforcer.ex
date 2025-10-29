@@ -475,7 +475,7 @@ defmodule Acx.Enforcer do
        when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) and is_binary(dom) do
     with group when not is_nil(group) <- Map.get(groups, mapping_name),
          false <- Enum.member?(mappings, mapping),
-         group <- RoleGroup.add_inheritance(group, {role1, role2 <> dom}) do
+         group <- RoleGroup.add_inheritance(group, {{role1, dom}, {role2, dom}}) do
       new_enforcer = %{
         enforcer
         | role_groups: %{groups | mapping_name => group},
@@ -720,7 +720,7 @@ defmodule Acx.Enforcer do
       )
       when is_atom(mapping_name) and is_binary(role1) and is_binary(role2) and is_binary(dom) do
     with group when not is_nil(group) <- Map.get(groups, mapping_name),
-         group <- RoleGroup.remove_inheritance(group, {role1, role2 <> dom}),
+         group <- RoleGroup.remove_inheritance(group, {{role1, dom}, {role2, dom}}),
          mappings <- Enum.reject(mappings, fn m -> m == mapping end),
          {:ok, _adpater} <-
            PersistAdapter.remove_policy(adapter, {mapping_name, [role1, role2, dom]}) do

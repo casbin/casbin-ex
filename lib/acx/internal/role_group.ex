@@ -145,9 +145,9 @@ defmodule Acx.Internal.RoleGroup do
       ...> false = f.(1, 2)
       ...> f.("admin", "member")
       true
-      ...> g = g |> RoleGroup.add_inheritance({"admin", "memberdomain"})
+      ...> g = g |> RoleGroup.add_inheritance({{"admin", "domain"}, {"member", "domain"}})
       ...> f = g |> RoleGroup.stub_3
-      ...> false = f.("member", "admin", "dom")
+      ...> false = f.("member", "admin", "domain")
       ...> f.("admin", "member", "domain")
       true
   """
@@ -161,7 +161,7 @@ defmodule Acx.Internal.RoleGroup do
   def stub_3(%__MODULE__{} = group) do
     fn
       arg1, arg2, arg3 ->
-        group |> inherit_from?(arg1, arg2 <> arg3)
+        group |> inherit_from?({arg1, arg3}, {arg2, arg3})
     end
   end
 end
