@@ -94,6 +94,14 @@ defmodule Acx.Persist.LoadPoliciesFromAdapterTest do
   end
 
   describe "Enforcer.load_policies!/1 with adapter" do
+    test "returns error when no adapter is set" do
+      {:ok, enforcer} = Enforcer.init(@cfile)
+
+      # Trying to load without adapter should return error
+      result = Enforcer.load_policies!(enforcer)
+      assert result == {:error, "No adapter set and no policy file provided"}
+    end
+
     test "loads policies from configured adapter" do
       adapter = EctoAdapter.new(@repo)
       {:ok, enforcer} = Enforcer.init(@cfile, adapter)
