@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/casbin/casbin-ex/compare/v1.2.0...v1.3.0) (2025-10-30)
+
+
+### Features
+
+* improve README ([#35](https://github.com/casbin/casbin-ex/issues/35)) ([c478e2d](https://github.com/casbin/casbin-ex/commit/c478e2d06ccc8fcf972de81d04b2f187e1b6f392))
+
 # [1.2.0](https://github.com/casbin/casbin-ex/compare/v1.1.0...v1.2.0) (2025-10-30)
 
 
