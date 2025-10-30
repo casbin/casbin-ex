@@ -289,6 +289,86 @@ case EnforcerServer.allow?(ename, new_req) do
 end
 ```
 
+## Testing with Async Tests
+
+When writing tests with `async: true`, you need to ensure each test has its own isolated enforcer instance to prevent race conditions. Acx provides utilities to make this easy.
+
+### Problem: Shared Global State
+
+By default, `EnforcerServer.start_link/2` uses a global ETS table to cache enforcers by name. This means all tests using the same enforcer name will share state, causing async tests to fail:
+
+```elixir
+# ❌ This will fail with async: true
+defmodule MyTest do
+  use ExUnit.Case, async: true  # Tests interfere with each other!
+  
+  setup do
+    EnforcerServer.start_link("my_enforcer", config_file)
+    :ok
+  end
+  
+  test "test 1" do
+    EnforcerServer.add_policy("my_enforcer", {:p, ["user1", "data", "read"]})
+    # Another test's cleanup might delete this policy!
+  end
+end
+```
+
+### Solution: Isolated Enforcers
+
+Use `start_link_isolated/2` and the test helper module to create isolated enforcers:
+
+```elixir
+# ✅ This works with async: true
+defmodule MyTest do
+  use ExUnit.Case, async: true
+  import Acx.EnforcerTestHelper
+  
+  setup do
+    # Each test gets a unique, isolated enforcer
+    {:ok, ename, _pid} = start_test_enforcer("my_test", config_file)
+    {:ok, ename: ename}
+  end
+  
+  test "test 1", %{ename: ename} do
+    EnforcerServer.add_policy(ename, {:p, ["user1", "data", "read"]})
+    assert EnforcerServer.allow?(ename, ["user1", "data", "read"])
+  end
+  
+  test "test 2", %{ename: ename} do
+    # This test has its own enforcer - no interference!
+    EnforcerServer.add_policy(ename, {:p, ["user2", "data", "write"]})
+    assert EnforcerServer.allow?(ename, ["user2", "data", "write"])
+  end
+end
+```
+
+### Manual Control
+
+If you need more control, you can manually manage isolated enforcers:
+
+```elixir
+test "manual control" do
+  ename = Acx.EnforcerServer.unique_name("test")
+  {:ok, _pid} = Acx.EnforcerServer.start_link_isolated(ename, config_file)
+  
+  try do
+    # Your test code
+    EnforcerServer.add_policy(ename, {:p, ["user", "data", "read"]})
+    assert EnforcerServer.allow?(ename, ["user", "data", "read"])
+  after
+    Acx.EnforcerTestHelper.stop_enforcer(ename)
+  end
+end
+```
+
+### Key Functions
+
+- `EnforcerServer.start_link_isolated/2` - Start an isolated enforcer (no ETS caching)
+- `EnforcerServer.unique_name/1` - Generate a unique enforcer name
+- `EnforcerTestHelper.start_test_enforcer/3` - Helper to start and auto-cleanup test enforcers
+- `EnforcerSupervisor.start_enforcer_isolated/2` - Start an isolated supervised enforcer
+
 ## TODO
 
 ### Global

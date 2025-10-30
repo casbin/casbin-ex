@@ -17,13 +17,59 @@ defmodule Acx.EnforcerServer do
   Loads and constructs an enforcer from the given config file `cfile`,
   and spawns a new process under the given name `ename` taking the
   (just constructed) enforcer as its initial state.
+
+  Note: This function uses a global ETS table to cache and lookup enforcers
+  by name. If you need isolated enforcers for testing (e.g., with `async: true`),
+  use `start_link_isolated/2` instead.
   """
   def start_link(ename, cfile) do
     GenServer.start_link(
       __MODULE__,
-      {ename, cfile},
+      {ename, cfile, false},
       name: via_tuple(ename)
     )
+  end
+
+  @doc """
+  Loads and constructs an enforcer from the given config file `cfile`,
+  and spawns a new isolated process under the given name `ename`.
+
+  Unlike `start_link/2`, this function does NOT use the global ETS table
+  for caching/lookup, ensuring each call creates a fresh enforcer instance.
+  This is particularly useful for async tests where state isolation is required.
+
+  ## Example
+
+      # In your test setup
+      test_enforcer_name = Acx.EnforcerServer.unique_name("test_enforcer")
+      {:ok, _pid} = Acx.EnforcerServer.start_link_isolated(test_enforcer_name, config_file)
+
+      on_exit(fn ->
+        if Process.whereis(via_tuple(test_enforcer_name)) do
+          GenServer.stop(via_tuple(test_enforcer_name))
+        end
+      end)
+  """
+  def start_link_isolated(ename, cfile) do
+    GenServer.start_link(
+      __MODULE__,
+      {ename, cfile, true},
+      name: via_tuple(ename)
+    )
+  end
+
+  @doc """
+  Generates a unique enforcer name by appending a unique reference to the base name.
+
+  This is useful for creating isolated enforcers in async tests.
+
+  ## Example
+
+      unique_name = Acx.EnforcerServer.unique_name("my_enforcer")
+      # Returns something like: "my_enforcer_#Reference<0.123.456.789>"
+  """
+  def unique_name(base_name) when is_binary(base_name) do
+    "#{base_name}_#{:erlang.unique_integer([:positive])}"
   end
 
   @doc """
@@ -193,8 +239,20 @@ defmodule Acx.EnforcerServer do
   # Server Callbacks
   #
 
+  # Handle old signature for backwards compatibility
   def init({ename, cfile}) do
-    case create_new_or_lookup_enforcer(ename, cfile) do
+    init({ename, cfile, false})
+  end
+
+  def init({ename, cfile, isolated}) do
+    result =
+      if isolated do
+        create_isolated_enforcer(ename, cfile)
+      else
+        create_new_or_lookup_enforcer(ename, cfile)
+      end
+
+    case result do
       {:error, reason} ->
         {:stop, reason}
 
@@ -356,5 +414,12 @@ defmodule Acx.EnforcerServer do
       [{^ename, enforcer}] ->
         {:ok, enforcer}
     end
+  end
+
+  # Creates a new isolated enforcer without using the ETS table for lookup.
+  # This ensures a fresh enforcer instance is created for each call, making it
+  # suitable for async tests where state isolation is required.
+  defp create_isolated_enforcer(_ename, cfile) do
+    Enforcer.init(cfile)
   end
 end

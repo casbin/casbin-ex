@@ -25,4 +25,20 @@ defmodule Acx.EnforcerSupervisor do
 
     DynamicSupervisor.start_child(__MODULE__, child_spec)
   end
+
+  @doc """
+  Starts a new isolated `Enforcer` process and supervises it.
+
+  Unlike `start_enforcer/2`, this creates a fresh enforcer instance without
+  using the global ETS table for caching. This is useful for async tests.
+  """
+  def start_enforcer_isolated(ename, cfile) do
+    child_spec = %{
+      id: Acx.EnforcerServer,
+      start: {Acx.EnforcerServer, :start_link_isolated, [ename, cfile]},
+      restart: :permanent
+    }
+
+    DynamicSupervisor.start_child(__MODULE__, child_spec)
+  end
 end
