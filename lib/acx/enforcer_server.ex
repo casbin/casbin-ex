@@ -69,6 +69,33 @@ defmodule Acx.EnforcerServer do
   end
 
   @doc """
+  Loads policy rules from the configured persist adapter and adds them
+  to the enforcer.
+
+  This function loads both regular policies and mapping policies (role
+  inheritances) from the database into the enforcer's memory.
+
+  Returns `:ok` on success, or `{:error, reason}` if the adapter is not
+  configured or if loading fails.
+
+  ## Examples
+
+      # Configure adapter
+      adapter = EctoAdapter.new(Repo)
+      EnforcerServer.set_persist_adapter("my_enforcer", adapter)
+
+      # Load policies from the adapter
+      EnforcerServer.load_policies_from_adapter("my_enforcer")
+      # => :ok
+
+  See `Enforcer.load_policies!/1` and `Enforcer.load_mapping_policies!/1`
+  for more details.
+  """
+  def load_policies_from_adapter(ename) do
+    GenServer.call(via_tuple(ename), {:load_policies_from_adapter})
+  end
+
+  @doc """
   Returns a list of policies in the given enforcer that match the
   given criteria.
 
@@ -243,6 +270,18 @@ defmodule Acx.EnforcerServer do
     new_enforcer = enforcer |> Enforcer.load_policies!(pfile)
     :ets.insert(:enforcers_table, {self_name(), new_enforcer})
     {:reply, :ok, new_enforcer}
+  end
+
+  def handle_call({:load_policies_from_adapter}, _from, enforcer) do
+    case Enforcer.load_policies!(enforcer) do
+      {:error, reason} ->
+        {:reply, {:error, reason}, enforcer}
+
+      new_enforcer ->
+        new_enforcer = Enforcer.load_mapping_policies!(new_enforcer)
+        :ets.insert(:enforcers_table, {self_name(), new_enforcer})
+        {:reply, :ok, new_enforcer}
+    end
   end
 
   def handle_call({:list_policies, criteria}, _from, enforcer) do
