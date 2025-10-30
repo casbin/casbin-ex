@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/casbin/casbin-ex/compare/v1.1.0...v1.2.0) (2025-10-30)
+
+
+### Features
+
+* fix RBAC role inheritance with domains ([#29](https://github.com/casbin/casbin-ex/issues/29)) ([20c7b2b](https://github.com/casbin/casbin-ex/commit/20c7b2beb1ad809ffc65d2895d8b11dd9b291dca))
+
 # [1.1.0](https://github.com/casbin/casbin-ex/compare/v1.0.0...v1.1.0) (2025-10-12)
 
 
