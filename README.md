@@ -289,6 +289,104 @@ case EnforcerServer.allow?(ename, new_req) do
 end
 ```
 
+## Database Persistence
+
+Acx supports persisting policies to a database using the `EctoAdapter`. This allows you to store policies in a database and load them back into memory on application startup.
+
+### Setup
+
+First, add the `casbin_rule` table to your database:
+
+```elixir
+defmodule MyApp.Repo.Migrations.CreateCasbinRule do
+  use Ecto.Migration
+
+  def change do
+    create table(:casbin_rule) do
+      add :ptype, :string, null: false
+      add :v0, :string
+      add :v1, :string
+      add :v2, :string
+      add :v3, :string
+      add :v4, :string
+      add :v5, :string
+      add :v6, :string
+    end
+
+    create index(:casbin_rule, [:ptype])
+  end
+end
+```
+
+### Usage
+
+```elixir
+alias Acx.{EnforcerServer, Persist.EctoAdapter}
+
+# Start your enforcer with a model configuration
+{:ok, _pid} = EnforcerServer.start_link("my_enforcer", "path/to/model.conf")
+
+# Configure the database adapter
+adapter = EctoAdapter.new(MyApp.Repo)
+:ok = EnforcerServer.set_persist_adapter("my_enforcer", adapter)
+
+# Load policies from the database
+# This loads both regular policies and role mappings
+:ok = EnforcerServer.load_policies_from_adapter("my_enforcer")
+
+# Now your enforcer is ready with policies from the database
+EnforcerServer.allow?("my_enforcer", ["alice", "blog_post", "read"])
+# => true or false based on policies in the database
+```
+
+### Automatic Persistence
+
+When you add or remove policies, they are automatically saved to the database:
+
+```elixir
+# This automatically saves to the database
+EnforcerServer.add_policy("my_enforcer", {:p, ["admin", "data", "write"]})
+
+# This also automatically saves to the database
+EnforcerServer.add_mapping_policy("my_enforcer", {:g, "alice", "admin"})
+```
+
+### Application Startup Pattern
+
+A typical pattern for loading policies on application startup:
+
+```elixir
+defmodule MyApp.Application do
+  use Application
+
+  def start(_type, _args) do
+    children = [
+      MyApp.Repo,
+      # ... other children
+      {Acx.EnforcerSupervisor, []},
+    ]
+
+    opts = [strategy: :one_for_one, name: MyApp.Supervisor]
+    result = Supervisor.start_link(children, opts)
+
+    # Initialize the enforcer after the repo is started
+    setup_enforcer()
+
+    result
+  end
+
+  defp setup_enforcer do
+    {:ok, _pid} = Acx.EnforcerServer.start_link("my_enforcer", "priv/model.conf")
+
+    adapter = Acx.Persist.EctoAdapter.new(MyApp.Repo)
+    :ok = Acx.EnforcerServer.set_persist_adapter("my_enforcer", adapter)
+
+    # Load policies from database on startup
+    :ok = Acx.EnforcerServer.load_policies_from_adapter("my_enforcer")
+  end
+end
+```
+
 ## TODO
 
 ### Global
