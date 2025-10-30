@@ -273,14 +273,18 @@ defmodule Acx.EnforcerServer do
   end
 
   def handle_call({:load_policies_from_adapter}, _from, enforcer) do
-    case Enforcer.load_policies!(enforcer) do
-      {:error, reason} ->
-        {:reply, {:error, reason}, enforcer}
+    try do
+      case Enforcer.load_policies!(enforcer) do
+        {:error, reason} ->
+          {:reply, {:error, reason}, enforcer}
 
-      new_enforcer ->
-        new_enforcer = Enforcer.load_mapping_policies!(new_enforcer)
-        :ets.insert(:enforcers_table, {self_name(), new_enforcer})
-        {:reply, :ok, new_enforcer}
+        new_enforcer ->
+          new_enforcer = Enforcer.load_mapping_policies!(new_enforcer)
+          :ets.insert(:enforcers_table, {self_name(), new_enforcer})
+          {:reply, :ok, new_enforcer}
+      end
+    rescue
+      e -> {:reply, {:error, Exception.message(e)}, enforcer}
     end
   end
 
