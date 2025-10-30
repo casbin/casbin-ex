@@ -25,7 +25,10 @@ defmodule Acx.Persist.EnforcerServerAdapterLoadIntegrationTest do
       {:ok, _pid} = EnforcerServer.start_link(enforcer_name, @cfile)
 
       on_exit(fn ->
-        Process.exit(Process.whereis({:via, Registry, {Acx.EnforcerRegistry, enforcer_name}}), :kill)
+        Process.exit(
+          Process.whereis({:via, Registry, {Acx.EnforcerRegistry, enforcer_name}}),
+          :kill
+        )
       end)
 
       # Step 2: Configure the adapter
@@ -56,7 +59,10 @@ defmodule Acx.Persist.EnforcerServerAdapterLoadIntegrationTest do
       {:ok, _pid} = EnforcerServer.start_link(enforcer_name, @cfile)
 
       on_exit(fn ->
-        Process.exit(Process.whereis({:via, Registry, {Acx.EnforcerRegistry, enforcer_name}}), :kill)
+        Process.exit(
+          Process.whereis({:via, Registry, {Acx.EnforcerRegistry, enforcer_name}}),
+          :kill
+        )
       end)
 
       # BEFORE: Without load_policies_from_adapter
@@ -84,7 +90,10 @@ defmodule Acx.Persist.EnforcerServerAdapterLoadIntegrationTest do
       {:ok, _pid} = EnforcerServer.start_link(enforcer_name, @cfile)
 
       on_exit(fn ->
-        Process.exit(Process.whereis({:via, Registry, {Acx.EnforcerRegistry, enforcer_name}}), :kill)
+        Process.exit(
+          Process.whereis({:via, Registry, {Acx.EnforcerRegistry, enforcer_name}}),
+          :kill
+        )
       end)
 
       # Application startup: Configure persistence
