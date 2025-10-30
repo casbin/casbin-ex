@@ -305,6 +305,111 @@ case EnforcerServer.allow?(ename, new_req) do
 end
 ```
 
+## Persistence Adapters
+
+Casbin-Ex supports persisting policies to a database using adapters. The `EctoAdapter` allows you to store and load policies from any Ecto-compatible database.
+
+### Setting up the EctoAdapter
+
+First, create a migration for the `casbin_rule` table:
+
+```elixir
+defmodule MyApp.Repo.Migrations.CreateCasbinRule do
+  use Ecto.Migration
+
+  def change do
+    create table(:casbin_rule) do
+      add :ptype, :string, null: false
+      add :v0, :string
+      add :v1, :string
+      add :v2, :string
+      add :v3, :string
+      add :v4, :string
+      add :v5, :string
+      add :v6, :string
+    end
+
+    create index(:casbin_rule, [:ptype])
+  end
+end
+```
+
+### Using the EctoAdapter with EnforcerServer
+
+```elixir
+alias Acx.{EnforcerSupervisor, EnforcerServer}
+alias Acx.Persist.EctoAdapter
+
+# Start the enforcer
+ename = "my_enforcer"
+EnforcerSupervisor.start_enforcer(ename, "path/to/model.conf")
+
+# Configure the persist adapter
+adapter = EctoAdapter.new(MyApp.Repo)
+EnforcerServer.set_persist_adapter(ename, adapter)
+
+# Load policies from database on application startup
+EnforcerServer.load_policies_from_adapter(ename)
+
+# Add a new policy - it will be automatically saved to the database
+EnforcerServer.add_policy(ename, {:p, ["alice", "data", "write"]})
+
+# The policy is now both in memory and persisted to the database
+EnforcerServer.allow?(ename, ["alice", "data", "write"])
+# => true
+```
+
+### Loading Policies on Application Startup
+
+When your application restarts, policies need to be loaded from the database back into memory:
+
+```elixir
+# In your application startup code
+def start(_type, _args) do
+  children = [
+    MyApp.Repo,
+    {Acx.EnforcerSupervisor, []}
+  ]
+
+  opts = [strategy: :one_for_one, name: MyApp.Supervisor]
+  {:ok, _pid} = Supervisor.start_link(children, opts)
+
+  # Initialize enforcer and load policies from database
+  ename = "my_enforcer"
+  EnforcerSupervisor.start_enforcer(ename, "path/to/model.conf")
+  
+  adapter = EctoAdapter.new(MyApp.Repo)
+  EnforcerServer.set_persist_adapter(ename, adapter)
+  
+  # Load all policies from database into memory
+  EnforcerServer.load_policies_from_adapter(ename)
+  
+  {:ok, pid}
+end
+```
+
+### Using the EctoAdapter with Enforcer directly
+
+You can also use the adapter directly without EnforcerServer:
+
+```elixir
+alias Acx.Enforcer
+alias Acx.Persist.EctoAdapter
+
+# Initialize enforcer with adapter
+adapter = EctoAdapter.new(MyApp.Repo)
+{:ok, enforcer} = Enforcer.init("path/to/model.conf", adapter)
+
+# Load policies from database
+enforcer = 
+  enforcer
+  |> Enforcer.load_policies!()
+  |> Enforcer.load_mapping_policies!()
+
+# Use the enforcer
+Enforcer.allow?(enforcer, ["alice", "data", "write"])
+```
+
 ## Supported Models
 
 Casbin-Ex supports the following access control models:
