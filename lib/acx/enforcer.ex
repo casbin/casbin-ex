@@ -320,6 +320,33 @@ defmodule Acx.Enforcer do
       ]
   """
 
+  @doc """
+  Loads policy rules from the configured persist adapter and adds them
+  to the enforcer.
+
+  This is useful for loading policies from a database or other storage
+  backend after application startup. The adapter must be configured using
+  `set_persist_adapter/2` or by passing it to `init/2`.
+
+  Returns the updated enforcer with policies loaded from the adapter, or
+  `{:error, reason}` if no adapter is configured.
+
+  ## Examples
+
+      # Initialize enforcer with adapter
+      adapter = Acx.Persist.EctoAdapter.new(MyRepo)
+      {:ok, e} = Enforcer.init("path/to/model.conf", adapter)
+
+      # Load policies from the adapter
+      e = Enforcer.load_policies!(e)
+
+      # Now the enforcer has policies from the database
+      Enforcer.allow?(e, ["alice", "blog_post", "read"])
+      # => true
+
+  See also `load_policies!/2` for loading from a file, and
+  `load_mapping_policies!/1` for loading role mappings from the adapter.
+  """
   @spec load_policies!(t()) :: t() | {:error, any()}
   def load_policies!(%__MODULE__{persist_adapter: nil}) do
     {:error, "No adapter set and no policy file provided"}
