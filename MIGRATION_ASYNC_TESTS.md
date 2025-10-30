@@ -310,4 +310,4 @@ After:  100 tests in 8 seconds (parallel with async: true)
 
 - See `ASYNC_TESTING.md` for detailed guide
 - See `examples/async_test_example.exs` for examples
-- Check test/enforcer_async_test.exs for reference implementation
+- Check `test/enforcer_async_test.exs` for reference implementation
