@@ -3,10 +3,40 @@ defmodule Acx.Enforcer.RbacDomainRoleInheritanceTest do
   alias Acx.Enforcer
 
   @cfile "../data/rbac_domain.conf" |> Path.expand(__DIR__)
+  @pfile_hierarchy "../data/rbac_with_hierarchy_with_domains_policy.csv" |> Path.expand(__DIR__)
 
   setup do
     {:ok, e} = Enforcer.init(@cfile)
     {:ok, e: e}
+  end
+
+  describe "role-to-role inheritance with domains (matching Golang Casbin tests)" do
+    test "global_admin inherits from reader and writer roles in domain1", %{e: e} do
+      # This test matches the Golang Casbin implementation
+      # from rbac_api_with_domains_test.go -> TestGetImplicitRolesForDomainUser
+      # and uses the same test data from rbac_with_hierarchy_with_domains_policy.csv
+      e =
+        e
+        |> Enforcer.load_policies!(@pfile_hierarchy)
+        |> Enforcer.load_mapping_policies!(@pfile_hierarchy)
+
+      # Alice has role:global_admin role in domain1
+      # role:global_admin inherits from role:reader and role:writer in domain1
+      # Therefore, alice should have permissions from both reader and writer roles
+
+      # Test that alice can read data1 (from role:reader)
+      assert e |> Enforcer.allow?(["alice", "domain1", "data1", "read"]) === true
+
+      # Test that alice can write data1 (from role:writer)
+      assert e |> Enforcer.allow?(["alice", "domain1", "data1", "write"]) === true
+
+      # Test that alice can read data2 (direct permission)
+      assert e |> Enforcer.allow?(["alice", "domain1", "data2", "read"]) === true
+
+      # Test that alice in domain2 only has direct permissions, no role inheritance
+      assert e |> Enforcer.allow?(["alice", "domain2", "data2", "read"]) === true
+      assert e |> Enforcer.allow?(["alice", "domain2", "data1", "read"]) === false
+    end
   end
 
   describe "role-to-role inheritance with domains" do
