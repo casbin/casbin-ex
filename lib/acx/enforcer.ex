@@ -319,6 +319,21 @@ defmodule Acx.Enforcer do
       }
       ]
   """
+  @spec load_policies!(t(), String.t()) :: t()
+  def load_policies!(%__MODULE__{model: m} = enforcer, pfile)
+      when is_binary(pfile) do
+    adapter = ReadonlyFileAdapter.new(pfile)
+    enforcer = %{enforcer | persist_adapter: adapter}
+
+    case PersistAdapter.load_policies(adapter) do
+      {:ok, policies} ->
+        policies
+        |> Enum.map(fn [key | attrs] -> [String.to_atom(key) | attrs] end)
+        |> Enum.filter(fn [key | _] -> Model.has_policy_key?(m, key) end)
+        |> Enum.map(fn [key | attrs] -> {key, attrs} end)
+        |> Enum.reduce(enforcer, &load_policy!(&2, &1))
+    end
+  end
 
   @doc """
   Loads policy rules from the configured persist adapter and adds them
@@ -354,22 +369,6 @@ defmodule Acx.Enforcer do
 
   @spec load_policies!(t()) :: t() | {:error, any()}
   def load_policies!(%__MODULE__{model: m, persist_adapter: adapter} = enforcer) do
-    case PersistAdapter.load_policies(adapter) do
-      {:ok, policies} ->
-        policies
-        |> Enum.map(fn [key | attrs] -> [String.to_atom(key) | attrs] end)
-        |> Enum.filter(fn [key | _] -> Model.has_policy_key?(m, key) end)
-        |> Enum.map(fn [key | attrs] -> {key, attrs} end)
-        |> Enum.reduce(enforcer, &load_policy!(&2, &1))
-    end
-  end
-
-  @spec load_policies!(t(), String.t()) :: t()
-  def load_policies!(%__MODULE__{model: m} = enforcer, pfile)
-      when is_binary(pfile) do
-    adapter = ReadonlyFileAdapter.new(pfile)
-    enforcer = %{enforcer | persist_adapter: adapter}
-
     case PersistAdapter.load_policies(adapter) do
       {:ok, policies} ->
         policies
