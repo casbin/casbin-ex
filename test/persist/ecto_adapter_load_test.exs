@@ -22,10 +22,10 @@ defmodule Acx.Persist.EctoAdapterLoadTest do
       {:ok, _pid} = EnforcerServer.start_link(enforcer_name, @acl_cfile)
 
       on_exit(fn ->
-        Process.exit(
-          Process.whereis({:via, Registry, {Acx.EnforcerRegistry, enforcer_name}}),
-          :kill
-        )
+        case Process.whereis({:via, Registry, {Acx.EnforcerRegistry, enforcer_name}}) do
+          nil -> :ok
+          pid -> Process.exit(pid, :kill)
+        end
       end)
 
       {:ok, enforcer_name: enforcer_name}
@@ -73,10 +73,10 @@ defmodule Acx.Persist.EctoAdapterLoadTest do
       {:ok, _pid} = EnforcerServer.start_link(enforcer_name, @rbac_cfile)
 
       on_exit(fn ->
-        Process.exit(
-          Process.whereis({:via, Registry, {Acx.EnforcerRegistry, enforcer_name}}),
-          :kill
-        )
+        case Process.whereis({:via, Registry, {Acx.EnforcerRegistry, enforcer_name}}) do
+          nil -> :ok
+          pid -> Process.exit(pid, :kill)
+        end
       end)
 
       {:ok, enforcer_name: enforcer_name}
