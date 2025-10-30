@@ -1,12 +1,29 @@
-# Acx
+# Casbin-Ex
 
 [![GitHub Actions](https://github.com/casbin/casbin-ex/actions/workflows/ci.yml/badge.svg)](https://github.com/casbin/casbin-ex/actions/workflows/ci.yml)
 [![Hex.pm](https://img.shields.io/hexpm/v/acx.svg)](https://hex.pm/packages/acx)
 [![Release](https://img.shields.io/github/release/casbin/casbin-ex.svg)](https://github.com/casbin/casbin-ex/releases/latest)
 [![Discord](https://img.shields.io/discord/1022748306096537660?logo=discord&label=discord&color=5865F2)](https://discord.gg/S5UjpzGZjN)
 
-Acx is an access control library that can do whatever shit
-[Casbin](https://casbin.org/) can and much more...
+**News**: still worry about how to write the correct Casbin policy? ``Casbin online editor`` is coming to help! Try it at: https://casbin.org/editor/
+
+Casbin-Ex is a powerful and efficient open-source access control library for Elixir projects. It provides support for enforcing authorization based on various [access control models](https://en.wikipedia.org/wiki/Computer_security_model).
+
+## All the languages supported by Casbin:
+
+| [![golang](https://casbin.org/img/langs/golang.png)](https://github.com/casbin/casbin) | [![java](https://casbin.org/img/langs/java.png)](https://github.com/casbin/jcasbin) | [![nodejs](https://casbin.org/img/langs/nodejs.png)](https://github.com/casbin/node-casbin) | [![php](https://casbin.org/img/langs/php.png)](https://github.com/php-casbin/php-casbin) |
+|----------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
+| [Casbin](https://github.com/casbin/casbin)                                             | [jCasbin](https://github.com/casbin/jcasbin)                                        | [node-Casbin](https://github.com/casbin/node-casbin)                                        | [PHP-Casbin](https://github.com/php-casbin/php-casbin)                                   |
+| production-ready                                                                       | production-ready                                                                    | production-ready                                                                            | production-ready                                                                         |
+
+| [![python](https://casbin.org/img/langs/python.png)](https://github.com/casbin/pycasbin) | [![dotnet](https://casbin.org/img/langs/dotnet.png)](https://github.com/casbin-net/Casbin.NET) | [![c++](https://casbin.org/img/langs/cpp.png)](https://github.com/casbin/casbin-cpp) | [![rust](https://casbin.org/img/langs/rust.png)](https://github.com/casbin/casbin-rs) |
+|------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------|
+| [PyCasbin](https://github.com/casbin/pycasbin)                                           | [Casbin.NET](https://github.com/casbin-net/Casbin.NET)                                         | [Casbin-CPP](https://github.com/casbin/casbin-cpp)                                   | [Casbin-RS](https://github.com/casbin/casbin-rs)                                      |
+| production-ready                                                                         | production-ready                                                                               | production-ready                                                                     | production-ready                                                                      |
+
+## Documentation
+
+https://casbin.org/docs/overview
 
 ## Installation
 
@@ -31,11 +48,11 @@ like this:
 | bob   |     no           |       yes      |        no        |          yes     |
 | peter |     yes          |       yes      |        yes       |          no      |
 
-Based on this requirements, our first step is to choose an appropriate
+Based on these requirements, our first step is to choose an appropriate
 access control model. Let's say we choose to go with the ACL model.
-Similar to Casbin, in Acx, an access control model is abstracted into a
+In Casbin-Ex, an access control model is abstracted into a
 config file based on the **[PERM Meta-Model](https://casbin.org/docs/how-it-works)**. The content of the config file for our system would look
-like so:
+like this:
 
 ```ini
 # blog_ac.conf
@@ -48,8 +65,8 @@ like so:
 r = sub, obj, act
 
 # Each policy definition should have a key and a list of attributes separated by
-# an equal `=` sign. In Acx all policy rules have in common the `eft` attribute
-# and it can only take value of either `"allow"` or `"deny"`, so you can ommit
+# an equal `=` sign. In Casbin-Ex all policy rules have in common the `eft` attribute
+# and it can only take value of either `"allow"` or `"deny"`, so you can omit
 # it in your policy definition.
 [policy_definition]
 p = sub, obj, act
@@ -88,12 +105,12 @@ p, peter, blog_post, modify
 
 ```
 
-Note that, first of all , since we don't specify the value for the `eft`
+Note that, first of all, since we don't specify the value for the `eft`
 attribute for any of the above rules, all of our rules are of type `allow`
-(a.k.a `yes`) by default. Second, we don't have to define any `deny`
-(a.k.a `no`) rules for our system.
+(i.e., `yes`) by default. Second, we don't have to define any `deny`
+(i.e., `no`) rules for our system.
 
-The final step is to combine the model, the policy rules and Acx to
+The final step is to combine the model, the policy rules and Casbin-Ex to
 construct our access control system.
 
 ```elixir
@@ -121,29 +138,29 @@ end
 ```
 
 If you are not a fan of supervision tree or stateful server, read on to
-figure our how to use Acx without any of those.
+figure out how to use Casbin-Ex without any of those.
 
-## [Role Base Access Control (RBAC)](https://en.wikipedia.org/wiki/Role-based_access_control)
+## [Role-Based Access Control (RBAC)](https://en.wikipedia.org/wiki/Role-based_access_control)
 
-Our ACL access control system is working just fine for initial purpose, but
-now our bussiness is expanding like nuts, so we need a more flexible access
-control model to meet new bussiness requirements. We went back to the
-drawing-board and came up with this design for our new system:
+Our ACL access control system is working just fine for the initial purpose, but
+now our business is expanding rapidly, so we need a more flexible access
+control model to meet new business requirements. We went back to the
+drawing board and came up with this design for our new system:
 
 ![rbac diagram](rbac.png)
 
-We assign different roles to different users, `bob` has the role `reader`,
-`peter` has the role `author` and `alice` has the role `admin`, and so on...
+We assign different roles to different users: `bob` has the role `reader`,
+`peter` has the role `author`, and `alice` has the role `admin`, and so on.
 We then define mappings from `role` to `permission` (instead of asking
-*who can do what* like in the ACL model, now it's time to ask **which role can
-do what?**). We also define mappings from role to role  to represent
-inheritance. In the above diagram, we have `admin` inherits from `author`,
+*who can do what* like in the ACL model, now we ask **which role can
+do what?**). We also define mappings from role to role to represent
+inheritance. In the above diagram, `admin` inherits from `author`,
 which in turn inherits from `reader`.
 
-Note that *has role* or *inherits from* relation is [transitive](https://en.wikipedia.org/wiki/Transitive_relation).
+Note that the *has role* or *inherits from* relation is [transitive](https://en.wikipedia.org/wiki/Transitive_relation).
 
 Based on this design, the config file for our new model would look like
-so:
+this:
 
 ```ini
 # blog_ac.conf
@@ -154,9 +171,9 @@ r = sub, obj, act
 [policy_definition]
 p = sub, obj, act
 
-# This is the name of the mapping we mentioned above, I call it `g`
-# to make it compatible with Casbin (which for some reason only allows name
-# like `g, g2, ...`) but you can name it whatever shit you like so long as
+# This is the name of the mapping we mentioned above. We call it `g`
+# to make it compatible with Casbin (which only allows names
+# like `g, g2, ...`), but you can name it however you prefer as long as
 # you're consistent.
 [role_definition]
 g = _, _
@@ -197,9 +214,9 @@ ename = "blog_ac"
 EnforcerSupervisor.start_enforcer(ename, blog_ac.conf)
 EnforcerServer.load_policies(ename, blog_ac.csv)
 
-# You only have to add this new line to load mapping rules. Unlike Casbin
-# Acx distinguishes from `normal` policy rules and `mapping` rules.
-# We've just happended to put the two types of rules in the same `*.csv` file.
+# You only have to add this new line to load mapping rules. Unlike other Casbin
+# implementations, Casbin-Ex distinguishes between `normal` policy rules and `mapping` rules.
+# We've just happened to put the two types of rules in the same `*.csv` file.
 EnforcerServer.load_mapping_policies(ename, blog_ac.csv)
 
 new_req = ["alice", "blog_post", "read"]
@@ -213,11 +230,10 @@ case EnforcerServer.allow?(ename, new_req) do
 end
 ```
 
-As you can see, the cost of swithching or upgrading to another access control
-mechanism is just as cheap as modifying the configuration.
+As you can see, the cost of switching or upgrading to another access control
+mechanism is as simple as modifying the configuration.
 
-## RESTful example
-TODO
+## RESTful Example
 
 The config file:
 
@@ -259,11 +275,11 @@ ename = "restful_ac"
 EnforcerSupervisor.start_enforcer(ename, restful_ac.conf)
 EnforcerServer.load_policies(ename, restful_ac.csv)
 
-# We have to define the `match?/2` and add it to our enforcer system.
+# We have to define the `match?/2` function and add it to our enforcer system.
 
-# This anonymous function is idential to the built-in function
-# `regex_match?/2`, but I redifine it here to illustrate the idea of
-# how you can customize the system to meet your need.
+# This anonymous function is identical to the built-in function
+# `regex_match?/2`, but we redefine it here to illustrate the idea of
+# how you can customize the system to meet your needs.
 fun = fn str, pattern ->
   case Regex.compile("^#{pattern}$") do
     {:error, _} ->
@@ -274,7 +290,7 @@ fun = fn str, pattern ->
   end
 end
 
-# add `fun` to our system. Note that the name `:match?` is an atom not
+# Add `fun` to our system. Note that the name `:match?` is an atom, not
 # a string.
 EnforcerServer.add_fun(ename, {:match?, fun})
 
@@ -289,17 +305,44 @@ case EnforcerServer.allow?(ename, new_req) do
 end
 ```
 
+## Supported Models
+
+Casbin-Ex supports the following access control models:
+
+1. [**ACL (Access Control List)**](https://en.wikipedia.org/wiki/Access-control_list)
+2. **ACL with [superuser](https://en.wikipedia.org/wiki/Superuser)**
+3. **ACL without users**: especially useful for systems that don't have authentication or user log-ins
+4. **ACL without resources**: some scenarios may target a type of resources instead of an individual resource
+5. **[RBAC (Role-Based Access Control)](https://en.wikipedia.org/wiki/Role-based_access_control)**
+6. **RBAC with resource roles**: both users and resources can have roles (or groups) at the same time
+7. **RBAC with domains/tenants**: users can have different role sets for different domains/tenants
+8. **[ABAC (Attribute-Based Access Control)](https://en.wikipedia.org/wiki/Attribute-Based_Access_Control)**: syntax sugar like `resource.Owner` can be used to get the attribute for a resource
+9. **[RESTful](https://en.wikipedia.org/wiki/Representational_state_transfer)**: supports paths like `/res/*`, `/res/:id` and HTTP methods like `GET`, `POST`, `PUT`, `DELETE`
+10. **Deny-override**: both allow and deny authorizations are supported, deny overrides the allow
+11. **Priority**: the policy rules can be prioritized like firewall rules
+
 ## TODO
 
-### Global
+### Matchers Functions
 
 Implement all [matchers' functions](https://casbin.org/docs/function):
 - [x] regexMatch
 - [ ] keyMatch
 - [ ] keyGet
-- [x] KeyMatch2
+- [x] keyMatch2
 - [ ] keyGet2
 - [ ] keyMatch3
 - [ ] keyMatch4
 - [ ] ipMatch
 - [ ] globMatch
+
+## License
+
+This project is licensed under the [Apache 2.0 license](LICENSE).
+
+## Getting Help
+
+- Casbin-Ex documentation: https://casbin.org/docs/overview
+- Casbin website: https://casbin.org
+- Discord: https://discord.gg/S5UjpzGZjN
+- GitHub Issues: https://github.com/casbin/casbin-ex/issues
