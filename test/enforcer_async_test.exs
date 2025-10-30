@@ -7,7 +7,7 @@ defmodule Acx.EnforcerAsyncTest do
 
   alias Acx.EnforcerServer
 
-  @cfile "../data/acl.conf" |> Path.expand(__DIR__)
+  @cfile "data/acl.conf" |> Path.expand(__DIR__)
 
   describe "isolated enforcers with async: true" do
     setup do

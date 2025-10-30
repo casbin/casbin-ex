@@ -9,7 +9,7 @@ defmodule AsyncTestExample do
   use ExUnit.Case, async: true
   import Acx.EnforcerTestHelper
 
-  @cfile "test/data/acl.conf" |> Path.expand(__DIR__)
+  @cfile "../test/data/acl.conf" |> Path.expand(__DIR__)
 
   describe "Example: Using isolated enforcers in async tests" do
     setup do
