@@ -171,58 +171,38 @@ defmodule Acx.Persist.EctoAdapter do
     end
 
     defp build_filtered_query(filter) do
-      Enum.reduce(filter, Ecto.Query.from(r in CasbinRule), fn
-        {:ptype, values}, query when is_list(values) ->
-          Ecto.Query.where(query, [r], r.ptype in ^values)
-
-        {:ptype, value}, query ->
-          Ecto.Query.where(query, [r], r.ptype == ^value)
-
-        {:v0, values}, query when is_list(values) ->
-          Ecto.Query.where(query, [r], r.v0 in ^values)
-
-        {:v0, value}, query ->
-          Ecto.Query.where(query, [r], r.v0 == ^value)
-
-        {:v1, values}, query when is_list(values) ->
-          Ecto.Query.where(query, [r], r.v1 in ^values)
-
-        {:v1, value}, query ->
-          Ecto.Query.where(query, [r], r.v1 == ^value)
-
-        {:v2, values}, query when is_list(values) ->
-          Ecto.Query.where(query, [r], r.v2 in ^values)
-
-        {:v2, value}, query ->
-          Ecto.Query.where(query, [r], r.v2 == ^value)
-
-        {:v3, values}, query when is_list(values) ->
-          Ecto.Query.where(query, [r], r.v3 in ^values)
-
-        {:v3, value}, query ->
-          Ecto.Query.where(query, [r], r.v3 == ^value)
-
-        {:v4, values}, query when is_list(values) ->
-          Ecto.Query.where(query, [r], r.v4 in ^values)
-
-        {:v4, value}, query ->
-          Ecto.Query.where(query, [r], r.v4 == ^value)
-
-        {:v5, values}, query when is_list(values) ->
-          Ecto.Query.where(query, [r], r.v5 in ^values)
-
-        {:v5, value}, query ->
-          Ecto.Query.where(query, [r], r.v5 == ^value)
-
-        {:v6, values}, query when is_list(values) ->
-          Ecto.Query.where(query, [r], r.v6 in ^values)
-
-        {:v6, value}, query ->
-          Ecto.Query.where(query, [r], r.v6 == ^value)
-
-        _, query ->
-          query
+      Enum.reduce(filter, Ecto.Query.from(r in CasbinRule), fn {field, value}, query ->
+        add_where_clause(query, field, value)
       end)
+    end
+
+    # Helper function to add WHERE clause for a single filter condition
+    defp add_where_clause(query, field, values) when is_list(values) do
+      case field do
+        :ptype -> Ecto.Query.where(query, [r], r.ptype in ^values)
+        :v0 -> Ecto.Query.where(query, [r], r.v0 in ^values)
+        :v1 -> Ecto.Query.where(query, [r], r.v1 in ^values)
+        :v2 -> Ecto.Query.where(query, [r], r.v2 in ^values)
+        :v3 -> Ecto.Query.where(query, [r], r.v3 in ^values)
+        :v4 -> Ecto.Query.where(query, [r], r.v4 in ^values)
+        :v5 -> Ecto.Query.where(query, [r], r.v5 in ^values)
+        :v6 -> Ecto.Query.where(query, [r], r.v6 in ^values)
+        _ -> query
+      end
+    end
+
+    defp add_where_clause(query, field, value) do
+      case field do
+        :ptype -> Ecto.Query.where(query, [r], r.ptype == ^value)
+        :v0 -> Ecto.Query.where(query, [r], r.v0 == ^value)
+        :v1 -> Ecto.Query.where(query, [r], r.v1 == ^value)
+        :v2 -> Ecto.Query.where(query, [r], r.v2 == ^value)
+        :v3 -> Ecto.Query.where(query, [r], r.v3 == ^value)
+        :v4 -> Ecto.Query.where(query, [r], r.v4 == ^value)
+        :v5 -> Ecto.Query.where(query, [r], r.v5 == ^value)
+        :v6 -> Ecto.Query.where(query, [r], r.v6 == ^value)
+        _ -> query
+      end
     end
 
     @doc """
