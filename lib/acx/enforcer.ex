@@ -354,6 +354,40 @@ defmodule Acx.Enforcer do
   end
 
   @doc """
+  Loads policies from the persist adapter using the given filter.
+  Only matching policies are loaded into the enforcer.
+
+  The filter is a map where keys can be `:ptype`, `:v0`, `:v1`, `:v2`, `:v3`, `:v4`, `:v5`, or `:v6`.
+  Values can be either a single string or a list of strings for matching multiple values.
+
+  ## Examples
+
+      # Load only policies for a specific domain
+      enforcer = Enforcer.load_filtered_policies!(enforcer, %{v3: "org:abc"})
+
+      # Load policies with multiple criteria
+      enforcer = Enforcer.load_filtered_policies!(enforcer, %{ptype: "p", v3: ["org:tenant_1", "org:tenant_2"]})
+  """
+  @spec load_filtered_policies!(t(), map()) :: t()
+  def load_filtered_policies!(
+        %__MODULE__{model: m, persist_adapter: adapter} = enforcer,
+        filter
+      )
+      when is_map(filter) do
+    case PersistAdapter.load_filtered_policy(adapter, filter) do
+      {:ok, policies} ->
+        policies
+        |> Enum.map(fn [key | attrs] -> [String.to_atom(key) | attrs] end)
+        |> Enum.filter(fn [key | _] -> Model.has_policy_key?(m, key) end)
+        |> Enum.map(fn [key | attrs] -> {key, attrs} end)
+        |> Enum.reduce(enforcer, &load_policy!(&2, &1))
+
+      {:error, reason} ->
+        raise ArgumentError, message: reason
+    end
+  end
+
+  @doc """
   Returns a list of policies in the given enforcer that match the
   given criteria.
 

@@ -69,6 +69,16 @@ defmodule Acx.EnforcerServer do
   end
 
   @doc """
+  Loads filtered policies from the persist adapter.
+  Only policies matching the filter are loaded into the enforcer.
+
+  See `Enforcer.load_filtered_policies!/2` for more details.
+  """
+  def load_filtered_policies(ename, filter) do
+    GenServer.call(via_tuple(ename), {:load_filtered_policies, filter})
+  end
+
+  @doc """
   Returns a list of policies in the given enforcer that match the
   given criteria.
 
@@ -241,6 +251,12 @@ defmodule Acx.EnforcerServer do
 
   def handle_call({:load_policies, pfile}, _from, enforcer) do
     new_enforcer = enforcer |> Enforcer.load_policies!(pfile)
+    :ets.insert(:enforcers_table, {self_name(), new_enforcer})
+    {:reply, :ok, new_enforcer}
+  end
+
+  def handle_call({:load_filtered_policies, filter}, _from, enforcer) do
+    new_enforcer = enforcer |> Enforcer.load_filtered_policies!(filter)
     :ets.insert(:enforcers_table, {self_name(), new_enforcer})
     {:reply, :ok, new_enforcer}
   end

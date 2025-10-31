@@ -1,0 +1,113 @@
+defmodule Acx.Persist.ReadonlyFileAdapterFilteredTest do
+  use ExUnit.Case, async: true
+  alias Acx.Enforcer
+  alias Acx.Persist.ReadonlyFileAdapter
+  alias Acx.Persist.PersistAdapter
+
+  @cfile "../data/rbac_domain.conf" |> Path.expand(__DIR__)
+  @pfile "../data/rbac_domain.csv" |> Path.expand(__DIR__)
+
+  describe "load_filtered_policy/2 with ReadonlyFileAdapter" do
+    test "filters policies by domain" do
+      adapter = ReadonlyFileAdapter.new(@pfile)
+
+      # Load only policies for domain1
+      {:ok, policies} = PersistAdapter.load_filtered_policy(adapter, %{v2: "domain1"})
+
+      # Should only have policies with domain1
+      assert length(policies) == 2
+      assert Enum.all?(policies, fn [_ptype, _subj, domain, _obj, _act] -> domain == "domain1" end)
+    end
+
+    test "filters policies by ptype" do
+      adapter = ReadonlyFileAdapter.new(@pfile)
+
+      # Load only p (policy) rules, not g (role) rules
+      {:ok, policies} = PersistAdapter.load_filtered_policy(adapter, %{ptype: "p"})
+
+      # Should only have p rules
+      assert length(policies) == 5
+      assert Enum.all?(policies, fn [ptype | _] -> ptype == "p" end)
+    end
+
+    test "filters policies by multiple criteria" do
+      adapter = ReadonlyFileAdapter.new(@pfile)
+
+      # Load only p rules for domain2
+      {:ok, policies} = PersistAdapter.load_filtered_policy(adapter, %{ptype: "p", v2: "domain2"})
+
+      # Should only have p rules with domain2
+      assert length(policies) == 2
+      assert Enum.all?(policies, fn [ptype, _subj, domain, _obj, _act] ->
+        ptype == "p" && domain == "domain2"
+      end)
+    end
+
+    test "filters policies by list of values" do
+      adapter = ReadonlyFileAdapter.new(@pfile)
+
+      # Load policies for domain1 OR domain2
+      {:ok, policies} = PersistAdapter.load_filtered_policy(adapter, %{v2: ["domain1", "domain2"]})
+
+      # Should have policies with domain1 or domain2
+      assert length(policies) == 4
+      assert Enum.all?(policies, fn [_ptype, _subj, domain, _obj, _act] ->
+        domain in ["domain1", "domain2"]
+      end)
+    end
+
+    test "returns empty list when policy file is nil" do
+      adapter = ReadonlyFileAdapter.new()
+      assert {:ok, []} == PersistAdapter.load_filtered_policy(adapter, %{})
+    end
+
+    test "returns empty list when no policies match filter" do
+      adapter = ReadonlyFileAdapter.new(@pfile)
+
+      # Load policies for non-existent domain
+      {:ok, policies} = PersistAdapter.load_filtered_policy(adapter, %{v2: "non_existent_domain"})
+
+      assert policies == []
+    end
+  end
+
+  describe "load_filtered_policies!/2 with Enforcer and ReadonlyFileAdapter" do
+    test "loads only filtered policies into enforcer" do
+      {:ok, e} = Enforcer.init(@cfile)
+      adapter = ReadonlyFileAdapter.new(@pfile)
+      e = Enforcer.set_persist_adapter(e, adapter)
+
+      # Load only policies for domain1
+      e = Enforcer.load_filtered_policies!(e, %{v2: "domain1"})
+      |> Enforcer.load_mapping_policies!()
+
+      # Should only have domain1 policies
+      policies = Enforcer.list_policies(e)
+      assert length(policies) == 2
+      
+      # Domain1 requests should work
+      assert Enforcer.allow?(e, ["alice", "domain1", "data1", "read"]) === true
+      assert Enforcer.allow?(e, ["alice", "domain1", "data1", "write"]) === true
+      
+      # Domain2 requests should not work (policies not loaded)
+      assert Enforcer.allow?(e, ["alice", "domain2", "data2", "read"]) === false
+      assert Enforcer.allow?(e, ["bob", "domain2", "data2", "read"]) === false
+    end
+
+    test "loads only p policies when filtered by ptype" do
+      {:ok, e} = Enforcer.init(@cfile)
+      adapter = ReadonlyFileAdapter.new(@pfile)
+      e = Enforcer.set_persist_adapter(e, adapter)
+
+      # Load only p rules, not g rules
+      e = Enforcer.load_filtered_policies!(e, %{ptype: "p"})
+
+      policies = Enforcer.list_policies(e)
+      assert length(policies) == 5
+      
+      # Without role mappings loaded, role-based permissions should not work
+      mapping_policies = Enforcer.list_mapping_policies(e)
+      assert length(mapping_policies) == 0
+    end
+  end
+end
