@@ -11,8 +11,8 @@ defmodule Acx.Persist.ReadonlyFileAdapterFilteredTest do
     test "filters policies by domain" do
       adapter = ReadonlyFileAdapter.new(@pfile)
 
-      # Load only policies for domain1
-      {:ok, policies} = PersistAdapter.load_filtered_policy(adapter, %{v2: "domain1"})
+      # Load only policies for domain1 (domain is at v1 position)
+      {:ok, policies} = PersistAdapter.load_filtered_policy(adapter, %{v1: "domain1"})
 
       # Should only have policies with domain1
       assert length(policies) == 2
@@ -33,8 +33,8 @@ defmodule Acx.Persist.ReadonlyFileAdapterFilteredTest do
     test "filters policies by multiple criteria" do
       adapter = ReadonlyFileAdapter.new(@pfile)
 
-      # Load only p rules for domain2
-      {:ok, policies} = PersistAdapter.load_filtered_policy(adapter, %{ptype: "p", v2: "domain2"})
+      # Load only p rules for domain2 (domain is at v1 position)
+      {:ok, policies} = PersistAdapter.load_filtered_policy(adapter, %{ptype: "p", v1: "domain2"})
 
       # Should only have p rules with domain2
       assert length(policies) == 2
@@ -46,8 +46,8 @@ defmodule Acx.Persist.ReadonlyFileAdapterFilteredTest do
     test "filters policies by list of values" do
       adapter = ReadonlyFileAdapter.new(@pfile)
 
-      # Load policies for domain1 OR domain2
-      {:ok, policies} = PersistAdapter.load_filtered_policy(adapter, %{v2: ["domain1", "domain2"]})
+      # Load policies for domain1 OR domain2 (domain is at v1 position)
+      {:ok, policies} = PersistAdapter.load_filtered_policy(adapter, %{v1: ["domain1", "domain2"]})
 
       # Should have policies with domain1 or domain2
       assert length(policies) == 4
@@ -65,7 +65,7 @@ defmodule Acx.Persist.ReadonlyFileAdapterFilteredTest do
       adapter = ReadonlyFileAdapter.new(@pfile)
 
       # Load policies for non-existent domain
-      {:ok, policies} = PersistAdapter.load_filtered_policy(adapter, %{v2: "non_existent_domain"})
+      {:ok, policies} = PersistAdapter.load_filtered_policy(adapter, %{v1: "non_existent_domain"})
 
       assert policies == []
     end
@@ -77,8 +77,8 @@ defmodule Acx.Persist.ReadonlyFileAdapterFilteredTest do
       adapter = ReadonlyFileAdapter.new(@pfile)
       e = Enforcer.set_persist_adapter(e, adapter)
 
-      # Load only policies for domain1
-      e = Enforcer.load_filtered_policies!(e, %{v2: "domain1"})
+      # Load only policies for domain1 (domain is at v1 position)
+      e = Enforcer.load_filtered_policies!(e, %{v1: "domain1"})
       |> Enforcer.load_mapping_policies!()
 
       # Should only have domain1 policies
