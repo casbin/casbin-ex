@@ -16,7 +16,10 @@ defmodule Acx.Persist.MockRepo do
         |> then(&Map.merge(%Acx.Persist.EctoAdapter.CasbinRule{id: id}, &1))
       end
 
-      def all(CasbinRule, _opts \\ []) do
+      # Define function head with default parameter
+      def all(query_or_schema, opts \\ [])
+
+      def all(CasbinRule, _opts) do
         unquote(pfile)
         |> File.read!()
         |> String.split("\n", trim: true)
@@ -28,7 +31,7 @@ defmodule Acx.Persist.MockRepo do
       # Support for Ecto.Query - delegates to CasbinRule for simplicity
       # In a real database, Ecto would apply the query filters
       # For testing filtered policies, use ReadonlyFileAdapter tests instead
-      def all(%Ecto.Query{}, _opts \\ []) do
+      def all(%Ecto.Query{}, _opts) do
         all(CasbinRule)
       end
 
