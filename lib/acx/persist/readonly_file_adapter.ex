@@ -78,7 +78,7 @@ defmodule Acx.Persist.ReadonlyFileAdapter do
       end)
     end
 
-    defp get_policy_value([ptype | values], :ptype), do: ptype
+    defp get_policy_value([ptype | _values], :ptype), do: ptype
 
     defp get_policy_value([_ptype | values], key) do
       index =
