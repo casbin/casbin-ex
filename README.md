@@ -305,6 +305,77 @@ case EnforcerServer.allow?(ename, new_req) do
 end
 ```
 
+## Database Persistence with EctoAdapter
+
+Casbin-Ex supports persisting policies to a database using the EctoAdapter. This is particularly useful for production applications where policies need to be managed dynamically.
+
+### Setup
+
+```elixir
+alias Acx.{EnforcerSupervisor, EnforcerServer}
+alias Acx.Persist.EctoAdapter
+
+# Start the enforcer
+ename = "my_enforcer"
+EnforcerSupervisor.start_enforcer(ename, "path/to/model.conf")
+
+# Configure the database adapter
+adapter = EctoAdapter.new(MyApp.Repo)
+EnforcerServer.set_persist_adapter(ename, adapter)
+
+# Load existing policies from the database
+EnforcerServer.load_policies(ename)
+EnforcerServer.load_mapping_policies(ename)
+```
+
+### Runtime Policy Management
+
+Once configured, policies are automatically persisted to the database:
+
+```elixir
+# Add a policy - automatically saved to database
+EnforcerServer.add_policy(ename, {:p, ["admin", "data", "write"]})
+
+# Add a role mapping - automatically saved to database
+EnforcerServer.add_mapping_policy(ename, {:g, "alice", "admin"})
+
+# Remove a policy - automatically removed from database
+EnforcerServer.remove_policy(ename, {:p, ["admin", "data", "write"]})
+```
+
+### Application Startup
+
+On application restart, simply load policies from the database:
+
+```elixir
+defmodule MyApp.Application do
+  use Application
+
+  def start(_type, _args) do
+    # ... your supervision tree ...
+    
+    # Initialize enforcer on startup
+    initialize_enforcer()
+  end
+
+  defp initialize_enforcer do
+    ename = "my_app_enforcer"
+    model_path = Application.app_dir(:my_app, "priv/casbin/model.conf")
+    
+    EnforcerSupervisor.start_enforcer(ename, model_path)
+    
+    adapter = EctoAdapter.new(MyApp.Repo)
+    EnforcerServer.set_persist_adapter(ename, adapter)
+    
+    # Load all policies from database
+    EnforcerServer.load_policies(ename)
+    EnforcerServer.load_mapping_policies(ename)
+  end
+end
+```
+
+For more details, see [LOADING_POLICIES_FROM_DATABASE.md](LOADING_POLICIES_FROM_DATABASE.md).
+
 ## Supported Models
 
 Casbin-Ex supports the following access control models:
