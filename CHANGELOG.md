@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/casbin/casbin-ex/compare/v1.3.0...v1.4.0) (2025-11-01)
+
+
+### Features
+
+* add load_filtered_policy() API ([#38](https://github.com/casbin/casbin-ex/issues/38)) ([0e856ac](https://github.com/casbin/casbin-ex/commit/0e856ac077876bbc27e5177d341b5a82f74b2d40))
+
 # [1.3.0](https://github.com/casbin/casbin-ex/compare/v1.2.0...v1.3.0) (2025-10-30)
 
 
