@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/casbin/casbin-ex/compare/v1.4.0...v1.5.0) (2025-11-01)
+
+
+### Features
+
+* add code formatting check to CI workflow ([#40](https://github.com/casbin/casbin-ex/issues/40)) ([e0115f5](https://github.com/casbin/casbin-ex/commit/e0115f5495b2713f4fac6a008811a8affff70a09))
+
 # [1.4.0](https://github.com/casbin/casbin-ex/compare/v1.3.0...v1.4.0) (2025-11-01)
 
 
