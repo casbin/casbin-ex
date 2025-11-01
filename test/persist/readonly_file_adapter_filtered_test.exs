@@ -16,6 +16,7 @@ defmodule Acx.Persist.ReadonlyFileAdapterFilteredTest do
 
       # Should only have policies with domain1
       assert length(policies) == 2
+
       assert Enum.all?(policies, fn [_ptype, _subj, domain, _obj, _act] -> domain == "domain1" end)
     end
 
@@ -38,22 +39,25 @@ defmodule Acx.Persist.ReadonlyFileAdapterFilteredTest do
 
       # Should only have p rules with domain2
       assert length(policies) == 2
+
       assert Enum.all?(policies, fn [ptype, _subj, domain, _obj, _act] ->
-        ptype == "p" && domain == "domain2"
-      end)
+               ptype == "p" && domain == "domain2"
+             end)
     end
 
     test "filters policies by list of values" do
       adapter = ReadonlyFileAdapter.new(@pfile)
 
       # Load policies for domain1 OR domain2 (domain is at v1 position)
-      {:ok, policies} = PersistAdapter.load_filtered_policy(adapter, %{v1: ["domain1", "domain2"]})
+      {:ok, policies} =
+        PersistAdapter.load_filtered_policy(adapter, %{v1: ["domain1", "domain2"]})
 
       # Should have policies with domain1 or domain2
       assert length(policies) == 4
+
       assert Enum.all?(policies, fn [_ptype, _subj, domain, _obj, _act] ->
-        domain in ["domain1", "domain2"]
-      end)
+               domain in ["domain1", "domain2"]
+             end)
     end
 
     test "returns empty list when policy file is nil" do
@@ -78,17 +82,18 @@ defmodule Acx.Persist.ReadonlyFileAdapterFilteredTest do
       e = Enforcer.set_persist_adapter(e, adapter)
 
       # Load only policies for domain1 (domain is at v1 position)
-      e = Enforcer.load_filtered_policies!(e, %{v1: "domain1"})
-      |> Enforcer.load_mapping_policies!()
+      e =
+        Enforcer.load_filtered_policies!(e, %{v1: "domain1"})
+        |> Enforcer.load_mapping_policies!()
 
       # Should only have domain1 policies
       policies = Enforcer.list_policies(e)
       assert length(policies) == 2
-      
+
       # Domain1 requests should work
       assert Enforcer.allow?(e, ["alice", "domain1", "data1", "read"]) === true
       assert Enforcer.allow?(e, ["alice", "domain1", "data1", "write"]) === true
-      
+
       # Domain2 requests should not work (policies not loaded)
       assert Enforcer.allow?(e, ["alice", "domain2", "data2", "read"]) === false
       assert Enforcer.allow?(e, ["bob", "domain2", "data2", "read"]) === false
@@ -104,7 +109,7 @@ defmodule Acx.Persist.ReadonlyFileAdapterFilteredTest do
 
       policies = Enforcer.list_policies(e)
       assert length(policies) == 5
-      
+
       # Without role mappings loaded, role-based permissions should not work
       mapping_policies = Enforcer.list_mapping_policies(e)
       assert length(mapping_policies) == 0
