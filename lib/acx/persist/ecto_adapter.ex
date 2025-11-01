@@ -173,7 +173,7 @@ defmodule Acx.Persist.EctoAdapter do
     defp build_filtered_query(filter) do
       import Ecto.Query
       base_query = from(r in CasbinRule)
-      
+
       Enum.reduce(filter, base_query, fn {field, value}, query ->
         add_where_clause(query, field, value)
       end)
@@ -182,7 +182,7 @@ defmodule Acx.Persist.EctoAdapter do
     # Helper function to add WHERE clause for a single filter condition
     defp add_where_clause(query, field, values) when is_list(values) do
       import Ecto.Query
-      
+
       case field do
         :ptype -> where(query, [r], r.ptype in ^values)
         :v0 -> where(query, [r], r.v0 in ^values)
@@ -198,7 +198,7 @@ defmodule Acx.Persist.EctoAdapter do
 
     defp add_where_clause(query, field, value) do
       import Ecto.Query
-      
+
       case field do
         :ptype -> where(query, [r], r.ptype == ^value)
         :v0 -> where(query, [r], r.v0 == ^value)
