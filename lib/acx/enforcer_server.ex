@@ -59,6 +59,28 @@ defmodule Acx.EnforcerServer do
   end
 
   @doc """
+  Loads policy rules from the configured persist adapter and adds them
+  to the enforcer.
+
+  This function is useful for loading policies from a database adapter
+  (like EctoAdapter) on application startup.
+
+  See `Enforcer.load_policies!/1` for more details.
+
+  ## Examples
+
+      # Set up the adapter
+      adapter = EctoAdapter.new(Repo)
+      EnforcerServer.set_persist_adapter("my_enforcer", adapter)
+
+      # Load policies from the adapter
+      EnforcerServer.load_policies("my_enforcer")
+  """
+  def load_policies(ename) do
+    GenServer.call(via_tuple(ename), {:load_policies})
+  end
+
+  @doc """
   Loads policy rules from external file given by the name `pfile` and
   adds them to the enforcer.
 
@@ -165,6 +187,28 @@ defmodule Acx.EnforcerServer do
   end
 
   @doc """
+  Loads mapping policies from the configured persist adapter and adds them
+  to the enforcer.
+
+  This function is useful for loading mapping policies (role assignments)
+  from a database adapter (like EctoAdapter) on application startup.
+
+  See `Enforcer.load_mapping_policies!/1` for more details.
+
+  ## Examples
+
+      # Set up the adapter
+      adapter = EctoAdapter.new(Repo)
+      EnforcerServer.set_persist_adapter("my_enforcer", adapter)
+
+      # Load mapping policies from the adapter
+      EnforcerServer.load_mapping_policies("my_enforcer")
+  """
+  def load_mapping_policies(ename) do
+    GenServer.call(via_tuple(ename), {:load_mapping_policies})
+  end
+
+  @doc """
   Loads mapping policies from a csv file and adds them to the enforcer.
 
   See `Enforcer.load_mapping_policies!/2` for more details.
@@ -249,6 +293,12 @@ defmodule Acx.EnforcerServer do
     end
   end
 
+  def handle_call({:load_policies}, _from, enforcer) do
+    new_enforcer = enforcer |> Enforcer.load_policies!()
+    :ets.insert(:enforcers_table, {self_name(), new_enforcer})
+    {:reply, :ok, new_enforcer}
+  end
+
   def handle_call({:load_policies, pfile}, _from, enforcer) do
     new_enforcer = enforcer |> Enforcer.load_policies!(pfile)
     :ets.insert(:enforcers_table, {self_name(), new_enforcer})
@@ -284,6 +334,12 @@ defmodule Acx.EnforcerServer do
         :ets.insert(:enforcers_table, {self_name(), new_enforcer})
         {:reply, :ok, new_enforcer}
     end
+  end
+
+  def handle_call({:load_mapping_policies}, _from, enforcer) do
+    new_enforcer = enforcer |> Enforcer.load_mapping_policies!()
+    :ets.insert(:enforcers_table, {self_name(), new_enforcer})
+    {:reply, :ok, new_enforcer}
   end
 
   def handle_call({:load_mapping_policies, fname}, _from, enforcer) do
