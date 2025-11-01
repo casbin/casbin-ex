@@ -16,13 +16,23 @@ defmodule Acx.Persist.MockRepo do
         |> then(&Map.merge(%Acx.Persist.EctoAdapter.CasbinRule{id: id}, &1))
       end
 
-      def all(CasbinRule, _opts \\ []) do
+      # Define function head with default parameter
+      def all(query_or_schema, opts \\ [])
+
+      def all(CasbinRule, _opts) do
         unquote(pfile)
         |> File.read!()
         |> String.split("\n", trim: true)
         |> Enum.map(&String.split(&1, ~r{,\s*}))
         |> Enum.with_index(1)
         |> Enum.map(fn {rule, id} -> to_changeset(id, rule) end)
+      end
+
+      # Support for Ecto.Query - delegates to CasbinRule for simplicity
+      # In a real database, Ecto would apply the query filters
+      # For testing filtered policies, use ReadonlyFileAdapter tests instead
+      def all(%Ecto.Query{}, _opts) do
+        all(CasbinRule)
       end
 
       def insert(changeset, opts \\ [])
@@ -38,6 +48,9 @@ defmodule Acx.Persist.MockRepo do
       def delete_all(queryset) do
         {1, nil}
       end
+
+      # Allow override in using modules
+      defoverridable all: 1, all: 2
     end
   end
 end

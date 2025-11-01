@@ -137,6 +137,82 @@ defmodule Acx.Persist.EctoAdapter do
     end
 
     @doc """
+    Loads only policies matching the given filter from the database.
+
+    The filter is a map where keys can be `:ptype`, `:v0`, `:v1`, `:v2`, `:v3`, `:v4`, `:v5`, or `:v6`.
+    Values can be either a single string or a list of strings for matching multiple values.
+
+    ## Examples
+
+        # Load policies for a specific domain
+        filter = %{v3: "org:tenant_123"}
+        PersistAdapter.load_filtered_policy(adapter, filter)
+
+        # Load policies with multiple criteria
+        filter = %{ptype: "p", v3: ["org:tenant_1", "org:tenant_2"]}
+        PersistAdapter.load_filtered_policy(adapter, filter)
+
+        iex> PersistAdapter.load_filtered_policy(%Acx.Persist.EctoAdapter{repo: nil}, %{})
+        ...> {:error, "repo is not set"}
+    """
+    @spec load_filtered_policy(EctoAdapter.t(), map()) :: {:ok, [list()]} | {:error, String.t()}
+    def load_filtered_policy(%Acx.Persist.EctoAdapter{repo: nil}, _filter) do
+      {:error, "repo is not set"}
+    end
+
+    def load_filtered_policy(adapter, filter) when is_map(filter) do
+      query = build_filtered_query(filter)
+
+      policies =
+        adapter.repo.all(query)
+        |> Enum.map(&CasbinRule.changeset_to_list(&1))
+
+      {:ok, policies}
+    end
+
+    defp build_filtered_query(filter) do
+      import Ecto.Query
+      base_query = from(r in CasbinRule)
+      
+      Enum.reduce(filter, base_query, fn {field, value}, query ->
+        add_where_clause(query, field, value)
+      end)
+    end
+
+    # Helper function to add WHERE clause for a single filter condition
+    defp add_where_clause(query, field, values) when is_list(values) do
+      import Ecto.Query
+      
+      case field do
+        :ptype -> where(query, [r], r.ptype in ^values)
+        :v0 -> where(query, [r], r.v0 in ^values)
+        :v1 -> where(query, [r], r.v1 in ^values)
+        :v2 -> where(query, [r], r.v2 in ^values)
+        :v3 -> where(query, [r], r.v3 in ^values)
+        :v4 -> where(query, [r], r.v4 in ^values)
+        :v5 -> where(query, [r], r.v5 in ^values)
+        :v6 -> where(query, [r], r.v6 in ^values)
+        _ -> query
+      end
+    end
+
+    defp add_where_clause(query, field, value) do
+      import Ecto.Query
+      
+      case field do
+        :ptype -> where(query, [r], r.ptype == ^value)
+        :v0 -> where(query, [r], r.v0 == ^value)
+        :v1 -> where(query, [r], r.v1 == ^value)
+        :v2 -> where(query, [r], r.v2 == ^value)
+        :v3 -> where(query, [r], r.v3 == ^value)
+        :v4 -> where(query, [r], r.v4 == ^value)
+        :v5 -> where(query, [r], r.v5 == ^value)
+        :v6 -> where(query, [r], r.v6 == ^value)
+        _ -> query
+      end
+    end
+
+    @doc """
     Uses the configured repo to insert a Policy into the casbin_rule table.
 
     Returns an error if repo is not set.
