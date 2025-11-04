@@ -140,7 +140,7 @@ defmodule Acx.TestHelper do
         {:ok, enforcer_name: ename}
 
       {:error, reason} ->
-        raise "Failed to start enforcer: #{inspect(reason)}"
+        raise "Failed to start enforcer with config '#{cfile}': #{inspect(reason)}"
     end
   end
 
@@ -163,7 +163,7 @@ defmodule Acx.TestHelper do
         {:ok, enforcer_name: ename}
 
       {:error, reason} ->
-        raise "Failed to start enforcer: #{inspect(reason)}"
+        raise "Failed to start enforcer with config '#{cfile}': #{inspect(reason)}"
     end
   end
 end
