@@ -1,3 +1,11 @@
+# [Unreleased]
+
+### Features
+
+* add `Acx.TestHelper` module for async test isolation - enables `async: true` tests by providing unique enforcer names per test
+* add comprehensive async testing guide at `guides/async_testing.md` with examples and migration instructions
+* update README with testing section and link to async testing guide
+
 # [1.5.0](https://github.com/casbin/casbin-ex/compare/v1.4.0...v1.5.0) (2025-11-01)
 
 
