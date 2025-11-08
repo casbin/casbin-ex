@@ -2,11 +2,45 @@ defmodule Acx.Persist.EctoAdapter do
   @moduledoc """
   This module defines an adapter for persisting the list of policies
   to a database.
+
+  ## Ecto.Adapters.SQL.Sandbox Compatibility
+
+  When using this adapter with `Ecto.Adapters.SQL.Sandbox` in tests, especially
+  with nested transactions, you need to ensure proper connection handling.
+
+  ### Option 1: Use Shared Mode (Simplest)
+
+  In your test setup, use shared mode for tests that wrap Casbin operations in transactions:
+
+      setup do
+        :ok = Ecto.Adapters.SQL.Sandbox.checkout(MyApp.Repo)
+        Ecto.Adapters.SQL.Sandbox.mode(MyApp.Repo, {:shared, self()})
+        :ok
+      end
+
+  ### Option 2: Use Dynamic Repo (More Control)
+
+  Configure the adapter with a function that returns the repo, allowing it to use
+  the connection from the calling process:
+
+      # In your application setup or test helper
+      adapter = EctoAdapter.new(fn -> 
+        Process.get(:ecto_repo) || MyApp.Repo
+      end)
+
+      # In your test
+      setup do
+        :ok = Ecto.Adapters.SQL.Sandbox.checkout(MyApp.Repo)
+        Process.put(:ecto_repo, MyApp.Repo)
+        :ok
+      end
+
+  See `Ecto.Adapters.SQL.Sandbox` documentation for more details on connection handling.
   """
   import Ecto.Changeset
   use Ecto.Schema
 
-  defstruct repo: nil
+  defstruct repo: nil, get_dynamic_repo: nil
 
   defmodule CasbinRule do
     @moduledoc """
@@ -109,8 +143,38 @@ defmodule Acx.Persist.EctoAdapter do
     end
   end
 
-  def new(repo) do
-    %__MODULE__{repo: repo}
+  @doc """
+  Creates a new EctoAdapter with the given repo.
+
+  ## Parameters
+  - `repo`: An Ecto.Repo module or a function that returns one.
+  
+  ## Examples
+      # Static repo (standard usage)
+      adapter = EctoAdapter.new(MyApp.Repo)
+      
+      # Dynamic repo (for Sandbox testing with transactions)
+      adapter = EctoAdapter.new(fn -> Ecto.Repo.get_dynamic_repo() || MyApp.Repo end)
+  """
+  def new(repo) when is_atom(repo) do
+    %__MODULE__{repo: repo, get_dynamic_repo: nil}
+  end
+
+  def new(repo_fn) when is_function(repo_fn, 0) do
+    %__MODULE__{repo: nil, get_dynamic_repo: repo_fn}
+  end
+
+  @doc """
+  Gets the repo to use for the current operation.
+  If get_dynamic_repo is set, calls it to get the dynamic repo.
+  Otherwise returns the static repo.
+  """
+  def get_repo(%__MODULE__{get_dynamic_repo: get_fn}) when is_function(get_fn, 0) do
+    get_fn.()
+  end
+
+  def get_repo(%__MODULE__{repo: repo}) when is_atom(repo) do
+    repo
   end
 
   defimpl Acx.Persist.PersistAdapter, for: Acx.Persist.EctoAdapter do
@@ -124,13 +188,15 @@ defmodule Acx.Persist.EctoAdapter do
         ...> {:error, "repo is not set"}
     """
     @spec load_policies(EctoAdapter.t()) :: [Model.Policy.t()]
-    def load_policies(%Acx.Persist.EctoAdapter{repo: nil}) do
+    def load_policies(%Acx.Persist.EctoAdapter{repo: nil, get_dynamic_repo: nil}) do
       {:error, "repo is not set"}
     end
 
     def load_policies(adapter) do
+      repo = EctoAdapter.get_repo(adapter)
+
       policies =
-        adapter.repo.all(CasbinRule)
+        repo.all(CasbinRule)
         |> Enum.map(&CasbinRule.changeset_to_list(&1))
 
       {:ok, policies}
@@ -156,15 +222,16 @@ defmodule Acx.Persist.EctoAdapter do
         ...> {:error, "repo is not set"}
     """
     @spec load_filtered_policy(EctoAdapter.t(), map()) :: {:ok, [list()]} | {:error, String.t()}
-    def load_filtered_policy(%Acx.Persist.EctoAdapter{repo: nil}, _filter) do
+    def load_filtered_policy(%Acx.Persist.EctoAdapter{repo: nil, get_dynamic_repo: nil}, _filter) do
       {:error, "repo is not set"}
     end
 
     def load_filtered_policy(adapter, filter) when is_map(filter) do
+      repo = EctoAdapter.get_repo(adapter)
       query = build_filtered_query(filter)
 
       policies =
-        adapter.repo.all(query)
+        repo.all(query)
         |> Enum.map(&CasbinRule.changeset_to_list(&1))
 
       {:ok, policies}
@@ -224,14 +291,12 @@ defmodule Acx.Persist.EctoAdapter do
         ...>    {:p, ["user", "file", "read"]})
         ...> {:error, "repo is not set"}
     """
-    def add_policy(%Acx.Persist.EctoAdapter{repo: nil}, _) do
+    def add_policy(%Acx.Persist.EctoAdapter{repo: nil, get_dynamic_repo: nil}, _) do
       {:error, "repo is not set"}
     end
 
-    def add_policy(
-          %Acx.Persist.EctoAdapter{repo: repo} = adapter,
-          {_key, _attrs} = policy
-        ) do
+    def add_policy(adapter, {_key, _attrs} = policy) do
+      repo = EctoAdapter.get_repo(adapter)
       changeset = CasbinRule.create_changeset(policy)
 
       case repo.insert(changeset) do
@@ -254,14 +319,12 @@ defmodule Acx.Persist.EctoAdapter do
         ...>    {:p, ["user", "file", "read"]})
         ...> {:error, "repo is not set"}
     """
-    def remove_policy(%Acx.Persist.EctoAdapter{repo: nil}, _) do
+    def remove_policy(%Acx.Persist.EctoAdapter{repo: nil, get_dynamic_repo: nil}, _) do
       {:error, "repo is not set"}
     end
 
-    def remove_policy(
-          %Acx.Persist.EctoAdapter{repo: repo} = adapter,
-          {_key, _attr} = policy
-        ) do
+    def remove_policy(adapter, {_key, _attr} = policy) do
+      repo = EctoAdapter.get_repo(adapter)
       f = CasbinRule.changeset_to_queryable(policy)
 
       case repo.delete_all(f) do
@@ -270,12 +333,8 @@ defmodule Acx.Persist.EctoAdapter do
       end
     end
 
-    def remove_filtered_policy(
-          %Acx.Persist.EctoAdapter{repo: repo} = adapter,
-          key,
-          idx,
-          attrs
-        ) do
+    def remove_filtered_policy(adapter, key, idx, attrs) do
+      repo = EctoAdapter.get_repo(adapter)
       f = CasbinRule.changeset_to_queryable({key, attrs}, idx)
 
       case repo.delete_all(f) do
@@ -296,14 +355,12 @@ defmodule Acx.Persist.EctoAdapter do
         ...>    [])
         ...> {:error, "repo is not set"}
     """
-    def save_policies(%Acx.Persist.EctoAdapter{repo: nil}, _) do
+    def save_policies(%Acx.Persist.EctoAdapter{repo: nil, get_dynamic_repo: nil}, _) do
       {:error, "repo is not set"}
     end
 
-    def save_policies(
-          %Acx.Persist.EctoAdapter{repo: repo} = adapter,
-          policies
-        ) do
+    def save_policies(adapter, policies) do
+      repo = EctoAdapter.get_repo(adapter)
       repo.transaction(fn -> insert_policies(repo, adapter, policies) end)
     end
 
