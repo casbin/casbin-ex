@@ -8,7 +8,7 @@ defmodule Acx.Persist.EctoAdapter do
   When using this adapter with `Ecto.Adapters.SQL.Sandbox` in tests, especially
   with nested transactions, you need to ensure proper connection handling.
 
-  ### Option 1: Use Shared Mode (Simplest)
+  ### Recommended: Use Shared Mode
 
   In your test setup, use shared mode for tests that wrap Casbin operations in transactions:
 
@@ -18,22 +18,22 @@ defmodule Acx.Persist.EctoAdapter do
         :ok
       end
 
-  ### Option 2: Use Dynamic Repo (More Control)
+  This allows the EnforcerServer process to access the database connection
+  during transactions. Note that this means all tests in the module will
+  share the same connection, which may affect test isolation.
 
-  Configure the adapter with a function that returns the repo, allowing it to use
-  the connection from the calling process:
+  ### Alternative: Avoid Transactions in Tests
 
-      # In your application setup or test helper
-      adapter = EctoAdapter.new(fn -> 
-        Process.get(:ecto_repo) || MyApp.Repo
-      end)
+  If you need better test isolation, consider structuring your tests to avoid
+  wrapping Casbin operations in explicit transactions, or handle rollback differently.
 
-      # In your test
-      setup do
-        :ok = Ecto.Adapters.SQL.Sandbox.checkout(MyApp.Repo)
-        Process.put(:ecto_repo, MyApp.Repo)
-        :ok
-      end
+  ### Advanced: Dynamic Repo (Limited Use)
+
+  For advanced use cases, you can configure the adapter with a function that
+  returns the repo, though this alone doesn't solve the transaction isolation issue:
+
+      # In your application setup
+      adapter = EctoAdapter.new(fn -> MyApp.Repo end)
 
   See `Ecto.Adapters.SQL.Sandbox` documentation for more details on connection handling.
   """
