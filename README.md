@@ -305,6 +305,28 @@ case EnforcerServer.allow?(ename, new_req) do
 end
 ```
 
+## Testing
+
+When writing tests with `async: true`, each test needs its own isolated enforcer instance to avoid race conditions. See the [Async Testing Guide](guides/async_testing.md) for detailed instructions on how to write async-safe tests.
+
+Quick example:
+
+```elixir
+defmodule MyApp.PolicyTest do
+  use ExUnit.Case, async: true
+  import Acx.TestHelper
+  
+  setup do
+    setup_enforcer("path/to/config.conf")
+  end
+  
+  test "some test", %{enforcer_name: ename} do
+    Acx.EnforcerServer.add_policy(ename, {:p, ["alice", "data", "read"]})
+    assert Acx.EnforcerServer.allow?(ename, ["alice", "data", "read"])
+  end
+end
+```
+
 ## Supported Models
 
 Casbin-Ex supports the following access control models:
