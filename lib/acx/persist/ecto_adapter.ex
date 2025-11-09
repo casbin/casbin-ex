@@ -193,7 +193,7 @@ defmodule Acx.Persist.EctoAdapter do
     end
 
     def load_policies(adapter) do
-      repo = EctoAdapter.get_repo(adapter)
+      repo = Acx.Persist.EctoAdapter.get_repo(adapter)
 
       policies =
         repo.all(CasbinRule)
@@ -227,7 +227,7 @@ defmodule Acx.Persist.EctoAdapter do
     end
 
     def load_filtered_policy(adapter, filter) when is_map(filter) do
-      repo = EctoAdapter.get_repo(adapter)
+      repo = Acx.Persist.EctoAdapter.get_repo(adapter)
       query = build_filtered_query(filter)
 
       policies =
@@ -296,7 +296,7 @@ defmodule Acx.Persist.EctoAdapter do
     end
 
     def add_policy(adapter, {_key, _attrs} = policy) do
-      repo = EctoAdapter.get_repo(adapter)
+      repo = Acx.Persist.EctoAdapter.get_repo(adapter)
       changeset = CasbinRule.create_changeset(policy)
 
       case repo.insert(changeset) do
@@ -324,7 +324,7 @@ defmodule Acx.Persist.EctoAdapter do
     end
 
     def remove_policy(adapter, {_key, _attr} = policy) do
-      repo = EctoAdapter.get_repo(adapter)
+      repo = Acx.Persist.EctoAdapter.get_repo(adapter)
       f = CasbinRule.changeset_to_queryable(policy)
 
       case repo.delete_all(f) do
@@ -334,7 +334,7 @@ defmodule Acx.Persist.EctoAdapter do
     end
 
     def remove_filtered_policy(adapter, key, idx, attrs) do
-      repo = EctoAdapter.get_repo(adapter)
+      repo = Acx.Persist.EctoAdapter.get_repo(adapter)
       f = CasbinRule.changeset_to_queryable({key, attrs}, idx)
 
       case repo.delete_all(f) do
@@ -360,7 +360,7 @@ defmodule Acx.Persist.EctoAdapter do
     end
 
     def save_policies(adapter, policies) do
-      repo = EctoAdapter.get_repo(adapter)
+      repo = Acx.Persist.EctoAdapter.get_repo(adapter)
       repo.transaction(fn -> insert_policies(repo, adapter, policies) end)
     end
 
