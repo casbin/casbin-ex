@@ -336,6 +336,17 @@ Implement all [matchers' functions](https://casbin.org/docs/function):
 - [ ] ipMatch
 - [ ] globMatch
 
+## Testing
+
+### Using with Ecto.Adapters.SQL.Sandbox
+
+If you're using Casbin-Ex with Ecto and need to wrap operations in database transactions during testing, see our guide on [Testing with Ecto.Adapters.SQL.Sandbox and Transactions](guides/sandbox_testing.md).
+
+Key points:
+- Use `Ecto.Adapters.SQL.Sandbox.mode(Repo, {:shared, self()})` for tests with transactions
+- Allow the EnforcerServer process to access your test's database connection
+- See the guide for complete examples and best practices
+
 ## License
 
 This project is licensed under the [Apache 2.0 license](LICENSE).
