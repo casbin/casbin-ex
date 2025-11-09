@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/casbin/casbin-ex/compare/v1.5.0...v1.6.0) (2025-11-09)
+
+
+### Features
+
+* fix EctoAdapter transaction compatibility with Ecto.Adapters.SQL.Sandbox ([#44](https://github.com/casbin/casbin-ex/issues/44)) ([d827793](https://github.com/casbin/casbin-ex/commit/d8277935f7eaea37ef469eaf8c6a90640187365c))
+
 # [1.5.0](https://github.com/casbin/casbin-ex/compare/v1.4.0...v1.5.0) (2025-11-01)
 
 
