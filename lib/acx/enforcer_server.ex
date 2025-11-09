@@ -69,6 +69,19 @@ defmodule Acx.EnforcerServer do
   end
 
   @doc """
+  Loads policy rules from the configured persist adapter and adds them
+  to the enforcer's memory.
+
+  This function is useful for loading policies from a database adapter
+  (like EctoAdapter) on application startup.
+
+  See `Enforcer.load_policies!/1` for more details.
+  """
+  def load_policies_from_adapter(ename) do
+    GenServer.call(via_tuple(ename), {:load_policies_from_adapter})
+  end
+
+  @doc """
   Loads filtered policies from the persist adapter.
   Only policies matching the filter are loaded into the enforcer.
 
@@ -174,6 +187,19 @@ defmodule Acx.EnforcerServer do
   end
 
   @doc """
+  Loads mapping policies from the configured persist adapter and adds them
+  to the enforcer's memory.
+
+  This function is useful for loading role mappings from a database adapter
+  (like EctoAdapter) on application startup.
+
+  See `Enforcer.load_mapping_policies!/1` for more details.
+  """
+  def load_mapping_policies_from_adapter(ename) do
+    GenServer.call(via_tuple(ename), {:load_mapping_policies_from_adapter})
+  end
+
+  @doc """
   Return a fresh enforcer.
 
   See `Enforcer.init/1` for more details.
@@ -255,6 +281,12 @@ defmodule Acx.EnforcerServer do
     {:reply, :ok, new_enforcer}
   end
 
+  def handle_call({:load_policies_from_adapter}, _from, enforcer) do
+    new_enforcer = enforcer |> Enforcer.load_policies!()
+    :ets.insert(:enforcers_table, {self_name(), new_enforcer})
+    {:reply, :ok, new_enforcer}
+  end
+
   def handle_call({:load_filtered_policies, filter}, _from, enforcer) do
     new_enforcer = enforcer |> Enforcer.load_filtered_policies!(filter)
     :ets.insert(:enforcers_table, {self_name(), new_enforcer})
@@ -288,6 +320,12 @@ defmodule Acx.EnforcerServer do
 
   def handle_call({:load_mapping_policies, fname}, _from, enforcer) do
     new_enforcer = enforcer |> Enforcer.load_mapping_policies!(fname)
+    :ets.insert(:enforcers_table, {self_name(), new_enforcer})
+    {:reply, :ok, new_enforcer}
+  end
+
+  def handle_call({:load_mapping_policies_from_adapter}, _from, enforcer) do
+    new_enforcer = enforcer |> Enforcer.load_mapping_policies!()
     :ets.insert(:enforcers_table, {self_name(), new_enforcer})
     {:reply, :ok, new_enforcer}
   end
