@@ -2,7 +2,7 @@ defmodule Acx.Persist.EctoSandboxTransactionTest do
   @moduledoc """
   This test module demonstrates how to use Casbin with Ecto.Adapters.SQL.Sandbox
   when wrapping operations in transactions.
-  
+
   These tests are marked as skip by default because they require a real database
   connection. To run them, set up a test database and remove the @moduletag :skip.
   """
@@ -52,7 +52,7 @@ defmodule Acx.Persist.EctoSandboxTransactionTest do
   test "add policy within a transaction succeeds" do
     # This test demonstrates adding Casbin policies within a database transaction.
     # With shared mode enabled in setup, this works correctly.
-    
+
     # result = @repo.transaction(fn ->
     #   # Add multiple policies atomically
     #   :ok = EnforcerServer.add_policy(@enforcer_name, {:p, ["alice", "data1", "read"]})
@@ -72,7 +72,7 @@ defmodule Acx.Persist.EctoSandboxTransactionTest do
   test "transaction rollback also rolls back Casbin policies" do
     # This test demonstrates that Casbin policy changes are rolled back
     # when the containing transaction is rolled back.
-    
+
     # result = @repo.transaction(fn ->
     #   # Add a policy
     #   :ok = EnforcerServer.add_policy(@enforcer_name, {:p, ["bob", "data2", "read"]})
@@ -92,7 +92,7 @@ defmodule Acx.Persist.EctoSandboxTransactionTest do
   test "mixed database and casbin operations in transaction" do
     # This test demonstrates using both regular database operations
     # and Casbin operations within the same transaction.
-    
+
     # result = @repo.transaction(fn ->
     #   # Insert a user record (example - replace with your schema)
     #   # {:ok, user} = @repo.insert(%User{name: "charlie"})
@@ -111,7 +111,7 @@ defmodule Acx.Persist.EctoSandboxTransactionTest do
   test "without shared mode, transaction operations fail" do
     # This test demonstrates what happens WITHOUT shared mode.
     # Uncomment to see the error (but don't check this in as passing).
-    
+
     # First, disable shared mode
     # Ecto.Adapters.SQL.Sandbox.mode(@repo, :manual)
     #

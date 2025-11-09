@@ -148,7 +148,7 @@ defmodule Acx.Persist.EctoAdapter do
 
   ## Parameters
   - `repo`: An Ecto.Repo module or a function that returns one.
-  
+
   ## Examples
       # Static repo (standard usage)
       adapter = EctoAdapter.new(MyApp.Repo)
