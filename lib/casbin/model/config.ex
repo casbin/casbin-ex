@@ -1,4 +1,4 @@
-defmodule Acx.Model.Config do
+defmodule Casbin.Model.Config do
   @moduledoc """
   A configuration file is a text files divided into named sections
   (optional). Brackets enclose each section name.

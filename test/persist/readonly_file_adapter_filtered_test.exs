@@ -1,8 +1,8 @@
-defmodule Acx.Persist.ReadonlyFileAdapterFilteredTest do
+defmodule Casbin.Persist.ReadonlyFileAdapterFilteredTest do
   use ExUnit.Case, async: true
-  alias Acx.Enforcer
-  alias Acx.Persist.ReadonlyFileAdapter
-  alias Acx.Persist.PersistAdapter
+  alias Casbin.Enforcer
+  alias Casbin.Persist.ReadonlyFileAdapter
+  alias Casbin.Persist.PersistAdapter
 
   @cfile "../data/rbac_domain.conf" |> Path.expand(__DIR__)
   @pfile "../data/rbac_domain.csv" |> Path.expand(__DIR__)

@@ -1,9 +1,9 @@
-defmodule Acx.MixProject do
+defmodule Casbin.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :acx,
+      app: :casbin,
       version: "1.6.1",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -20,7 +20,7 @@ defmodule Acx.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {Acx, []}
+      mod: {Casbin, []}
     ]
   end
 
@@ -44,7 +44,7 @@ defmodule Acx.MixProject do
 
   defp package() do
     [
-      name: "acx",
+      name: "casbin",
       files: ~w(lib .formatter.exs mix.exs README.md LICENSE),
       licenses: ["Apache-2.0"],
       links: %{

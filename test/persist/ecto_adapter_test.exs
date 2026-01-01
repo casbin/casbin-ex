@@ -1,14 +1,14 @@
-defmodule Acx.Persist.EctoAdapterTest do
+defmodule Casbin.Persist.EctoAdapterTest do
   use ExUnit.Case, async: true
-  alias Acx.Persist.EctoAdapter
-  alias Acx.Persist.EctoAdapter.CasbinRule
-  alias Acx.Persist.PersistAdapter
-  doctest Acx.Persist.EctoAdapter
-  doctest Acx.Persist.PersistAdapter.Acx.Persist.EctoAdapter
-  doctest Acx.Persist.EctoAdapter.CasbinRule
+  alias Casbin.Persist.EctoAdapter
+  alias Casbin.Persist.EctoAdapter.CasbinRule
+  alias Casbin.Persist.PersistAdapter
+  doctest Casbin.Persist.EctoAdapter
+  doctest Casbin.Persist.PersistAdapter.Casbin.Persist.EctoAdapter
+  doctest Casbin.Persist.EctoAdapter.CasbinRule
 
   defmodule MockTestRepo do
-    use Acx.Persist.MockRepo, pfile: "../data/acl.csv" |> Path.expand(__DIR__)
+    use Casbin.Persist.MockRepo, pfile: "../data/acl.csv" |> Path.expand(__DIR__)
   end
 
   describe "using the mock repo" do

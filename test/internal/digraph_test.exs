@@ -1,5 +1,5 @@
-defmodule Acx.Internal.DigraphTest do
+defmodule Casbin.Internal.DigraphTest do
   use ExUnit.Case, async: true
-  alias Acx.Internal.Digraph
-  doctest Acx.Internal.Digraph
+  alias Casbin.Internal.Digraph
+  doctest Casbin.Internal.Digraph
 end

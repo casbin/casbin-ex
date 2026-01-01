@@ -1,7 +1,7 @@
 # Casbin-Ex
 
 [![GitHub Actions](https://github.com/casbin/casbin-ex/actions/workflows/ci.yml/badge.svg)](https://github.com/casbin/casbin-ex/actions/workflows/ci.yml)
-[![Hex.pm](https://img.shields.io/hexpm/v/acx.svg)](https://hex.pm/packages/acx)
+[![Hex.pm](https://img.shields.io/hexpm/v/casbin.svg)](https://hex.pm/packages/casbin)
 [![Release](https://img.shields.io/github/release/casbin/casbin-ex.svg)](https://github.com/casbin/casbin-ex/releases/latest)
 [![Discord](https://img.shields.io/discord/1022748306096537660?logo=discord&label=discord&color=5865F2)](https://discord.gg/S5UjpzGZjN)
 
@@ -27,12 +27,12 @@ https://casbin.org/docs/overview
 
 ## Installation
 
-The package can be installed by adding `acx` to your list of dependencies in `mix.exs`:
+The package can be installed by adding `casbin` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:acx, "~> 1.6"}
+    {:casbin, "~> 1.6"}
   ]
 end
 ```
@@ -42,7 +42,7 @@ Or install from GitHub:
 ```elixir
 def deps do
   [
-    {:acx, git: "https://github.com/casbin/casbin-ex"}
+    {:casbin, git: "https://github.com/casbin/casbin-ex"}
   ]
 end
 ```
@@ -126,7 +126,7 @@ The final step is to combine the model, the policy rules and Casbin-Ex to
 construct our access control system.
 
 ```elixir
-alias Acx.{EnforcerSupervisor, EnforcerServer}
+alias Casbin.{EnforcerSupervisor, EnforcerServer}
 
 # Give our system a name so that we can reference it by its name
 # rather than the process ID (a.k.a `pid`).
@@ -220,7 +220,7 @@ g, admin, author
 Finally:
 
 ```elixir
-alias Acx.{EnforcerSupervisor, EnforcerServer}
+alias Casbin.{EnforcerSupervisor, EnforcerServer}
 
 ename = "blog_ac"
 EnforcerSupervisor.start_enforcer(ename, blog_ac.conf)
@@ -281,7 +281,7 @@ p, peter, /peter_data, (GET)|(POST)
 Code:
 
 ```elixir
-alias Acx.{EnforcerSupervisor, EnforcerServer}
+alias Casbin.{EnforcerSupervisor, EnforcerServer}
 
 ename = "restful_ac"
 EnforcerSupervisor.start_enforcer(ename, restful_ac.conf)

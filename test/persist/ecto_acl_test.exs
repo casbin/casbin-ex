@@ -1,10 +1,10 @@
-defmodule Acx.Persist.EctoAclTest do
+defmodule Casbin.Persist.EctoAclTest do
   use ExUnit.Case, async: true
-  alias Acx.Enforcer
-  alias Acx.Persist.EctoAdapter
+  alias Casbin.Enforcer
+  alias Casbin.Persist.EctoAdapter
 
   defmodule MockAclRepo do
-    use Acx.Persist.MockRepo, pfile: "../data/acl.csv" |> Path.expand(__DIR__)
+    use Casbin.Persist.MockRepo, pfile: "../data/acl.csv" |> Path.expand(__DIR__)
   end
 
   @cfile "../data/acl.conf" |> Path.expand(__DIR__)

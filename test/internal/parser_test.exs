@@ -1,7 +1,7 @@
-defmodule Acx.Internal.ParserTest do
+defmodule Casbin.Internal.ParserTest do
   use ExUnit.Case, async: true
-  alias Acx.Internal.Parser
-  doctest Acx.Internal.Parser
+  alias Casbin.Internal.Parser
+  doctest Casbin.Internal.Parser
 
   describe "parse/1 for number" do
     @test_success_cases [

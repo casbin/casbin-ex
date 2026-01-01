@@ -32,7 +32,7 @@ defmodule MyApp.RolesTest do
     Ecto.Adapters.SQL.Sandbox.mode(MyApp.Repo, {:shared, self()})
     
     # Allow the EnforcerServer process to access the connection
-    case Registry.lookup(Acx.EnforcerRegistry, "my_enforcer") do
+    case Registry.lookup(Casbin.EnforcerRegistry, "my_enforcer") do
       [{enforcer_pid, _}] ->
         Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self(), enforcer_pid)
       [] ->
@@ -52,7 +52,7 @@ defmodule MyApp.RolesTest do
     assert {:ok, :created} = 
       MyApp.Repo.transaction(fn ->
         Enum.each(permissions, fn %{resource: resource, action: action} ->
-          case Acx.EnforcerServer.add_policy("my_enforcer", {:p, ["analyst", resource, action]}) do
+          case Casbin.EnforcerServer.add_policy("my_enforcer", {:p, ["analyst", resource, action]}) do
             :ok -> :ok
             {:error, reason} -> MyApp.Repo.rollback(reason)
           end
@@ -105,7 +105,7 @@ defmodule MyApp.Authorization.RolesTest do
     Ecto.Adapters.SQL.Sandbox.mode(Repo, {:shared, self()})
     
     # Allow EnforcerServer to access the connection
-    case Registry.lookup(Acx.EnforcerRegistry, "my_enforcer") do
+    case Registry.lookup(Casbin.EnforcerRegistry, "my_enforcer") do
       [{pid, _}] -> Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), pid)
       [] -> :ok
     end
@@ -126,7 +126,7 @@ defmodule MyApp.Authorization.RolesTest do
       
       # Add Casbin policies
       Enum.each(permissions, fn perm ->
-        case Acx.EnforcerServer.add_policy(
+        case Casbin.EnforcerServer.add_policy(
           "my_enforcer",
           {:p, ["admin", perm.resource, perm.action]}
         ) do
@@ -144,7 +144,7 @@ defmodule MyApp.Authorization.RolesTest do
   test "rolls back Casbin operations on error" do
     result = Repo.transaction(fn ->
       # Add a policy
-      :ok = Acx.EnforcerServer.add_policy(
+      :ok = Casbin.EnforcerServer.add_policy(
         "my_enforcer",
         {:p, ["temp_role", "resource", "action"]}
       )
@@ -156,7 +156,7 @@ defmodule MyApp.Authorization.RolesTest do
     assert {:error, :simulated_error} = result
     
     # Verify the policy was not persisted
-    policies = Acx.EnforcerServer.list_policies("my_enforcer", %{sub: "temp_role"})
+    policies = Casbin.EnforcerServer.list_policies("my_enforcer", %{sub: "temp_role"})
     assert policies == []
   end
 end

@@ -1,8 +1,8 @@
-defmodule Acx.Persist.ReadonlyFileAdapter do
+defmodule Casbin.Persist.ReadonlyFileAdapter do
   @moduledoc """
   A read-only file adapter for loading policies from files.
   """
-  alias Acx.Persist.PersistAdapter
+  alias Casbin.Persist.PersistAdapter
 
   defstruct policy_file: nil
 
@@ -14,8 +14,8 @@ defmodule Acx.Persist.ReadonlyFileAdapter do
     %__MODULE__{policy_file: pfile}
   end
 
-  defimpl PersistAdapter, for: Acx.Persist.ReadonlyFileAdapter do
-    def load_policies(%Acx.Persist.ReadonlyFileAdapter{policy_file: nil}) do
+  defimpl PersistAdapter, for: Casbin.Persist.ReadonlyFileAdapter do
+    def load_policies(%Casbin.Persist.ReadonlyFileAdapter{policy_file: nil}) do
       {:ok, []}
     end
 
@@ -50,7 +50,7 @@ defmodule Acx.Persist.ReadonlyFileAdapter do
         filter = %{ptype: "p", v3: "org:tenant_123"}
         PersistAdapter.load_filtered_policy(adapter, filter)
     """
-    def load_filtered_policy(%Acx.Persist.ReadonlyFileAdapter{policy_file: nil}, _filter) do
+    def load_filtered_policy(%Casbin.Persist.ReadonlyFileAdapter{policy_file: nil}, _filter) do
       {:ok, []}
     end
 

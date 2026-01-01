@@ -1,6 +1,6 @@
-defmodule Acx.Enforcer.AclRestfulModelTest do
+defmodule Casbin.Enforcer.AclRestfulModelTest do
   use ExUnit.Case, async: true
-  alias Acx.Enforcer
+  alias Casbin.Enforcer
 
   @cfile "../data/acl_restful.conf" |> Path.expand(__DIR__)
   @pfile "../data/acl_restful.csv" |> Path.expand(__DIR__)

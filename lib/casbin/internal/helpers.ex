@@ -1,6 +1,6 @@
-defmodule Acx.Internal.Helpers do
+defmodule Casbin.Internal.Helpers do
   @moduledoc """
-  Helper functions used internally by Acx.
+  Helper functions used internally by Casbin.
   """
   @doc """
   Returns a tuple `{succeeds, remainder, count}` where `succeeds` is

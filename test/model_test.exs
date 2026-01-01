@@ -1,8 +1,8 @@
-defmodule Acx.ModelTest do
+defmodule Casbin.ModelTest do
   use ExUnit.Case, async: true
-  alias Acx.Model
+  alias Casbin.Model
 
-  alias Acx.Model.{
+  alias Casbin.Model.{
     Matcher,
     Policy,
     PolicyDefinition,
@@ -11,5 +11,5 @@ defmodule Acx.ModelTest do
     RequestDefinition
   }
 
-  doctest Acx.Model
+  doctest Casbin.Model
 end

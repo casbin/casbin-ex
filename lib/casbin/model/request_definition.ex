@@ -1,4 +1,4 @@
-defmodule Acx.Model.RequestDefinition do
+defmodule Casbin.Model.RequestDefinition do
   @moduledoc """
   This module defines a structure to represent a request definition in
   a model. A request definition has two parts:
@@ -17,7 +17,7 @@ defmodule Acx.Model.RequestDefinition do
           attrs: [attr()]
         }
 
-  alias Acx.Model.Request
+  alias Casbin.Model.Request
 
   @doc """
   Creates a request definition based on the given `key` and a comma

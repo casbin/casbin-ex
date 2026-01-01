@@ -1,4 +1,4 @@
-defmodule Acx.Persist.EctoSandboxTransactionTest do
+defmodule Casbin.Persist.EctoSandboxTransactionTest do
   @moduledoc """
   This test module demonstrates how to use Casbin with Ecto.Adapters.SQL.Sandbox
   when wrapping operations in transactions.
@@ -10,9 +10,9 @@ defmodule Acx.Persist.EctoSandboxTransactionTest do
 
   @moduletag :skip
 
-  alias Acx.Enforcer
-  alias Acx.EnforcerServer
-  alias Acx.Persist.EctoAdapter
+  alias Casbin.Enforcer
+  alias Casbin.EnforcerServer
+  alias Casbin.Persist.EctoAdapter
 
   # NOTE: Replace MyApp.Repo with your actual Repo module
   # @repo MyApp.Repo
@@ -36,7 +36,7 @@ defmodule Acx.Persist.EctoSandboxTransactionTest do
     # :ok = EnforcerServer.set_persist_adapter(@enforcer_name, adapter)
 
     # Step 4: Allow the EnforcerServer to access the connection
-    # case Registry.lookup(Acx.EnforcerRegistry, @enforcer_name) do
+    # case Registry.lookup(Casbin.EnforcerRegistry, @enforcer_name) do
     #   [{pid, _}] -> Ecto.Adapters.SQL.Sandbox.allow(@repo, self(), pid)
     #   [] -> :ok
     # end

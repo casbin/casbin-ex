@@ -1,6 +1,6 @@
-defmodule Acx.Enforcer.RbacDomainModelTest do
+defmodule Casbin.Enforcer.RbacDomainModelTest do
   use ExUnit.Case, async: true
-  alias Acx.Enforcer
+  alias Casbin.Enforcer
 
   @cfile "../data/rbac_domain.conf" |> Path.expand(__DIR__)
   @pfile "../data/rbac_domain.csv" |> Path.expand(__DIR__)

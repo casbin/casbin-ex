@@ -1,4 +1,4 @@
-defmodule Acx.Internal.Operator do
+defmodule Casbin.Internal.Operator do
   @moduledoc """
   This module defines a set of operators and helper functions used when
   parsing operators in a matcher expression.

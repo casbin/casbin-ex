@@ -1,5 +1,5 @@
-defmodule Acx.Model.PolicyEffectTest do
+defmodule Casbin.Model.PolicyEffectTest do
   use ExUnit.Case, async: true
-  alias Acx.Model.{PolicyDefinition, PolicyEffect}
-  doctest Acx.Model.PolicyEffect
+  alias Casbin.Model.{PolicyDefinition, PolicyEffect}
+  doctest Casbin.Model.PolicyEffect
 end

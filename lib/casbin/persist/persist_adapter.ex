@@ -1,4 +1,4 @@
-defprotocol Acx.Persist.PersistAdapter do
+defprotocol Casbin.Persist.PersistAdapter do
   def load_policies(adapter)
   def load_filtered_policy(adapter, filter)
   def add_policy(adapter, policy)

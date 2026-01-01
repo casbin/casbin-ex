@@ -1,4 +1,4 @@
-defmodule Acx.Model.Matcher do
+defmodule Casbin.Model.Matcher do
   @moduledoc """
   This module defines a structure to represent a matcher expression.
   """
@@ -33,7 +33,7 @@ defmodule Acx.Model.Matcher do
           prog: program()
         }
 
-  alias Acx.Internal.{Helpers, Operator, Parser}
+  alias Casbin.Internal.{Helpers, Operator, Parser}
 
   @unary_operators [:not, :pos, :neg]
   @binary_operators [:mul, :div, :add, :sub, :lt, :le, :gt, :ge, :eq, :ne, :and, :or]

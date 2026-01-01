@@ -1,5 +1,5 @@
-defmodule Acx.EnforcerTest do
+defmodule Casbin.EnforcerTest do
   use ExUnit.Case, async: true
-  alias Acx.Enforcer
-  doctest Acx.Enforcer
+  alias Casbin.Enforcer
+  doctest Casbin.Enforcer
 end

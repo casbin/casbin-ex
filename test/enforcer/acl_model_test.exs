@@ -1,7 +1,7 @@
-defmodule Acx.Enforcer.AclModelTest do
+defmodule Casbin.Enforcer.AclModelTest do
   use ExUnit.Case, async: true
-  alias Acx.Enforcer
-  alias Acx.Model.Policy
+  alias Casbin.Enforcer
+  alias Casbin.Model.Policy
 
   @cfile "../data/acl.conf" |> Path.expand(__DIR__)
   @pfile "../data/acl.csv" |> Path.expand(__DIR__)
