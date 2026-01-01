@@ -30,7 +30,6 @@ jobs:
             semantic-release@21
 
       - name: Run semantic-release
-        id: semantic_release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
@@ -73,8 +72,10 @@ jobs:
         if: steps.check_release.outputs.release_created == 'true'
         run: |
           VERSION="${{ steps.get_version.outputs.version }}"
-          sed -i "s/version: \".*\"/version: \"$VERSION\"/" mix.exs
-          cat mix.exs | grep version:
+          # Update the version in the project configuration
+          sed -i "s/^\s*version: \"[^\"]*\"/      version: \"$VERSION\"/" mix.exs
+          echo "Updated version to:"
+          cat mix.exs | grep "version:"
 
       - name: Install dependencies
         if: steps.check_release.outputs.release_created == 'true'
