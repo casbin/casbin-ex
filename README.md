@@ -333,21 +333,6 @@ Casbin-Ex supports the following access control models:
 10. **Deny-override**: both allow and deny authorizations are supported, deny overrides the allow
 11. **Priority**: the policy rules can be prioritized like firewall rules
 
-## TODO
-
-### Matchers Functions
-
-Implement all [matchers' functions](https://casbin.org/docs/function):
-- [x] regexMatch
-- [ ] keyMatch
-- [ ] keyGet
-- [x] keyMatch2
-- [ ] keyGet2
-- [ ] keyMatch3
-- [ ] keyMatch4
-- [ ] ipMatch
-- [ ] globMatch
-
 ## Testing
 
 ### Using with Ecto.Adapters.SQL.Sandbox
