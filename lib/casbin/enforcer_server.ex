@@ -1,6 +1,36 @@
 defmodule Casbin.EnforcerServer do
   @moduledoc """
   An enforcer process that holds an `Enforcer` struct as its state.
+
+  The EnforcerServer manages enforcer instances in supervised GenServer processes,
+  allowing for concurrent policy management and authorization checks.
+
+  ## Usage
+
+  Start an enforcer using the supervisor:
+
+      Casbin.EnforcerSupervisor.start_enforcer("my_enforcer", "path/to/config.conf")
+
+  Then use the enforcer by name:
+
+      Casbin.EnforcerServer.add_policy("my_enforcer", {:p, ["alice", "data", "read"]})
+      Casbin.EnforcerServer.allow?("my_enforcer", ["alice", "data", "read"])
+
+  ## Important Notes for Testing
+
+  When writing tests with `async: true`, each test should use a unique enforcer
+  name to avoid race conditions. Use `Casbin.TestHelper` for this:
+
+      import Casbin.TestHelper
+      
+      setup do
+        name = unique_enforcer_name()
+        {:ok, _} = start_test_enforcer(name, "config.conf")
+        on_exit(fn -> cleanup_test_enforcer(name) end)
+        {:ok, enforcer_name: name}
+      end
+
+  See `Casbin.TestHelper` and `guides/async_testing.md` for more information.
   """
 
   use GenServer
