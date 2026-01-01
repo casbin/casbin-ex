@@ -339,14 +339,14 @@ Casbin-Ex supports the following access control models:
 
 Implement all [matchers' functions](https://casbin.org/docs/function):
 - [x] regexMatch
-- [ ] keyMatch
-- [ ] keyGet
+- [x] keyMatch
+- [x] keyGet
 - [x] keyMatch2
-- [ ] keyGet2
-- [ ] keyMatch3
-- [ ] keyMatch4
-- [ ] ipMatch
-- [ ] globMatch
+- [x] keyGet2
+- [x] keyMatch3
+- [x] keyMatch4
+- [x] ipMatch
+- [x] globMatch
 
 ## Testing
 

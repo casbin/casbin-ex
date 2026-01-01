@@ -963,6 +963,70 @@ defmodule Casbin.Enforcer do
   @doc """
   Returns `true` if `key1` matches the pattern of `key2`.
 
+  `key2` can contain a `*` wildcard.
+
+  ## Examples
+
+      iex> Enforcer.key_match?("/foo/bar", "/foo/*")
+      true
+      iex> Enforcer.key_match?("/foo/bar", "/foo*")
+      true
+      iex> Enforcer.key_match?("/foo", "/foo")
+      true
+  """
+  @spec key_match?(String.t(), String.t()) :: boolean()
+  def key_match?(key1, key2) do
+    case String.split(key2, "*", parts: 2) do
+      [prefix, _] ->
+        if String.length(key1) >= String.length(prefix) do
+          String.starts_with?(key1, prefix)
+        else
+          key1 == prefix
+        end
+
+      [_] ->
+        key1 == key2
+    end
+  end
+
+  @doc """
+  Returns the matched part of `key1` based on pattern `key2`.
+
+  For example, `/foo/bar/foo` matches `/foo/*` and returns `bar/foo`.
+
+  ## Examples
+
+      iex> Enforcer.key_get("/foo/bar", "/foo/*")
+      "bar"
+      iex> Enforcer.key_get("/foo/bar", "/foo*")
+      "/bar"
+  """
+  @spec key_get(String.t(), String.t()) :: String.t()
+  def key_get(key1, key2) do
+    i = :binary.match(key2, "*")
+
+    case i do
+      :nomatch ->
+        ""
+
+      {pos, _} ->
+        if String.length(key1) > pos do
+          prefix = String.slice(key2, 0, pos)
+
+          if String.starts_with?(key1, prefix) do
+            String.slice(key1, pos, String.length(key1) - pos)
+          else
+            ""
+          end
+        else
+          ""
+        end
+    end
+  end
+
+  @doc """
+  Returns `true` if `key1` matches the pattern of `key2`.
+
   Returns `false` otherwise.
 
   `key_match2?/2` can handle three types of path / patterns :
@@ -996,6 +1060,238 @@ defmodule Casbin.Enforcer do
     end
   end
 
+  @doc """
+  Returns the value matched by the path variable in `key2`.
+
+  For example, `/resource1` matches `/:resource` and if `path_var` is `"resource"`,
+  then `"resource1"` will be returned.
+
+  ## Examples
+
+      iex> Enforcer.key_get2("/resource1", "/:resource", "resource")
+      "resource1"
+      iex> Enforcer.key_get2("/myid/using/myresid", "/:id/using/:resId", "id")
+      "myid"
+      iex> Enforcer.key_get2("/myid/using/myresid", "/:id/using/:resId", "resId")
+      "myresid"
+  """
+  @spec key_get2(String.t(), String.t(), String.t()) :: String.t()
+  def key_get2(key1, key2, path_var) do
+    key2 = String.replace(key2, "/*", "/.*")
+
+    with {:ok, r1} <- Regex.compile(":[^/]+"),
+         keys <- Regex.scan(r1, key2) |> Enum.map(fn [k] -> k end),
+         key2 <- Regex.replace(r1, key2, "([^/]+)"),
+         {:ok, r2} <- Regex.compile("^" <> key2 <> "$"),
+         matches <- Regex.run(r2, key1) do
+      if matches && length(matches) > 1 do
+        values = Enum.drop(matches, 1)
+
+        keys
+        |> Enum.zip(values)
+        |> Enum.find_value("", fn {k, v} ->
+          if String.slice(k, 1..-1//1) == path_var, do: v
+        end)
+      else
+        ""
+      end
+    else
+      _ -> ""
+    end
+  end
+
+  @doc """
+  Returns `true` if `key1` matches the pattern of `key2`.
+
+  Similar to `key_match2?/2` but uses `{resource}` syntax instead of `:resource`.
+
+  ## Examples
+
+      iex> Enforcer.key_match3?("/foo/bar", "/foo/*")
+      true
+      iex> Enforcer.key_match3?("/resource1", "/{resource}")
+      true
+      iex> Enforcer.key_match3?("/myid/using/myresid", "/{id}/using/{resId}")
+      true
+  """
+  @spec key_match3?(String.t(), String.t()) :: boolean()
+  def key_match3?(key1, key2) do
+    key2 = String.replace(key2, "/*", "/.*")
+
+    with {:ok, r1} <- Regex.compile("\\{[^/]+\\}"),
+         match <- Regex.replace(r1, key2, "[^/]+"),
+         {:ok, r2} <- Regex.compile("^" <> match <> "$") do
+      Regex.match?(r2, key1)
+    else
+      _ -> false
+    end
+  end
+
+  @doc """
+  Returns `true` if `key1` matches the pattern of `key2`.
+
+  Similar to `key_match3?/2` but enforces that repeated parameter names must have
+  the same value. For example, `/parent/123/child/123` matches `/parent/{id}/child/{id}`
+  but `/parent/123/child/456` does not.
+
+  ## Examples
+
+      iex> Enforcer.key_match4?("/parent/123/child/123", "/parent/{id}/child/{id}")
+      true
+      iex> Enforcer.key_match4?("/parent/123/child/456", "/parent/{id}/child/{id}")
+      false
+  """
+  @spec key_match4?(String.t(), String.t()) :: boolean()
+  def key_match4?(key1, key2) do
+    key2 = String.replace(key2, "/*", "/.*")
+
+    with {:ok, r1} <- Regex.compile("\\{([^/]+)\\}"),
+         tokens <- Regex.scan(r1, key2) |> Enum.map(fn [_, token] -> token end),
+         key2_pattern <- Regex.replace(r1, key2, "([^/]+)"),
+         {:ok, r2} <- Regex.compile("^" <> key2_pattern <> "$"),
+         matches <- Regex.run(r2, key1) do
+      if matches do
+        values = Enum.drop(matches, 1)
+
+        if length(tokens) != length(values) do
+          false
+        else
+          # Build a map of token -> value and check for conflicts
+          tokens
+          |> Enum.zip(values)
+          |> Enum.reduce_while(%{}, fn {token, value}, acc ->
+            case Map.get(acc, token) do
+              nil -> {:cont, Map.put(acc, token, value)}
+              ^value -> {:cont, acc}
+              _ -> {:halt, :mismatch}
+            end
+          end)
+          |> case do
+            :mismatch -> false
+            _ -> true
+          end
+        end
+      else
+        false
+      end
+    else
+      _ -> false
+    end
+  end
+
+  @doc """
+  Returns `true` if IP address `ip1` matches the pattern of `ip2`.
+
+  `ip2` can be an IP address or a CIDR pattern.
+
+  ## Examples
+
+      iex> Enforcer.ip_match?("192.168.2.123", "192.168.2.0/24")
+      true
+      iex> Enforcer.ip_match?("192.168.2.123", "192.168.2.123")
+      true
+      iex> Enforcer.ip_match?("192.168.2.123", "192.168.3.0/24")
+      false
+  """
+  @spec ip_match?(String.t(), String.t()) :: boolean()
+  def ip_match?(ip1, ip2) do
+    case parse_ip(ip1) do
+      {:ok, ip1_tuple} ->
+        case parse_cidr(ip2) do
+          {:ok, network, prefix_len} ->
+            ip_in_cidr?(ip1_tuple, network, prefix_len)
+
+          :error ->
+            case parse_ip(ip2) do
+              {:ok, ip2_tuple} -> ip1_tuple == ip2_tuple
+              :error -> false
+            end
+        end
+
+      :error ->
+        false
+    end
+  end
+
+  # Helper function to parse IP address
+  defp parse_ip(ip_string) do
+    case :inet.parse_address(String.to_charlist(ip_string)) do
+      {:ok, ip_tuple} -> {:ok, ip_tuple}
+      {:error, _} -> :error
+    end
+  end
+
+  # Helper function to parse CIDR notation
+  defp parse_cidr(cidr_string) do
+    case String.split(cidr_string, "/") do
+      [ip_str, prefix_str] ->
+        with {:ok, ip_tuple} <- parse_ip(ip_str),
+             {prefix_len, ""} <- Integer.parse(prefix_str) do
+          {:ok, ip_tuple, prefix_len}
+        else
+          _ -> :error
+        end
+
+      _ ->
+        :error
+    end
+  end
+
+  # Check if an IP is within a CIDR range
+  defp ip_in_cidr?(ip_tuple, network_tuple, prefix_len) do
+    ip_bits = ip_to_bits(ip_tuple)
+    network_bits = ip_to_bits(network_tuple)
+
+    String.slice(ip_bits, 0, prefix_len) == String.slice(network_bits, 0, prefix_len)
+  end
+
+  # Convert IP tuple to binary string representation
+  defp ip_to_bits({a, b, c, d}) do
+    <<a, b, c, d>>
+    |> :binary.bin_to_list()
+    |> Enum.map(&Integer.to_string(&1, 2))
+    |> Enum.map(&String.pad_leading(&1, 8, "0"))
+    |> Enum.join()
+  end
+
+  defp ip_to_bits({a, b, c, d, e, f, g, h}) do
+    <<a::16, b::16, c::16, d::16, e::16, f::16, g::16, h::16>>
+    |> :binary.bin_to_list()
+    |> Enum.map(&Integer.to_string(&1, 2))
+    |> Enum.map(&String.pad_leading(&1, 8, "0"))
+    |> Enum.join()
+  end
+
+  @doc """
+  Returns `true` if `key1` matches the glob pattern `key2`.
+
+  Uses standard glob pattern matching with `*` and `**` wildcards.
+
+  ## Examples
+
+      iex> Enforcer.glob_match?("/foo/bar", "/foo/*")
+      true
+      iex> Enforcer.glob_match?("/foo", "/foo")
+      true
+  """
+  @spec glob_match?(String.t(), String.t()) :: boolean()
+  def glob_match?(key1, key2) do
+    # Convert glob pattern to regex pattern
+    # This is a simplified implementation - for production use consider a dedicated glob library
+    pattern =
+      key2
+      |> String.replace(".", "\\.")
+      |> String.replace("**", "<!DOUBLESTAR!>")
+      |> String.replace("*", "[^/]*")
+      |> String.replace("<!DOUBLESTAR!>", ".*")
+      |> then(&("^" <> &1 <> "$"))
+
+    case Regex.compile(pattern) do
+      {:ok, regex} -> Regex.match?(regex, key1)
+      {:error, _} -> false
+    end
+  end
+
   #
   # Helpers
   #
@@ -1003,7 +1299,14 @@ defmodule Casbin.Enforcer do
   defp init_env do
     %{
       regexMatch: &regex_match?/2,
-      keyMatch2: &key_match2?/2
+      keyMatch: &key_match?/2,
+      keyGet: &key_get/2,
+      keyMatch2: &key_match2?/2,
+      keyGet2: &key_get2/3,
+      keyMatch3: &key_match3?/2,
+      keyMatch4: &key_match4?/2,
+      ipMatch: &ip_match?/2,
+      globMatch: &glob_match?/2
     }
   end
 end
