@@ -4,7 +4,6 @@ defmodule Casbin.Persist.EctoAdapterTest do
   alias Casbin.Persist.EctoAdapter.CasbinRule
   alias Casbin.Persist.PersistAdapter
   doctest Casbin.Persist.EctoAdapter
-  doctest Casbin.Persist.PersistAdapter.Casbin.Persist.EctoAdapter
   doctest Casbin.Persist.EctoAdapter.CasbinRule
 
   defmodule MockTestRepo do
