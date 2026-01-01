@@ -1,12 +1,12 @@
-defmodule Acx.Persist.EctoRbacTest do
+defmodule Casbin.Persist.EctoRbacTest do
   use ExUnit.Case, async: true
-  alias Acx.Enforcer
-  alias Acx.Persist.EctoAdapter
+  alias Casbin.Enforcer
+  alias Casbin.Persist.EctoAdapter
 
   @cfile "../data/rbac.conf" |> Path.expand(__DIR__)
 
   defmodule MockAclRepo do
-    use Acx.Persist.MockRepo, pfile: "../data/rbac.csv" |> Path.expand(__DIR__)
+    use Casbin.Persist.MockRepo, pfile: "../data/rbac.csv" |> Path.expand(__DIR__)
   end
 
   @repo MockAclRepo

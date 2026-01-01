@@ -1,4 +1,4 @@
-defmodule Acx.Internal.Parser do
+defmodule Casbin.Internal.Parser do
   @moduledoc """
   `Parser` is responsible for converting a string representing a
   boolean expression:
@@ -19,7 +19,7 @@ defmodule Acx.Internal.Parser do
    and logical operators: `&&(and), ||(or), !(not)`.
   """
 
-  alias Acx.Internal.{Helpers, Operator}
+  alias Casbin.Internal.{Helpers, Operator}
 
   @operators [
     ~c".",

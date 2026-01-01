@@ -1,7 +1,7 @@
-defmodule Acx.Model.ConfigTest do
+defmodule Casbin.Model.ConfigTest do
   use ExUnit.Case, async: true
-  alias Acx.Model.Config
-  doctest Acx.Model.Config
+  alias Casbin.Model.Config
+  doctest Casbin.Model.Config
 
   describe "new/1" do
     test "returns the correct key-value pairs under :undefined_section" do

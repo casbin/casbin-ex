@@ -1,5 +1,5 @@
-defmodule Acx.Internal.RoleGroupTest do
+defmodule Casbin.Internal.RoleGroupTest do
   use ExUnit.Case, async: true
-  alias Acx.Internal.RoleGroup
-  doctest Acx.Internal.RoleGroup
+  alias Casbin.Internal.RoleGroup
+  doctest Casbin.Internal.RoleGroup
 end

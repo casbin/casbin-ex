@@ -1,5 +1,5 @@
-defmodule Acx.Internal.HelpersTest do
+defmodule Casbin.Internal.HelpersTest do
   use ExUnit.Case, async: true
-  alias Acx.Internal.Helpers
-  doctest Acx.Internal.Helpers
+  alias Casbin.Internal.Helpers
+  doctest Casbin.Internal.Helpers
 end

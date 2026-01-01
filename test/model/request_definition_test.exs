@@ -1,5 +1,5 @@
-defmodule Acx.Model.RequestDefinitionTest do
+defmodule Casbin.Model.RequestDefinitionTest do
   use ExUnit.Case, async: true
-  alias Acx.Model.{Request, RequestDefinition}
-  doctest Acx.Model.RequestDefinition
+  alias Casbin.Model.{Request, RequestDefinition}
+  doctest Casbin.Model.RequestDefinition
 end

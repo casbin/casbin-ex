@@ -1,4 +1,4 @@
-defmodule Acx.Persist.EctoAdapter do
+defmodule Casbin.Persist.EctoAdapter do
   @moduledoc """
   This module defines an adapter for persisting the list of policies
   to a database.
@@ -177,23 +177,23 @@ defmodule Acx.Persist.EctoAdapter do
     repo
   end
 
-  defimpl Acx.Persist.PersistAdapter, for: Acx.Persist.EctoAdapter do
+  defimpl Casbin.Persist.PersistAdapter, for: Casbin.Persist.EctoAdapter do
     @doc """
     Queries the list of policy rules from the database and returns them
     as a list of strings.
 
     ## Examples
 
-        iex> PersistAdapter.load_policies(%Acx.Persist.EctoAdapter{repo: nil})
+        iex> PersistAdapter.load_policies(%Casbin.Persist.EctoAdapter{repo: nil})
         ...> {:error, "repo is not set"}
     """
     @spec load_policies(EctoAdapter.t()) :: [Model.Policy.t()]
-    def load_policies(%Acx.Persist.EctoAdapter{repo: nil, get_dynamic_repo: nil}) do
+    def load_policies(%Casbin.Persist.EctoAdapter{repo: nil, get_dynamic_repo: nil}) do
       {:error, "repo is not set"}
     end
 
     def load_policies(adapter) do
-      repo = Acx.Persist.EctoAdapter.get_repo(adapter)
+      repo = Casbin.Persist.EctoAdapter.get_repo(adapter)
 
       policies =
         repo.all(CasbinRule)
@@ -218,16 +218,16 @@ defmodule Acx.Persist.EctoAdapter do
         filter = %{ptype: "p", v3: ["org:tenant_1", "org:tenant_2"]}
         PersistAdapter.load_filtered_policy(adapter, filter)
 
-        iex> PersistAdapter.load_filtered_policy(%Acx.Persist.EctoAdapter{repo: nil}, %{})
+        iex> PersistAdapter.load_filtered_policy(%Casbin.Persist.EctoAdapter{repo: nil}, %{})
         ...> {:error, "repo is not set"}
     """
     @spec load_filtered_policy(EctoAdapter.t(), map()) :: {:ok, [list()]} | {:error, String.t()}
-    def load_filtered_policy(%Acx.Persist.EctoAdapter{repo: nil, get_dynamic_repo: nil}, _filter) do
+    def load_filtered_policy(%Casbin.Persist.EctoAdapter{repo: nil, get_dynamic_repo: nil}, _filter) do
       {:error, "repo is not set"}
     end
 
     def load_filtered_policy(adapter, filter) when is_map(filter) do
-      repo = Acx.Persist.EctoAdapter.get_repo(adapter)
+      repo = Casbin.Persist.EctoAdapter.get_repo(adapter)
       query = build_filtered_query(filter)
 
       policies =
@@ -287,16 +287,16 @@ defmodule Acx.Persist.EctoAdapter do
     ## Examples
 
         iex> PersistAdapter.add_policy(
-        ...>    %Acx.Persist.EctoAdapter{},
+        ...>    %Casbin.Persist.EctoAdapter{},
         ...>    {:p, ["user", "file", "read"]})
         ...> {:error, "repo is not set"}
     """
-    def add_policy(%Acx.Persist.EctoAdapter{repo: nil, get_dynamic_repo: nil}, _) do
+    def add_policy(%Casbin.Persist.EctoAdapter{repo: nil, get_dynamic_repo: nil}, _) do
       {:error, "repo is not set"}
     end
 
     def add_policy(adapter, {_key, _attrs} = policy) do
-      repo = Acx.Persist.EctoAdapter.get_repo(adapter)
+      repo = Casbin.Persist.EctoAdapter.get_repo(adapter)
       changeset = CasbinRule.create_changeset(policy)
 
       case repo.insert(changeset) do
@@ -315,16 +315,16 @@ defmodule Acx.Persist.EctoAdapter do
     ## Examples
 
         iex> PersistAdapter.remove_policy(
-        ...>    %Acx.Persist.EctoAdapter{},
+        ...>    %Casbin.Persist.EctoAdapter{},
         ...>    {:p, ["user", "file", "read"]})
         ...> {:error, "repo is not set"}
     """
-    def remove_policy(%Acx.Persist.EctoAdapter{repo: nil, get_dynamic_repo: nil}, _) do
+    def remove_policy(%Casbin.Persist.EctoAdapter{repo: nil, get_dynamic_repo: nil}, _) do
       {:error, "repo is not set"}
     end
 
     def remove_policy(adapter, {_key, _attr} = policy) do
-      repo = Acx.Persist.EctoAdapter.get_repo(adapter)
+      repo = Casbin.Persist.EctoAdapter.get_repo(adapter)
       f = CasbinRule.changeset_to_queryable(policy)
 
       case repo.delete_all(f) do
@@ -334,7 +334,7 @@ defmodule Acx.Persist.EctoAdapter do
     end
 
     def remove_filtered_policy(adapter, key, idx, attrs) do
-      repo = Acx.Persist.EctoAdapter.get_repo(adapter)
+      repo = Casbin.Persist.EctoAdapter.get_repo(adapter)
       f = CasbinRule.changeset_to_queryable({key, attrs}, idx)
 
       case repo.delete_all(f) do
@@ -351,16 +351,16 @@ defmodule Acx.Persist.EctoAdapter do
     ## Examples
 
         iex> PersistAdapter.save_policies(
-        ...>    %Acx.Persist.EctoAdapter{},
+        ...>    %Casbin.Persist.EctoAdapter{},
         ...>    [])
         ...> {:error, "repo is not set"}
     """
-    def save_policies(%Acx.Persist.EctoAdapter{repo: nil, get_dynamic_repo: nil}, _) do
+    def save_policies(%Casbin.Persist.EctoAdapter{repo: nil, get_dynamic_repo: nil}, _) do
       {:error, "repo is not set"}
     end
 
     def save_policies(adapter, policies) do
-      repo = Acx.Persist.EctoAdapter.get_repo(adapter)
+      repo = Casbin.Persist.EctoAdapter.get_repo(adapter)
       repo.transaction(fn -> insert_policies(repo, adapter, policies) end)
     end
 

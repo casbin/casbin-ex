@@ -1,8 +1,8 @@
-defmodule Acx.Persist.ReadonlyFileAdapterTest do
+defmodule Casbin.Persist.ReadonlyFileAdapterTest do
   use ExUnit.Case, async: true
-  alias Acx.Persist.PersistAdapter
-  alias Acx.Persist.ReadonlyFileAdapter
-  doctest Acx.Persist.ReadonlyFileAdapter
+  alias Casbin.Persist.PersistAdapter
+  alias Casbin.Persist.ReadonlyFileAdapter
+  doctest Casbin.Persist.ReadonlyFileAdapter
 
   describe "given a policy file" do
     @pfile "../data/acl.csv" |> Path.expand(__DIR__)

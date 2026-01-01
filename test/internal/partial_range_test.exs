@@ -1,5 +1,5 @@
-defmodule Acx.Internal.PartialRangeTest do
+defmodule Casbin.Internal.PartialRangeTest do
   use ExUnit.Case, async: true
-  alias Acx.Internal.PartialRange
-  doctest Acx.Internal.PartialRange
+  alias Casbin.Internal.PartialRange
+  doctest Casbin.Internal.PartialRange
 end

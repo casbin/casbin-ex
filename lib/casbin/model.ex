@@ -1,4 +1,4 @@
-defmodule Acx.Model do
+defmodule Casbin.Model do
   @moduledoc """
   This module defines the structure to represent a PERM (Policy, Effect,
   Request, Matchers) meta model. See [1] for more information.
@@ -14,7 +14,7 @@ defmodule Acx.Model do
             effect: nil,
             role_mappings: []
 
-  alias Acx.Model.{
+  alias Casbin.Model.{
     Config,
     Matcher,
     Policy,

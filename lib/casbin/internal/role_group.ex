@@ -1,4 +1,4 @@
-defmodule Acx.Internal.RoleGroup do
+defmodule Casbin.Internal.RoleGroup do
   @moduledoc """
   This module defines a structure to manage the roles and their inheritances
   in the (H)RBAC model.
@@ -10,7 +10,7 @@ defmodule Acx.Internal.RoleGroup do
 
   defstruct name: nil, role_graph: nil
 
-  alias Acx.Internal.Digraph
+  alias Casbin.Internal.Digraph
 
   @type role_type() :: term()
 

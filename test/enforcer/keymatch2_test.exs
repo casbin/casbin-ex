@@ -1,6 +1,6 @@
-defmodule Acx.Enforcer.KeyMatch2Test do
+defmodule Casbin.Enforcer.KeyMatch2Test do
   use ExUnit.Case, async: true
-  alias Acx.Enforcer
+  alias Casbin.Enforcer
 
   @cfile "../data/keymatch2.conf" |> Path.expand(__DIR__)
   @pfile "../data/keymatch2.csv" |> Path.expand(__DIR__)

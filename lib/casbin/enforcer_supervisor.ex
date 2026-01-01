@@ -1,4 +1,4 @@
-defmodule Acx.EnforcerSupervisor do
+defmodule Casbin.EnforcerSupervisor do
   @moduledoc """
   A supervisor that starts `Enforcer` processes dynamically.
   """
@@ -18,8 +18,8 @@ defmodule Acx.EnforcerSupervisor do
   """
   def start_enforcer(ename, cfile) do
     child_spec = %{
-      id: Acx.EnforcerServer,
-      start: {Acx.EnforcerServer, :start_link, [ename, cfile]},
+      id: Casbin.EnforcerServer,
+      start: {Casbin.EnforcerServer, :start_link, [ename, cfile]},
       restart: :permanent
     }
 

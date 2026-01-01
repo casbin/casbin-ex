@@ -1,4 +1,4 @@
-defmodule Acx.Enforcer do
+defmodule Casbin.Enforcer do
   @moduledoc """
   TODO
   """
@@ -10,10 +10,10 @@ defmodule Acx.Enforcer do
             env: %{},
             persist_adapter: nil
 
-  alias Acx.Internal.RoleGroup
-  alias Acx.Model
-  alias Acx.Persist.PersistAdapter
-  alias Acx.Persist.ReadonlyFileAdapter
+  alias Casbin.Internal.RoleGroup
+  alias Casbin.Model
+  alias Casbin.Persist.PersistAdapter
+  alias Casbin.Persist.ReadonlyFileAdapter
 
   @type mapping() ::
           {atom(), String.t(), String.t()}
@@ -189,7 +189,7 @@ defmodule Acx.Enforcer do
         ...> e = Enforcer.remove_filtered_policy(e, :p, 0, ["admin"])
         ...> Enforcer.list_policies(e)
         [
-          %Acx.Model.Policy{
+          %Casbin.Model.Policy{
             key: :p,
             attrs: [sub: "reader", obj: "blog_post", act: "read", eft: "allow"]
           }
@@ -205,7 +205,7 @@ defmodule Acx.Enforcer do
         ...> e = Enforcer.remove_filtered_policy(e, :p, 1, ["blog_post"])
         ...> Enforcer.list_policies(e)
         [
-          %Acx.Model.Policy{
+          %Casbin.Model.Policy{
             key: :p,
             attrs: [sub: "reader", obj: "comment", act: "read", eft: "allow"]
           }
@@ -285,35 +285,35 @@ defmodule Acx.Enforcer do
       ...> %Enforcer{policies: policies} = e
       ...> policies
       [
-      %Acx.Model.Policy{
+      %Casbin.Model.Policy{
         attrs: [sub: "peter", obj: "blog_post", act: "read", eft: "allow"],
         key: :p
       },
-      %Acx.Model.Policy{
+      %Casbin.Model.Policy{
         attrs: [sub: "peter", obj: "blog_post", act: "modify", eft: "allow"],
         key: :p
       },
-      %Acx.Model.Policy{
+      %Casbin.Model.Policy{
         attrs: [sub: "peter", obj: "blog_post", act: "create", eft: "allow"],
         key: :p
       },
-      %Acx.Model.Policy{
+      %Casbin.Model.Policy{
         attrs: [sub: "bob", obj: "blog_post", act: "read", eft: "allow"],
         key: :p
       },
-      %Acx.Model.Policy{
+      %Casbin.Model.Policy{
         attrs: [sub: "alice", obj: "blog_post", act: "read", eft: "allow"],
         key: :p
       },
-      %Acx.Model.Policy{
+      %Casbin.Model.Policy{
         attrs: [sub: "alice", obj: "blog_post", act: "modify", eft: "allow"],
         key: :p
       },
-      %Acx.Model.Policy{
+      %Casbin.Model.Policy{
         attrs: [sub: "alice", obj: "blog_post", act: "delete", eft: "allow"],
         key: :p
       },
-      %Acx.Model.Policy{
+      %Casbin.Model.Policy{
         attrs: [sub: "alice", obj: "blog_post", act: "create", eft: "allow"],
         key: :p
       }
@@ -409,15 +409,15 @@ defmodule Acx.Enforcer do
       ...> e = e |> Enforcer.load_policies!(pfile)
       ...> e |> Enforcer.list_policies(%{sub: "peter"})
       [
-      %Acx.Model.Policy{
+      %Casbin.Model.Policy{
         attrs: [sub: "peter", obj: "blog_post", act: "read", eft: "allow"],
         key: :p
       },
-      %Acx.Model.Policy{
+      %Casbin.Model.Policy{
         attrs: [sub: "peter", obj: "blog_post", act: "modify", eft: "allow"],
         key: :p
       },
-      %Acx.Model.Policy{
+      %Casbin.Model.Policy{
         attrs: [sub: "peter", obj: "blog_post", act: "create", eft: "allow"],
         key: :p
       }
@@ -856,7 +856,7 @@ defmodule Acx.Enforcer do
     end)
   end
 
-  @spec list_mapping_policies(Acx.Enforcer.t(), maybe_improper_list) :: [mapping()]
+  @spec list_mapping_policies(Casbin.Enforcer.t(), maybe_improper_list) :: [mapping()]
   def list_mapping_policies(
         %__MODULE__{mapping_policies: mapping_policies},
         criteria
@@ -869,7 +869,7 @@ defmodule Acx.Enforcer do
     end)
   end
 
-  @spec list_mapping_policies(Acx.Enforcer.t()) :: [mapping()]
+  @spec list_mapping_policies(Casbin.Enforcer.t()) :: [mapping()]
   def list_mapping_policies(%__MODULE__{mapping_policies: mapping_policies}), do: mapping_policies
 
   @doc """

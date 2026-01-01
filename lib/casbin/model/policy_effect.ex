@@ -1,4 +1,4 @@
-defmodule Acx.Model.PolicyEffect do
+defmodule Casbin.Model.PolicyEffect do
   @moduledoc """
   This module defines a structure to represent a policy effect in a model.
   Policy effect defines whether the access should be approved or denied
@@ -24,7 +24,7 @@ defmodule Acx.Model.PolicyEffect do
   @allow_override "some(where(p.eft==allow))"
   @deny_override "!some(where(p.eft==deny))"
 
-  alias Acx.Model.Policy
+  alias Casbin.Model.Policy
 
   @doc """
   Create a new policy effect based on the given `rule` string.

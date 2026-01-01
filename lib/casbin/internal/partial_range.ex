@@ -1,4 +1,4 @@
-defmodule Acx.Internal.PartialRange do
+defmodule Casbin.Internal.PartialRange do
   @moduledoc """
   PartialRange represents one of the following mathematical objects:
 

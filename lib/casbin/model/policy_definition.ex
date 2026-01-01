@@ -1,4 +1,4 @@
-defmodule Acx.Model.PolicyDefinition do
+defmodule Casbin.Model.PolicyDefinition do
   @moduledoc """
   This module defines the structure to represent a policy definition in
   a model. A policy definition has two parts:
@@ -18,7 +18,7 @@ defmodule Acx.Model.PolicyDefinition do
           attrs: [attr()]
         }
 
-  alias Acx.Model.Policy
+  alias Casbin.Model.Policy
 
   @doc """
   Creates a new policy definition based on the given `key` and a comma

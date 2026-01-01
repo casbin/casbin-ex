@@ -1,4 +1,4 @@
-defmodule Acx.EnforcerServer do
+defmodule Casbin.EnforcerServer do
   @moduledoc """
   An enforcer process that holds an `Enforcer` struct as its state.
   """
@@ -7,7 +7,7 @@ defmodule Acx.EnforcerServer do
 
   require Logger
 
-  alias Acx.Enforcer
+  alias Casbin.Enforcer
 
   #
   # Client Public Interface
@@ -348,12 +348,12 @@ defmodule Acx.EnforcerServer do
   # Returns a tuple used to register and lookup an enforcer process
   # by name
   defp via_tuple(ename) do
-    {:via, Registry, {Acx.EnforcerRegistry, ename}}
+    {:via, Registry, {Casbin.EnforcerRegistry, ename}}
   end
 
   # Returns the name of `self`.
   defp self_name do
-    Registry.keys(Acx.EnforcerRegistry, self()) |> List.first()
+    Registry.keys(Casbin.EnforcerRegistry, self()) |> List.first()
   end
 
   # Creates a new enforcer or lookups existing one in the ets table.

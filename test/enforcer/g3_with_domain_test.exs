@@ -1,6 +1,6 @@
-defmodule Acx.Enforcer.G3WithDomain do
+defmodule Casbin.Enforcer.G3WithDomain do
   use ExUnit.Case, async: true
-  alias Acx.Enforcer
+  alias Casbin.Enforcer
 
   @cfile "../data/g3_with_domain.conf" |> Path.expand(__DIR__)
   @pfile "../data/g3_with_domain.csv" |> Path.expand(__DIR__)

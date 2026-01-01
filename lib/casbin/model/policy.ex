@@ -1,4 +1,4 @@
-defmodule Acx.Model.Policy do
+defmodule Casbin.Model.Policy do
   @moduledoc """
   This module defines a structure to represent a policy.
   A policy has two parts:

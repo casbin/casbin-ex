@@ -1,4 +1,4 @@
-defmodule Acx.Model.Request do
+defmodule Casbin.Model.Request do
   @moduledoc """
   This module defines a structure to represent a request.
   A request has two parts:
