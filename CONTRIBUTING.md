@@ -107,11 +107,17 @@ Releases are automated using [semantic-release](https://semantic-release.gitbook
 2. Semantic-release analyzes commit messages since the last release
 3. If releasable commits are found:
    - A new version is determined based on commit types
-   - The version in `mix.exs` is updated
-   - A `CHANGELOG.md` is generated/updated
    - A Git tag is created
    - A GitHub release is published
-   - Changes are committed back to the repository
+   - The package is published to [Hex.pm](https://hex.pm/packages/acx)
+
+### Hex.pm Publishing
+
+The release workflow automatically publishes new versions to Hex.pm. This requires a `HEX_API_KEY` secret to be configured in the repository settings:
+
+1. Generate an API key from your Hex.pm account
+2. Add it as a repository secret named `HEX_API_KEY`
+3. The workflow will use this key to authenticate and publish the package
 
 ## Pull Request Process
 
