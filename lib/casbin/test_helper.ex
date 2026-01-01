@@ -75,7 +75,8 @@ defmodule Casbin.TestHelper do
   """
   @spec unique_enforcer_name(String.t()) :: String.t()
   def unique_enforcer_name(prefix \\ "") do
-    ref = :erlang.ref_to_list(make_ref()) |> to_string() |> String.replace(~r/[^0-9]/, "")
+    # Use inspect to get a string representation of the ref, then sanitize
+    ref = inspect(make_ref()) |> String.replace(~r/[^a-zA-Z0-9]/, "_")
     timestamp = System.system_time(:microsecond)
     random = :rand.uniform(999_999)
 
