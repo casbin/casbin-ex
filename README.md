@@ -335,6 +335,31 @@ Casbin-Ex supports the following access control models:
 
 ## Testing
 
+### Async Testing with Isolated Enforcers
+
+Casbin-Ex supports running tests with `async: true` by providing isolated enforcer instances per test. This prevents race conditions and enables faster parallel test execution.
+
+```elixir
+defmodule MyApp.AclTest do
+  use ExUnit.Case, async: true
+  import Casbin.TestHelper
+  
+  setup do
+    enforcer_name = unique_enforcer_name()
+    {:ok, _} = start_test_enforcer(enforcer_name, "config.conf")
+    on_exit(fn -> cleanup_test_enforcer(enforcer_name) end)
+    {:ok, enforcer_name: enforcer_name}
+  end
+  
+  test "my test", %{enforcer_name: name} do
+    EnforcerServer.add_policy(name, {:p, ["alice", "data", "read"]})
+    assert EnforcerServer.allow?(name, ["alice", "data", "read"])
+  end
+end
+```
+
+See our [Async Testing Guide](guides/async_testing.md) for complete examples and patterns.
+
 ### Using with Ecto.Adapters.SQL.Sandbox
 
 If you're using Casbin-Ex with Ecto and need to wrap operations in database transactions during testing, see our guide on [Testing with Ecto.Adapters.SQL.Sandbox and Transactions](guides/sandbox_testing.md).
