@@ -347,13 +347,28 @@ Key points:
 - Allow the EnforcerServer process to access your test's database connection
 - See the guide for complete examples and best practices
 
+## Middlewares
+
+Authz middlewares for web frameworks: https://casbin.org/docs/middlewares
+
+## Our adopters
+
+https://casbin.org/docs/adopters
+
+## How to Contribute
+
+Please read the [contributing guide](CONTRIBUTING.md).
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=casbin/casbin-ex&type=Date)](https://star-history.com/#casbin/casbin-ex&Date)
+
 ## License
 
 This project is licensed under the [Apache 2.0 license](LICENSE).
 
-## Getting Help
+## Contact
 
-- Casbin-Ex documentation: https://casbin.org/docs/overview
-- Casbin website: https://casbin.org
-- Discord: https://discord.gg/S5UjpzGZjN
-- GitHub Issues: https://github.com/casbin/casbin-ex/issues
+If you have any issues or feature requests, please contact us. PR is welcomed.
+- https://github.com/casbin/casbin-ex/issues
+- https://discord.gg/S5UjpzGZjN
