@@ -222,7 +222,10 @@ defmodule Casbin.Persist.EctoAdapter do
         ...> {:error, "repo is not set"}
     """
     @spec load_filtered_policy(EctoAdapter.t(), map()) :: {:ok, [list()]} | {:error, String.t()}
-    def load_filtered_policy(%Casbin.Persist.EctoAdapter{repo: nil, get_dynamic_repo: nil}, _filter) do
+    def load_filtered_policy(
+          %Casbin.Persist.EctoAdapter{repo: nil, get_dynamic_repo: nil},
+          _filter
+        ) do
       {:error, "repo is not set"}
     end
 
