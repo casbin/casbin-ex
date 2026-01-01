@@ -27,6 +27,18 @@ https://casbin.org/docs/overview
 
 ## Installation
 
+The package can be installed by adding `acx` to your list of dependencies in `mix.exs`:
+
+```elixir
+def deps do
+  [
+    {:acx, "~> 1.6"}
+  ]
+end
+```
+
+Or install from GitHub:
+
 ```elixir
 def deps do
   [
