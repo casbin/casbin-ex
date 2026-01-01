@@ -27,10 +27,7 @@ jobs:
       - name: Install semantic-release
         run: |
           npm install -g \
-            semantic-release@21 \
-            @semantic-release/git@10 \
-            @semantic-release/changelog@6 \
-            @semantic-release/exec@6
+            semantic-release@21
       
       - name: Run semantic-release
         env:
