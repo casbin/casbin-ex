@@ -1255,10 +1255,10 @@ defmodule Casbin.Enforcer do
   end
 
   defp ip_to_bits({a, b, c, d, e, f, g, h}) do
-    <<a::16, b::16, c::16, d::16, e::16, f::16, g::16, h::16>>
-    |> :binary.bin_to_list()
+    # Convert each 16-bit segment to binary representation
+    [a, b, c, d, e, f, g, h]
     |> Enum.map(&Integer.to_string(&1, 2))
-    |> Enum.map(&String.pad_leading(&1, 8, "0"))
+    |> Enum.map(&String.pad_leading(&1, 16, "0"))
     |> Enum.join()
   end
 
@@ -1266,6 +1266,8 @@ defmodule Casbin.Enforcer do
   Returns `true` if `key1` matches the glob pattern `key2`.
 
   Uses standard glob pattern matching with `*` and `**` wildcards.
+  - `*` matches any characters except `/`
+  - `**` matches any characters including `/`
 
   ## Examples
 
@@ -1277,13 +1279,13 @@ defmodule Casbin.Enforcer do
   @spec glob_match?(String.t(), String.t()) :: boolean()
   def glob_match?(key1, key2) do
     # Convert glob pattern to regex pattern
-    # This is a simplified implementation - for production use consider a dedicated glob library
+    # Process in order: escape dots, handle **, then handle *
     pattern =
       key2
       |> String.replace(".", "\\.")
-      |> String.replace("**", "<!DOUBLESTAR!>")
+      |> String.replace("**", "\x00")  # Use null byte as temporary placeholder
       |> String.replace("*", "[^/]*")
-      |> String.replace("<!DOUBLESTAR!>", ".*")
+      |> String.replace("\x00", ".*")  # Replace placeholder with .*
       |> then(&("^" <> &1 <> "$"))
 
     case Regex.compile(pattern) do
