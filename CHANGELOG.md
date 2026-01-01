@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/casbin/casbin-ex/compare/v1.6.0...v1.6.1) (2026-01-01)
+
+
+### Bug Fixes
+
+* improve links in README ([42b93a2](https://github.com/casbin/casbin-ex/commit/42b93a269430cd2fac906ffbef1ae3c895b0d326))
+
 # [1.6.0](https://github.com/casbin/casbin-ex/compare/v1.5.0...v1.6.0) (2025-11-09)
 
 
