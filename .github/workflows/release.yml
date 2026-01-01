@@ -30,17 +30,34 @@ jobs:
             semantic-release@21
 
       - name: Run semantic-release
+        id: semantic_release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
 
+      - name: Check if release was created
+        id: check_release
+        run: |
+          # Get the current commit SHA
+          CURRENT_SHA=$(git rev-parse HEAD)
+          # Check if there's a tag pointing to this commit
+          if git describe --exact-match --tags $CURRENT_SHA 2>/dev/null; then
+            echo "release_created=true" >> $GITHUB_OUTPUT
+            echo "Release was created"
+          else
+            echo "release_created=false" >> $GITHUB_OUTPUT
+            echo "No release was created"
+          fi
+
       - name: Set up Elixir
+        if: steps.check_release.outputs.release_created == 'true'
         uses: erlef/setup-beam@v1
         with:
           elixir-version: '1.14.2'
           otp-version: '25.1.1'
 
       - name: Get latest release version
+        if: steps.check_release.outputs.release_created == 'true'
         id: get_version
         run: |
           # Fetch all tags
@@ -53,15 +70,18 @@ jobs:
           echo "Latest version: $VERSION"
 
       - name: Update version in mix.exs
+        if: steps.check_release.outputs.release_created == 'true'
         run: |
           VERSION="${{ steps.get_version.outputs.version }}"
           sed -i "s/version: \".*\"/version: \"$VERSION\"/" mix.exs
           cat mix.exs | grep version:
 
       - name: Install dependencies
+        if: steps.check_release.outputs.release_created == 'true'
         run: mix deps.get
 
       - name: Publish to Hex.pm
+        if: steps.check_release.outputs.release_created == 'true'
         env:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
         run: mix hex.publish --yes
