@@ -21,7 +21,7 @@ defmodule Casbin.Enforcer.KeyMatch3Test do
       {["alice", "/alice_data2/myid/using/myresid", "GET"], true},
       {["alice", "/alice_data2/1/using/2", "GET"], true},
       {["alice", "/alice_data2/1/using/2", "POST"], false},
-      {["bob", "/bob_data/123", "GET"], true},
+      {["bob", "/bob_data/123/", "GET"], true},
       {["bob", "/bob_data/123/extra", "GET"], true},
       {["alice", "/alice_data/", "GET"], false},
       {["bob", "/alice_data/resource1", "GET"], false}
