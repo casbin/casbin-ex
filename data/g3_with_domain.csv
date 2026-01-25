@@ -1,0 +1,8 @@
+p, admin, /data/organizations/:orgid/, GET
+p, admin, /data/organizations/:orgid/, POST
+p, user, /data/organizations/:orgid/, GET
+
+g, alice, admin, *
+g, bob, admin, 1
+g, peter, admin, 2
+g, john, user, 2

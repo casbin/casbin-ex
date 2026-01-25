@@ -1,0 +1,11 @@
+p, reader, blog_post, read
+p, author, blog_post, modify
+p, author, blog_post, create
+p, admin, blog_post, delete
+
+g, bob, reader
+g, peter, author
+g, alice, admin
+
+g, author, reader
+g, admin, author
