@@ -1,3 +1,0 @@
-p, alice, /alice_data*, GET
-p, alice, /alice_data/*, POST
-p, bob, /bob_data/*, GET

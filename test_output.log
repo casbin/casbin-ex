@@ -1,8 +1,0 @@
-** (Mix) httpc request failed with: {:failed_connect, [{:to_address, {'repo.hex.pm', 443}}, {:inet6, [:inet6], :nxdomain}]}
-
-Could not install Hex because Mix could not download metadata at https://repo.hex.pm/installs/hex-1.x.csv.
-
-Alternatively, you can compile and install Hex directly with this command:
-
-    mix archive.install github hexpm/hex branch latest
-

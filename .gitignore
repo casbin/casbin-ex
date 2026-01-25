@@ -24,3 +24,14 @@ acx-*.tar
 
 .idea/
 *.iml
+
+# Temporary test files
+*.backup
+*.original
+*.skip
+mix.test.exs
+mix_offline_workaround.sh
+mix_simple.exs
+test_output.log
+test_runner.sh
+/data/
