@@ -1,6 +1,143 @@
-# Testing with Ecto.Adapters.SQL.Sandbox and Transactions
+# Testing with Casbin-Ex
 
-This guide explains how to use Casbin-Ex with `Ecto.Adapters.SQL.Sandbox` when you need to wrap Casbin operations in database transactions.
+This guide covers two important testing scenarios:
+
+1. **Async Testing with Isolated Enforcers** - Running tests concurrently without race conditions
+2. **Testing with Ecto.Adapters.SQL.Sandbox and Transactions** - Using Casbin with database transactions
+
+## Async Testing with Isolated Enforcers
+
+### The Problem
+
+When using `EnforcerServer` with a shared enforcer name across tests, all tests use the same global state through the `:enforcers_table` ETS table. This causes race conditions when running tests with `async: true`:
+
+```elixir
+defmodule MyApp.AclTest do
+  use ExUnit.Case, async: true  # ❌ Tests interfere with each other
+  
+  @enforcer_name "my_enforcer"  # ❌ Shared across all tests
+  
+  test "admin has permissions" do
+    EnforcerServer.add_policy(@enforcer_name, {:p, ["admin", "data", "read"]})
+    # Another test's cleanup might delete this policy mid-test!
+    assert EnforcerServer.allow?(@enforcer_name, ["admin", "data", "read"])
+  end
+end
+```
+
+**Symptoms:**
+- `list_policies()` returns `[]` even after adding policies
+- `add_policy` returns `{:error, :already_existed}` but policies aren't in the returned list
+- Tests pass individually but fail when run together
+- One test's cleanup deletes policies while another test is running
+
+### Solution: Use Isolated Enforcers
+
+Casbin-Ex provides `Casbin.AsyncTestHelper` to create isolated enforcer instances for each test:
+
+```elixir
+defmodule MyApp.AclTest do
+  use ExUnit.Case, async: true  # ✅ Safe to use async now
+  
+  alias Casbin.AsyncTestHelper
+  alias Casbin.EnforcerServer
+
+  @model_path "path/to/model.conf"
+
+  setup do
+    # Each test gets a unique enforcer name
+    AsyncTestHelper.setup_isolated_enforcer(@model_path)
+  end
+
+  test "admin has permissions", %{enforcer_name: enforcer_name} do
+    # Use the unique enforcer_name - no race conditions!
+    :ok = EnforcerServer.add_policy(
+      enforcer_name,
+      {:p, ["admin", "data", "read"]}
+    )
+    
+    assert EnforcerServer.allow?(enforcer_name, ["admin", "data", "read"])
+    
+    # Automatic cleanup happens via on_exit callback
+  end
+
+  test "user has limited permissions", %{enforcer_name: enforcer_name} do
+    # This test has its own isolated enforcer
+    :ok = EnforcerServer.add_policy(
+      enforcer_name,
+      {:p, ["user", "data", "read"]}
+    )
+    
+    assert EnforcerServer.allow?(enforcer_name, ["user", "data", "read"])
+    refute EnforcerServer.allow?(enforcer_name, ["user", "data", "write"])
+  end
+end
+```
+
+### Manual Setup (Alternative)
+
+If you need more control, you can manually manage the enforcer lifecycle:
+
+```elixir
+defmodule MyApp.AclTest do
+  use ExUnit.Case, async: true
+  
+  alias Casbin.AsyncTestHelper
+  alias Casbin.EnforcerServer
+
+  setup do
+    # Generate unique enforcer name
+    enforcer_name = AsyncTestHelper.unique_enforcer_name()
+    
+    # Start isolated enforcer
+    {:ok, _pid} = AsyncTestHelper.start_isolated_enforcer(
+      enforcer_name,
+      "path/to/model.conf"
+    )
+    
+    # Optional: Load initial policies
+    EnforcerServer.load_policies(enforcer_name, "path/to/policies.csv")
+    
+    # Cleanup on test exit
+    on_exit(fn -> AsyncTestHelper.stop_enforcer(enforcer_name) end)
+    
+    {:ok, enforcer: enforcer_name}
+  end
+
+  test "my test", %{enforcer: enforcer_name} do
+    # Use enforcer_name in your test
+  end
+end
+```
+
+### How It Works
+
+`AsyncTestHelper` ensures test isolation by:
+
+1. **Unique Names**: Generates unique enforcer names using monotonic integers
+2. **Isolated State**: Each enforcer gets its own entry in the ETS table and Registry
+3. **Automatic Cleanup**: Stops the enforcer process and removes ETS/Registry entries after tests
+
+This allows tests to run concurrently without interfering with each other.
+
+### When to Use Async Testing
+
+Use isolated enforcers with `async: true` when:
+- Tests don't require database transactions
+- You want faster test execution through parallelization  
+- Tests are independent and don't share state
+- You're testing pure Casbin logic without external dependencies
+
+Use `async: false` when:
+- Tests require database transactions (see next section)
+- Tests need to share a specific enforcer configuration
+- You're testing integration with external systems
+
+---
+
+## Testing with Ecto.Adapters.SQL.Sandbox and Transactions
+
+This section explains how to use Casbin-Ex with `Ecto.Adapters.SQL.Sandbox` when you need to wrap Casbin operations in database transactions.
 
 ## The Problem
 
@@ -164,6 +301,7 @@ end
 
 ## Further Reading
 
+- [Casbin.AsyncTestHelper Documentation](../test/support/async_test_helper.ex) - For async testing with isolated enforcers
 - [Ecto.Adapters.SQL.Sandbox Documentation](https://hexdocs.pm/ecto_sql/Ecto.Adapters.SQL.Sandbox.html)
 - [Ecto.Adapters.SQL.Sandbox Shared Mode](https://hexdocs.pm/ecto_sql/Ecto.Adapters.SQL.Sandbox.html#module-shared-mode)
 - [Testing with Ecto](https://hexdocs.pm/ecto/testing-with-ecto.html)
