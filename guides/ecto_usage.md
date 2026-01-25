@@ -117,43 +117,29 @@ end
 
 ### Stateful Approach (Using EnforcerServer)
 
-For production applications, use `EnforcerServer` with a supervision tree:
-
-```elixir
-# In your application supervisor (e.g., lib/my_app/application.ex)
-defmodule MyApp.Application do
-  use Application
-
-  def start(_type, _args) do
-    children = [
-      MyApp.Repo,
-      # Start the Casbin enforcer supervisor
-      {Casbin.EnforcerSupervisor, []}
-    ]
-
-    opts = [strategy: :one_for_one, name: MyApp.Supervisor]
-    Supervisor.start_link(children, opts)
-  end
-end
-```
-
-Then in your application setup or initialization code:
+The `EnforcerServer` approach is useful when you need to manage policies dynamically and access the enforcer from multiple parts of your application by name:
 
 ```elixir
 alias Casbin.{EnforcerSupervisor, EnforcerServer}
 alias Casbin.Persist.EctoAdapter
 
-# Start a named enforcer
+# Start the enforcer with your model
+{:ok, _pid} = EnforcerSupervisor.start_enforcer("my_enforcer", "priv/casbin/model.conf")
+
+# Set the Ecto adapter
 adapter = EctoAdapter.new(MyApp.Repo)
-{:ok, _pid} = EnforcerSupervisor.start_enforcer("my_enforcer", "priv/casbin/model.conf", adapter)
+:ok = EnforcerServer.set_persist_adapter("my_enforcer", adapter)
 
-# Load policies from the database
-:ok = EnforcerServer.load_policies("my_enforcer")
+# Add policies (these are automatically persisted to the database)
+EnforcerServer.add_policy("my_enforcer", {:p, ["alice", "data1", "read"]})
+EnforcerServer.add_policy("my_enforcer", {:g, ["alice", "admin"]})
 
-# Now you can use it anywhere in your application
+# Check permissions anywhere in your application
 EnforcerServer.allow?("my_enforcer", ["alice", "data1", "read"])
 # => true or false
 ```
+
+With `EnforcerServer`, policies added via `add_policy` are automatically persisted to the database through the EctoAdapter. This makes it ideal for applications that need to manage permissions dynamically at runtime.
 
 ## Managing Policies
 
@@ -243,22 +229,102 @@ m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
 ```elixir
 defmodule MyApp.Authorization do
   @moduledoc """
-  Authorization module using Casbin.
+  Authorization module using Casbin with Ecto persistence.
+  """
+  alias Casbin.Enforcer
+  alias Casbin.Persist.EctoAdapter
+
+  @model_path "priv/casbin/blog_model.conf"
+
+  def init do
+    adapter = EctoAdapter.new(MyApp.Repo)
+    {:ok, enforcer} = Enforcer.init(@model_path, adapter)
+    
+    # Load existing policies from database
+    enforcer = Enforcer.load_policies!(enforcer)
+    
+    # Seed initial policies if database is empty
+    enforcer = seed_initial_policies(enforcer)
+    
+    # Store enforcer in application state (e.g., ETS, Agent, or pass it around)
+    :persistent_term.put(__MODULE__, enforcer)
+    
+    {:ok, enforcer}
+  end
+
+  defp seed_initial_policies(enforcer) do
+    # Check if we already have policies
+    case Enforcer.list_policies(enforcer, %{}) do
+      [] -> 
+        # Add default role permissions
+        enforcer
+        |> Enforcer.add_policy({:p, ["admin", "blog_post", "create"]})
+        |> Enforcer.add_policy({:p, ["admin", "blog_post", "read"]})
+        |> Enforcer.add_policy({:p, ["admin", "blog_post", "update"]})
+        |> Enforcer.add_policy({:p, ["admin", "blog_post", "delete"]})
+        |> Enforcer.add_policy({:p, ["author", "blog_post", "create"]})
+        |> Enforcer.add_policy({:p, ["author", "blog_post", "read"]})
+        |> Enforcer.add_policy({:p, ["author", "blog_post", "update"]})
+        |> Enforcer.add_policy({:p, ["reader", "blog_post", "read"]})
+        # Role inheritance
+        |> Enforcer.add_mapping_policy({:g, ["admin", "author"]})
+        |> Enforcer.add_mapping_policy({:g, ["author", "reader"]})
+        # Persist to database
+        |> tap(&Enforcer.save_policies!/1)
+        
+      _ -> 
+        enforcer
+    end
+  end
+
+  def can?(user_id, resource, action) do
+    enforcer = :persistent_term.get(__MODULE__)
+    Enforcer.allow?(enforcer, [user_id, resource, action])
+  end
+
+  def assign_role(user_id, role) do
+    enforcer = :persistent_term.get(__MODULE__)
+    new_enforcer = Enforcer.add_mapping_policy(enforcer, {:g, [user_id, role]})
+    :persistent_term.put(__MODULE__, new_enforcer)
+    :ok
+  end
+
+  def revoke_role(user_id, role) do
+    enforcer = :persistent_term.get(__MODULE__)
+    new_enforcer = Enforcer.remove_mapping_policy(enforcer, {:g, [user_id, role]})
+    :persistent_term.put(__MODULE__, new_enforcer)
+    :ok
+  end
+
+  def user_roles(user_id) do
+    enforcer = :persistent_term.get(__MODULE__)
+    Enforcer.get_roles_for_user(enforcer, user_id)
+  end
+end
+```
+
+**Alternative: Using EnforcerServer**
+
+For a supervised, process-based approach:
+
+```elixir
+defmodule MyApp.Authorization do
+  @moduledoc """
+  Authorization module using Casbin with EnforcerServer.
   """
   alias Casbin.{EnforcerSupervisor, EnforcerServer}
   alias Casbin.Persist.EctoAdapter
 
   @enforcer_name "blog_enforcer"
+  @model_path "priv/casbin/blog_model.conf"
 
   def setup do
-    adapter = EctoAdapter.new(MyApp.Repo)
-    model_path = Application.app_dir(:my_app, "priv/casbin/blog_model.conf")
-    
     # Start the enforcer
-    {:ok, _pid} = EnforcerSupervisor.start_enforcer(@enforcer_name, model_path, adapter)
+    {:ok, _pid} = EnforcerSupervisor.start_enforcer(@enforcer_name, @model_path)
     
-    # Load existing policies from database
-    :ok = EnforcerServer.load_policies(@enforcer_name)
+    # Set the adapter
+    adapter = EctoAdapter.new(MyApp.Repo)
+    :ok = EnforcerServer.set_persist_adapter(@enforcer_name, adapter)
     
     # Seed initial policies if needed
     seed_initial_policies()
@@ -266,7 +332,7 @@ defmodule MyApp.Authorization do
 
   defp seed_initial_policies do
     # Check if we already have policies
-    case EnforcerServer.list_policies(@enforcer_name) do
+    case EnforcerServer.list_policies(@enforcer_name, %{}) do
       [] -> 
         # Add default role permissions
         EnforcerServer.add_policy(@enforcer_name, {:p, ["admin", "blog_post", "create"]})
@@ -280,7 +346,7 @@ defmodule MyApp.Authorization do
         
         EnforcerServer.add_policy(@enforcer_name, {:p, ["reader", "blog_post", "read"]})
         
-        # Role inheritance
+        # Role inheritance (using add_policy with :g type)
         EnforcerServer.add_policy(@enforcer_name, {:g, ["admin", "author"]})
         EnforcerServer.add_policy(@enforcer_name, {:g, ["author", "reader"]})
         
