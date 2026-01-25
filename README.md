@@ -333,6 +333,19 @@ Casbin-Ex supports the following access control models:
 10. **Deny-override**: both allow and deny authorizations are supported, deny overrides the allow
 11. **Priority**: the policy rules can be prioritized like firewall rules
 
+## Using with Ecto
+
+All examples above use CSV files for simplicity, but in production applications you'll typically want to store policies in a database. Casbin-Ex provides an `EctoAdapter` for this purpose.
+
+See our comprehensive guide: [Using Casbin with Ecto](guides/ecto_usage.md)
+
+Key topics covered:
+- Database setup and migrations
+- Loading and saving policies to a database
+- Dynamic policy management
+- Multi-tenant applications with filtered policies
+- Complete example applications
+
 ## Testing
 
 ### Using with Ecto.Adapters.SQL.Sandbox
