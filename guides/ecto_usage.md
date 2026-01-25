@@ -299,7 +299,7 @@ defmodule MyApp.Authorization do
   def user_roles(user_id) do
     enforcer = :persistent_term.get(__MODULE__)
     # Get role mappings for the user
-    Enforcer.list_mapping_policies(enforcer, %{v0: user_id})
+    Enforcer.list_mapping_policies(enforcer, [user_id])
     |> Enum.map(fn {:g, [_user, role]} -> role end)
   end
 end
@@ -371,7 +371,7 @@ defmodule MyApp.Authorization do
 
   def user_roles(user_id) do
     # Get role mappings for the user
-    EnforcerServer.list_mapping_policies(@enforcer_name, %{v0: user_id})
+    EnforcerServer.list_mapping_policies(@enforcer_name, [user_id])
     |> Enum.map(fn {:g, [_user, role]} -> role end)
   end
 end
