@@ -169,7 +169,7 @@ Add individual policies to the database:
 
 ```elixir
 # Get all policies
-policies = EnforcerServer.list_policies("my_enforcer")
+policies = EnforcerServer.list_policies("my_enforcer", %{})
 
 # Get policies matching a filter
 policies = EnforcerServer.list_policies("my_enforcer", %{sub: "alice"})
@@ -298,7 +298,9 @@ defmodule MyApp.Authorization do
 
   def user_roles(user_id) do
     enforcer = :persistent_term.get(__MODULE__)
-    Enforcer.get_roles_for_user(enforcer, user_id)
+    # Get role mappings for the user
+    Enforcer.list_mapping_policies(enforcer, %{v0: user_id})
+    |> Enum.map(fn {:g, [_user, role]} -> role end)
   end
 end
 ```
@@ -368,7 +370,9 @@ defmodule MyApp.Authorization do
   end
 
   def user_roles(user_id) do
-    EnforcerServer.get_roles_for_user(@enforcer_name, user_id)
+    # Get role mappings for the user
+    EnforcerServer.list_mapping_policies(@enforcer_name, %{v0: user_id})
+    |> Enum.map(fn {:g, [_user, role]} -> role end)
   end
 end
 ```
