@@ -71,7 +71,7 @@ defmodule Casbin.AsyncTestHelper do
       true
   """
   def unique_enforcer_name do
-    # Use a monotonic unique integer to ensure uniqueness across processes
+    # Use a monotonic unique integer to ensure uniqueness across concurrent calls
     ref = :erlang.unique_integer([:positive, :monotonic])
     "test_enforcer_#{ref}"
   end
@@ -180,9 +180,8 @@ defmodule Casbin.AsyncTestHelper do
         
         # Return the enforcer name in the context
         # Convert context to map and add enforcer_name
-        context
+        [enforcer_name: enforcer_name | context]
         |> Enum.into(%{})
-        |> Map.put(:enforcer_name, enforcer_name)
 
       {:error, reason} ->
         raise "Failed to start isolated enforcer: #{inspect(reason)}"

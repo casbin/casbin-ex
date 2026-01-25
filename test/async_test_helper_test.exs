@@ -67,7 +67,8 @@ defmodule Casbin.AsyncTestHelperTest do
     end
 
     test "stop_enforcer works with non-existent enforcer" do
-      enforcer_name = "non_existent_enforcer_#{:rand.uniform(100000)}"
+      # Use a unique name that is guaranteed not to exist
+      enforcer_name = AsyncTestHelper.unique_enforcer_name()
       
       # Should not raise an error
       assert :ok = AsyncTestHelper.stop_enforcer(enforcer_name)
@@ -198,9 +199,6 @@ defmodule Casbin.AsyncTestHelperTest do
       :ok = EnforcerServer.add_policy(enforcer_name, {:p, ["test1_alice", "data", "read"]})
       :ok = EnforcerServer.add_policy(enforcer_name, {:p, ["test1_bob", "data", "write"]})
       
-      # Simulate some work
-      Process.sleep(:rand.uniform(10))
-      
       # Verify our policies are still there (not affected by other tests)
       policies = EnforcerServer.list_policies(enforcer_name, %{})
       assert length(policies) == 2
@@ -215,9 +213,6 @@ defmodule Casbin.AsyncTestHelperTest do
       
       # Add different policies
       :ok = EnforcerServer.add_policy(enforcer_name, {:p, ["test2_charlie", "resource", "execute"]})
-      
-      # Simulate some work
-      Process.sleep(:rand.uniform(10))
       
       # Verify our policies (should not see test1's policies)
       policies = EnforcerServer.list_policies(enforcer_name, %{})
@@ -236,9 +231,6 @@ defmodule Casbin.AsyncTestHelperTest do
       :ok = EnforcerServer.add_policy(enforcer_name, {:p, ["test3_dave", "file", "read"]})
       :ok = EnforcerServer.add_policy(enforcer_name, {:p, ["test3_eve", "file", "write"]})
       :ok = EnforcerServer.add_policy(enforcer_name, {:p, ["test3_frank", "file", "delete"]})
-      
-      # Simulate some work
-      Process.sleep(:rand.uniform(10))
       
       # Verify our policies (isolated from other tests)
       policies = EnforcerServer.list_policies(enforcer_name, %{})

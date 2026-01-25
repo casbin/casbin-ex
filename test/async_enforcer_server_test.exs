@@ -127,14 +127,11 @@ defmodule Casbin.AsyncEnforcerServerTest do
       {:ok, _pid} = AsyncTestHelper.start_isolated_enforcer(enforcer_name, @cfile)
       on_exit(fn -> AsyncTestHelper.stop_enforcer(enforcer_name) end)
 
-      # Add policies
-      :ok = EnforcerServer.add_policy(enforcer_name, {:p, ["admin", "org_#{:rand.uniform(1000)}", "read"]})
-      :ok = EnforcerServer.add_policy(enforcer_name, {:p, ["admin", "org_#{:rand.uniform(1000)}", "write"]})
+      # Add policies with deterministic resource names
+      :ok = EnforcerServer.add_policy(enforcer_name, {:p, ["admin", "org_data", "read"]})
+      :ok = EnforcerServer.add_policy(enforcer_name, {:p, ["admin", "org_settings", "write"]})
 
-      # Simulate some async work
-      Process.sleep(5)
-
-      # Policies should still be there (not deleted by another test's cleanup)
+      # Policies should be immediately available (not deleted by another test's cleanup)
       policies = EnforcerServer.list_policies(enforcer_name, %{sub: "admin"})
       assert length(policies) == 2
 
