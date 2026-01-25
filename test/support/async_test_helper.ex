@@ -60,7 +60,7 @@ defmodule Casbin.AsyncTestHelper do
   @doc """
   Generates a unique enforcer name for a test.
 
-  The name is based on the test process's unique reference and timestamp,
+  The name is based on the test process's unique monotonic integer,
   ensuring no collisions even when running tests concurrently.
 
   ## Examples
@@ -71,7 +71,7 @@ defmodule Casbin.AsyncTestHelper do
       true
   """
   def unique_enforcer_name do
-    # Use the test process reference and a timestamp to ensure uniqueness
+    # Use a monotonic unique integer to ensure uniqueness across processes
     ref = :erlang.unique_integer([:positive, :monotonic])
     "test_enforcer_#{ref}"
   end
@@ -179,7 +179,10 @@ defmodule Casbin.AsyncTestHelper do
         ExUnit.Callbacks.on_exit(fn -> stop_enforcer(enforcer_name) end)
         
         # Return the enforcer name in the context
-        Map.merge(Enum.into(context, %{}), %{enforcer_name: enforcer_name})
+        # Convert context to map and add enforcer_name
+        context
+        |> Enum.into(%{})
+        |> Map.put(:enforcer_name, enforcer_name)
 
       {:error, reason} ->
         raise "Failed to start isolated enforcer: #{inspect(reason)}"
