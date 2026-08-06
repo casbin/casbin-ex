@@ -20,11 +20,11 @@ jobs:
 
       - name: Set up Erlang and Elixir
         run: |
-          wget -q https://packages.erlang-solutions.com/erlang-solutions_2.0_all.deb
-          sudo dpkg -i erlang-solutions_2.0_all.deb
           sudo apt-get update -q
-          sudo apt-get install -y erlang elixir
-      
+          sudo apt-get install -y erlang-nox elixir
+          mix local.hex --force
+          mix local.rebar --force
+
       - name: Restore dependencies cache
         uses: actions/cache@v3
         with:
