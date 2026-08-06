@@ -458,6 +458,22 @@ Key topics covered:
 
 ## Testing
 
+### Isolating enforcers in async tests
+
+An enforcer name is a global handle: every test using the same name talks to the
+same process and the same policies, so `async: true` tests interfere with each
+other. Give each test its own enforcer name and stop it when the test is over —
+see [Isolating enforcers in tests](guides/test_isolation.md).
+
+```elixir
+setup do
+  ename = "acl_test_#{:erlang.unique_integer([:positive])}"
+  {:ok, _pid} = EnforcerSupervisor.start_enforcer(ename, @cfile)
+  on_exit(fn -> EnforcerSupervisor.stop_enforcer(ename) end)
+  {:ok, ename: ename}
+end
+```
+
 ### Using with Ecto.Adapters.SQL.Sandbox
 
 If you're using Casbin-Ex with Ecto and need to wrap operations in database transactions during testing, see our guide on [Testing with Ecto.Adapters.SQL.Sandbox and Transactions](guides/sandbox_testing.md).

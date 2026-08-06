@@ -239,11 +239,33 @@ defmodule Casbin.EnforcerServer do
     GenServer.call(via_tuple(ename), {:set_persist_adapter, adapter})
   end
 
+  @doc """
+  Returns the pid of the enforcer process registered under `ename`, or
+  `nil` when no enforcer is running under that name.
+  """
+  def whereis(ename) do
+    # The registry unregisters a dead process asynchronously, so a lookup
+    # right after a shutdown can still return the pid that just went away.
+    case Registry.lookup(Casbin.EnforcerRegistry, ename) do
+      [{pid, _}] -> if Process.alive?(pid), do: pid, else: nil
+      [] -> nil
+    end
+  end
+
+  @doc """
+  Returns `true` if an enforcer process is running under `ename`.
+  """
+  def running?(ename), do: whereis(ename) !== nil
+
   #
   # Server Callbacks
   #
 
   def init({ename, cfile}) do
+    # Needed so `terminate/2` runs on a supervised shutdown and can drop
+    # the cached state of this enforcer.
+    Process.flag(:trap_exit, true)
+
     case create_new_or_lookup_enforcer(ename, cfile) do
       {:error, reason} ->
         {:stop, reason}
@@ -252,6 +274,21 @@ defmodule Casbin.EnforcerServer do
         Logger.info("Spawned an enforcer process named '#{ename}'")
         {:ok, enforcer}
     end
+  end
+
+  # The ets cache exists so a crashed enforcer is restarted with the state
+  # it had before the crash. A deliberate shutdown is not a crash: dropping
+  # the entry keeps the state from leaking into the next enforcer that is
+  # started under the same name.
+  def terminate(reason, _enforcer) do
+    if graceful_shutdown?(reason) do
+      case self_name() do
+        nil -> :ok
+        ename -> :ets.delete(:enforcers_table, ename)
+      end
+    end
+
+    :ok
   end
 
   def handle_call({:allow?, req}, _from, enforcer) do
@@ -314,6 +351,7 @@ defmodule Casbin.EnforcerServer do
 
   def handle_call({:save_policies}, _from, enforcer) do
     new_enforcer = enforcer |> Enforcer.save_policies()
+    :ets.insert(:enforcers_table, {self_name(), new_enforcer})
     {:reply, :ok, new_enforcer}
   end
 
@@ -407,6 +445,13 @@ defmodule Casbin.EnforcerServer do
   defp self_name do
     Registry.keys(Casbin.EnforcerRegistry, self()) |> List.first()
   end
+
+  # Returns `true` when the process was stopped on purpose rather than
+  # having crashed.
+  defp graceful_shutdown?(:normal), do: true
+  defp graceful_shutdown?(:shutdown), do: true
+  defp graceful_shutdown?({:shutdown, _reason}), do: true
+  defp graceful_shutdown?(_reason), do: false
 
   # Creates a new enforcer or lookups existing one in the ets table.
   defp create_new_or_lookup_enforcer(ename, cfile) do

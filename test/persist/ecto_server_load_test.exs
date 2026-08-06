@@ -17,14 +17,15 @@ defmodule Casbin.Persist.EctoServerLoadTest do
   @repo_rbac MockRbacRepo
 
   setup do
-    # Ensure clean state
-    :ets.delete_all_objects(:enforcers_table)
+    # Every test below starts enforcers under unique names, so there is no
+    # shared state to clear here. Wiping `:enforcers_table` would take out
+    # the enforcers of the test modules running alongside this one.
     :ok
   end
 
   describe "load_policies/1 with ACL model" do
     test "loads policies from EctoAdapter on startup" do
-      ename = "test_acl_load_#{:erlang.unique_integer([:positive])}"
+      ename = unique_ename("test_acl_load")
 
       # Start enforcer
       {:ok, _pid} = EnforcerSupervisor.start_enforcer(ename, @cfile_acl)
@@ -46,7 +47,7 @@ defmodule Casbin.Persist.EctoServerLoadTest do
     end
 
     test "returns error when no adapter is set" do
-      ename = "test_acl_no_adapter_#{:erlang.unique_integer([:positive])}"
+      ename = unique_ename("test_acl_no_adapter")
 
       # Start enforcer without setting adapter
       {:ok, _pid} = EnforcerSupervisor.start_enforcer(ename, @cfile_acl)
@@ -58,7 +59,7 @@ defmodule Casbin.Persist.EctoServerLoadTest do
 
   describe "load_policies/1 and load_mapping_policies/1 with RBAC model" do
     test "loads both policies and mapping policies from EctoAdapter" do
-      ename = "test_rbac_load_#{:erlang.unique_integer([:positive])}"
+      ename = unique_ename("test_rbac_load")
 
       # Start enforcer
       {:ok, _pid} = EnforcerSupervisor.start_enforcer(ename, @cfile_rbac)
@@ -92,7 +93,7 @@ defmodule Casbin.Persist.EctoServerLoadTest do
 
   describe "backward compatibility" do
     test "load_policies/2 with file path still works" do
-      ename = "test_file_load_#{:erlang.unique_integer([:positive])}"
+      ename = unique_ename("test_file_load")
       pfile = "../data/acl.csv" |> Path.expand(__DIR__)
 
       # Start enforcer
@@ -107,7 +108,7 @@ defmodule Casbin.Persist.EctoServerLoadTest do
     end
 
     test "load_mapping_policies/2 with file path still works" do
-      ename = "test_file_mapping_load_#{:erlang.unique_integer([:positive])}"
+      ename = unique_ename("test_file_mapping_load")
       pfile = "../data/rbac.csv" |> Path.expand(__DIR__)
 
       # Start enforcer
@@ -124,7 +125,7 @@ defmodule Casbin.Persist.EctoServerLoadTest do
 
   describe "persistence workflow" do
     test "complete workflow: set adapter, load, modify, verify" do
-      ename = "test_workflow_#{:erlang.unique_integer([:positive])}"
+      ename = unique_ename("test_workflow")
 
       # Start enforcer
       {:ok, _pid} = EnforcerSupervisor.start_enforcer(ename, @cfile_acl)
@@ -149,5 +150,14 @@ defmodule Casbin.Persist.EctoServerLoadTest do
       policies = EnforcerServer.list_policies(ename, %{sub: "alice", obj: "data"})
       assert length(policies) === 1
     end
+  end
+
+  # Returns an enforcer name unique to the running test and stops that
+  # enforcer once the test is over, so tests stay isolated from each other
+  # and enforcers do not pile up while the suite runs.
+  defp unique_ename(prefix) do
+    ename = "#{prefix}_#{:erlang.unique_integer([:positive])}"
+    on_exit(fn -> EnforcerSupervisor.stop_enforcer(ename) end)
+    ename
   end
 end
