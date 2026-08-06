@@ -1003,21 +1003,15 @@ defmodule Casbin.Enforcer do
   """
   @spec key_get(String.t(), String.t()) :: String.t()
   def key_get(key1, key2) do
-    i = :binary.match(key2, "*")
-
-    case i do
+    case :binary.match(key2, "*") do
       :nomatch ->
         ""
 
       {pos, _} ->
-        if String.length(key1) > pos do
-          prefix = String.slice(key2, 0, pos)
+        prefix = String.slice(key2, 0, pos)
 
-          if String.starts_with?(key1, prefix) do
-            String.slice(key1, pos, String.length(key1) - pos)
-          else
-            ""
-          end
+        if String.length(key1) > pos and String.starts_with?(key1, prefix) do
+          String.slice(key1, pos, String.length(key1) - pos)
         else
           ""
         end
@@ -1083,21 +1077,21 @@ defmodule Casbin.Enforcer do
          keys <- Regex.scan(r1, key2) |> Enum.map(fn [k] -> k end),
          key2 <- Regex.replace(r1, key2, "([^/]+)"),
          {:ok, r2} <- Regex.compile("^" <> key2 <> "$"),
-         matches <- Regex.run(r2, key1) do
-      if matches && length(matches) > 1 do
-        values = Enum.drop(matches, 1)
-
-        keys
-        |> Enum.zip(values)
-        |> Enum.find_value("", fn {k, v} ->
-          if String.slice(k, 1..-1//1) == path_var, do: v
-        end)
-      else
-        ""
-      end
+         [_full | values] when values != [] <- Regex.run(r2, key1) do
+      find_path_var(keys, values, path_var)
     else
       _ -> ""
     end
+  end
+
+  # Pairs the `:var` names captured from the pattern with their matched values
+  # and returns the value bound to `path_var`, or "" when it is not present.
+  defp find_path_var(keys, values, path_var) do
+    keys
+    |> Enum.zip(values)
+    |> Enum.find_value("", fn {k, v} ->
+      if String.slice(k, 1..-1//1) == path_var, do: v
+    end)
   end
 
   @doc """
@@ -1149,35 +1143,31 @@ defmodule Casbin.Enforcer do
          tokens <- Regex.scan(r1, key2) |> Enum.map(fn [_, token] -> token end),
          key2_pattern <- Regex.replace(r1, key2, "([^/]+)"),
          {:ok, r2} <- Regex.compile("^" <> key2_pattern <> "$"),
-         matches <- Regex.run(r2, key1) do
-      if matches do
-        values = Enum.drop(matches, 1)
-
-        if length(tokens) != length(values) do
-          false
-        else
-          # Build a map of token -> value and check for conflicts
-          tokens
-          |> Enum.zip(values)
-          |> Enum.reduce_while(%{}, fn {token, value}, acc ->
-            case Map.get(acc, token) do
-              nil -> {:cont, Map.put(acc, token, value)}
-              ^value -> {:cont, acc}
-              _ -> {:halt, :mismatch}
-            end
-          end)
-          |> case do
-            :mismatch -> false
-            _ -> true
-          end
-        end
-      else
-        false
-      end
+         [_full | values] <- Regex.run(r2, key1) do
+      tokens_consistent?(tokens, values)
     else
       _ -> false
     end
   end
+
+  # Every repetition of the same `{token}` has to capture the same value.
+  defp tokens_consistent?(tokens, values) when length(tokens) == length(values) do
+    tokens
+    |> Enum.zip(values)
+    |> Enum.reduce_while(%{}, fn {token, value}, acc ->
+      case Map.get(acc, token) do
+        nil -> {:cont, Map.put(acc, token, value)}
+        ^value -> {:cont, acc}
+        _ -> {:halt, :mismatch}
+      end
+    end)
+    |> case do
+      :mismatch -> false
+      _ -> true
+    end
+  end
+
+  defp tokens_consistent?(_tokens, _values), do: false
 
   @doc """
   Returns `true` if IP address `ip1` matches the pattern of `ip2`.
@@ -1196,20 +1186,23 @@ defmodule Casbin.Enforcer do
   @spec ip_match?(String.t(), String.t()) :: boolean()
   def ip_match?(ip1, ip2) do
     case parse_ip(ip1) do
-      {:ok, ip1_tuple} ->
-        case parse_cidr(ip2) do
-          {:ok, network, prefix_len} ->
-            ip_in_cidr?(ip1_tuple, network, prefix_len)
+      {:ok, ip1_tuple} -> ip_matches_target?(ip1_tuple, ip2)
+      :error -> false
+    end
+  end
 
-          :error ->
-            case parse_ip(ip2) do
-              {:ok, ip2_tuple} -> ip1_tuple == ip2_tuple
-              :error -> false
-            end
-        end
+  # `ip2` is either a CIDR range the address has to fall into, or a plain
+  # address it has to equal.
+  defp ip_matches_target?(ip1_tuple, ip2) do
+    case parse_cidr(ip2) do
+      {:ok, network, prefix_len} ->
+        ip_in_cidr?(ip1_tuple, network, prefix_len)
 
       :error ->
-        false
+        case parse_ip(ip2) do
+          {:ok, ip2_tuple} -> ip1_tuple == ip2_tuple
+          :error -> false
+        end
     end
   end
 
@@ -1249,17 +1242,15 @@ defmodule Casbin.Enforcer do
   defp ip_to_bits({a, b, c, d}) do
     <<a, b, c, d>>
     |> :binary.bin_to_list()
-    |> Enum.map(&Integer.to_string(&1, 2))
-    |> Enum.map(&String.pad_leading(&1, 8, "0"))
-    |> Enum.join()
+    |> Enum.map_join(&(&1 |> Integer.to_string(2) |> String.pad_leading(8, "0")))
   end
 
   defp ip_to_bits({a, b, c, d, e, f, g, h}) do
     # Convert each 16-bit segment to binary representation
-    [a, b, c, d, e, f, g, h]
-    |> Enum.map(&Integer.to_string(&1, 2))
-    |> Enum.map(&String.pad_leading(&1, 16, "0"))
-    |> Enum.join()
+    Enum.map_join(
+      [a, b, c, d, e, f, g, h],
+      &(&1 |> Integer.to_string(2) |> String.pad_leading(16, "0"))
+    )
   end
 
   @doc """

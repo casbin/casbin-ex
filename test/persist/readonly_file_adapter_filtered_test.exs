@@ -1,8 +1,8 @@
 defmodule Casbin.Persist.ReadonlyFileAdapterFilteredTest do
   use ExUnit.Case, async: true
   alias Casbin.Enforcer
-  alias Casbin.Persist.ReadonlyFileAdapter
   alias Casbin.Persist.PersistAdapter
+  alias Casbin.Persist.ReadonlyFileAdapter
 
   @cfile "../data/rbac_domain.conf" |> Path.expand(__DIR__)
   @pfile "../data/rbac_domain.csv" |> Path.expand(__DIR__)
@@ -112,7 +112,7 @@ defmodule Casbin.Persist.ReadonlyFileAdapterFilteredTest do
 
       # Without role mappings loaded, role-based permissions should not work
       mapping_policies = Enforcer.list_mapping_policies(e)
-      assert length(mapping_policies) == 0
+      assert mapping_policies == []
     end
   end
 end

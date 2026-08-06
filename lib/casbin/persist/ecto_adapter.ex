@@ -178,6 +178,11 @@ defmodule Casbin.Persist.EctoAdapter do
   end
 
   defimpl Casbin.Persist.PersistAdapter, for: Casbin.Persist.EctoAdapter do
+    alias Casbin.Persist.EctoAdapter
+
+    # Columns a policy filter is allowed to constrain.
+    @filterable_fields [:ptype, :v0, :v1, :v2, :v3, :v4, :v5, :v6]
+
     @doc """
     Queries the list of policy rules from the database and returns them
     as a list of strings.
@@ -193,7 +198,7 @@ defmodule Casbin.Persist.EctoAdapter do
     end
 
     def load_policies(adapter) do
-      repo = Casbin.Persist.EctoAdapter.get_repo(adapter)
+      repo = EctoAdapter.get_repo(adapter)
 
       policies =
         repo.all(CasbinRule)
@@ -230,7 +235,7 @@ defmodule Casbin.Persist.EctoAdapter do
     end
 
     def load_filtered_policy(adapter, filter) when is_map(filter) do
-      repo = Casbin.Persist.EctoAdapter.get_repo(adapter)
+      repo = EctoAdapter.get_repo(adapter)
       query = build_filtered_query(filter)
 
       policies =
@@ -249,38 +254,22 @@ defmodule Casbin.Persist.EctoAdapter do
       end)
     end
 
-    # Helper function to add WHERE clause for a single filter condition
-    defp add_where_clause(query, field, values) when is_list(values) do
+    # Helper function to add WHERE clause for a single filter condition.
+    # Unknown fields are ignored so a stray filter key cannot widen the query.
+    defp add_where_clause(query, field, values)
+         when field in @filterable_fields and is_list(values) do
       import Ecto.Query
 
-      case field do
-        :ptype -> where(query, [r], r.ptype in ^values)
-        :v0 -> where(query, [r], r.v0 in ^values)
-        :v1 -> where(query, [r], r.v1 in ^values)
-        :v2 -> where(query, [r], r.v2 in ^values)
-        :v3 -> where(query, [r], r.v3 in ^values)
-        :v4 -> where(query, [r], r.v4 in ^values)
-        :v5 -> where(query, [r], r.v5 in ^values)
-        :v6 -> where(query, [r], r.v6 in ^values)
-        _ -> query
-      end
+      where(query, [r], field(r, ^field) in ^values)
     end
 
-    defp add_where_clause(query, field, value) do
+    defp add_where_clause(query, field, value) when field in @filterable_fields do
       import Ecto.Query
 
-      case field do
-        :ptype -> where(query, [r], r.ptype == ^value)
-        :v0 -> where(query, [r], r.v0 == ^value)
-        :v1 -> where(query, [r], r.v1 == ^value)
-        :v2 -> where(query, [r], r.v2 == ^value)
-        :v3 -> where(query, [r], r.v3 == ^value)
-        :v4 -> where(query, [r], r.v4 == ^value)
-        :v5 -> where(query, [r], r.v5 == ^value)
-        :v6 -> where(query, [r], r.v6 == ^value)
-        _ -> query
-      end
+      where(query, [r], field(r, ^field) == ^value)
     end
+
+    defp add_where_clause(query, _field, _value), do: query
 
     @doc """
     Uses the configured repo to insert a Policy into the casbin_rule table.
@@ -299,7 +288,7 @@ defmodule Casbin.Persist.EctoAdapter do
     end
 
     def add_policy(adapter, {_key, _attrs} = policy) do
-      repo = Casbin.Persist.EctoAdapter.get_repo(adapter)
+      repo = EctoAdapter.get_repo(adapter)
       changeset = CasbinRule.create_changeset(policy)
 
       # on_conflict: :nothing prevents Ecto.ConstraintError when a duplicate rule is
@@ -331,7 +320,7 @@ defmodule Casbin.Persist.EctoAdapter do
     end
 
     def remove_policy(adapter, {_key, _attr} = policy) do
-      repo = Casbin.Persist.EctoAdapter.get_repo(adapter)
+      repo = EctoAdapter.get_repo(adapter)
       f = CasbinRule.changeset_to_queryable(policy)
 
       case repo.delete_all(f) do
@@ -341,7 +330,7 @@ defmodule Casbin.Persist.EctoAdapter do
     end
 
     def remove_filtered_policy(adapter, key, idx, attrs) do
-      repo = Casbin.Persist.EctoAdapter.get_repo(adapter)
+      repo = EctoAdapter.get_repo(adapter)
       f = CasbinRule.changeset_to_queryable({key, attrs}, idx)
 
       case repo.delete_all(f) do
@@ -367,7 +356,7 @@ defmodule Casbin.Persist.EctoAdapter do
     end
 
     def save_policies(adapter, policies) do
-      repo = Casbin.Persist.EctoAdapter.get_repo(adapter)
+      repo = EctoAdapter.get_repo(adapter)
       repo.transaction(fn -> insert_policies(repo, adapter, policies) end)
     end
 

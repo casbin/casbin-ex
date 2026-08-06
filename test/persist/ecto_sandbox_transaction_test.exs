@@ -57,7 +57,7 @@ defmodule Casbin.Persist.EctoSandboxTransactionTest do
     #   # Add multiple policies atomically
     #   :ok = EnforcerServer.add_policy(@enforcer_name, {:p, ["alice", "data1", "read"]})
     #   :ok = EnforcerServer.add_policy(@enforcer_name, {:p, ["alice", "data1", "write"]})
-    #   
+    #
     #   {:ok, :success}
     # end)
     #
@@ -76,7 +76,7 @@ defmodule Casbin.Persist.EctoSandboxTransactionTest do
     # result = @repo.transaction(fn ->
     #   # Add a policy
     #   :ok = EnforcerServer.add_policy(@enforcer_name, {:p, ["bob", "data2", "read"]})
-    #   
+    #
     #   # Simulate a failure that causes rollback
     #   @repo.rollback(:simulated_error)
     # end)
@@ -96,11 +96,11 @@ defmodule Casbin.Persist.EctoSandboxTransactionTest do
     # result = @repo.transaction(fn ->
     #   # Insert a user record (example - replace with your schema)
     #   # {:ok, user} = @repo.insert(%User{name: "charlie"})
-    #   
+    #
     #   # Add corresponding Casbin policies
     #   :ok = EnforcerServer.add_policy(@enforcer_name, {:p, ["charlie", "data3", "read"]})
     #   :ok = EnforcerServer.add_policy(@enforcer_name, {:p, ["charlie", "data3", "write"]})
-    #   
+    #
     #   {:ok, :complete}
     # end)
     #

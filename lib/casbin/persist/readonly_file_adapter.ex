@@ -15,6 +15,9 @@ defmodule Casbin.Persist.ReadonlyFileAdapter do
   end
 
   defimpl PersistAdapter, for: Casbin.Persist.ReadonlyFileAdapter do
+    # Position of each `vN` filter key within a rule's value list.
+    @value_indexes %{v0: 0, v1: 1, v2: 2, v3: 3, v4: 4, v5: 5, v6: 6}
+
     def load_policies(%Casbin.Persist.ReadonlyFileAdapter{policy_file: nil}) do
       {:ok, []}
     end
@@ -81,22 +84,9 @@ defmodule Casbin.Persist.ReadonlyFileAdapter do
     defp get_policy_value([ptype | _values], :ptype), do: ptype
 
     defp get_policy_value([_ptype | values], key) do
-      index =
-        case key do
-          :v0 -> 0
-          :v1 -> 1
-          :v2 -> 2
-          :v3 -> 3
-          :v4 -> 4
-          :v5 -> 5
-          :v6 -> 6
-          _ -> nil
-        end
-
-      if index && index < length(values) do
-        Enum.at(values, index)
-      else
-        nil
+      case Map.fetch(@value_indexes, key) do
+        {:ok, index} -> Enum.at(values, index)
+        :error -> nil
       end
     end
 
