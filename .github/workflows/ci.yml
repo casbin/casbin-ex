@@ -14,6 +14,11 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    env:
+      # Keep the whole job in :test so dev-only deps (ex_doc -> earmark_parser,
+      # git_hooks) are never compiled. earmark_parser needs leex, and the
+      # distro's erlang-nox package ships parsetools without its include/ dir.
+      MIX_ENV: test
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
